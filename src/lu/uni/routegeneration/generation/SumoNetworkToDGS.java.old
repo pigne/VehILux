@@ -1,0 +1,132 @@
+/**
+ *
+ * Copyright (c) 2010 University of Luxembourg
+ *
+ * @file SumoNetworkToDGS.java
+ * @date Aug 19, 2010
+ *
+ * @author Yoann Pigné
+ * 
+ */
+
+package lu.uni.routegeneration.generation;
+
+import java.io.IOException;
+
+import org.graphstream.algorithm.ConnectedComponents;
+import org.graphstream.graph.Edge;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.stream.file.FileSink;
+import org.graphstream.stream.file.FileSinkFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
+
+/**
+ * Utility class for the SUMO Route Generator.
+ * 
+ * Takes a .net.xml Sumo network file as a parameter and converts it of a DGS
+ * file.
+ * 
+ * 
+ * <B> NOT USED ANYMORE </B>
+ * 
+ */
+public class SumoNetworkToDGS extends DefaultHandler {
+	Graph g;
+	ConnectedComponents cc;
+	FileSink fs;
+	private Edge currentEdge = null;
+	String folderName;
+	String baseName;
+
+	public SumoNetworkToDGS(String folderName, String baseName) {
+		super();
+		this.folderName = folderName;
+		this.baseName = baseName;
+	}
+
+	@Override
+	public void startDocument() throws SAXException {
+		g = new MultiGraph("SumoNetworkToDGS", false, true);
+		g.addAttribute("copyright", "(c) 2010 University of Luxembourg");
+		g.addAttribute("author", "Yoann Pigné");
+		g.addAttribute("information", "http://ovnis.gforge.uni.lu");
+	}
+
+	@Override
+	public void startElement(String uri, String localName, String qName,
+			Attributes attributes) throws SAXException {
+		if (qName.equals("junction")) {
+			// DEAD_END
+			String type = attributes.getValue(attributes.getIndex("type"));
+			if (!(type.equals("internal"))) {
+				String id = attributes.getValue(attributes.getIndex("id"));
+				String x = attributes.getValue(attributes.getIndex("x"));
+				String y = attributes.getValue(attributes.getIndex("y"));
+				Node n = g.getNode(id);
+				if (n == null)
+					n = g.addNode(id);
+				n.addAttribute("x", x);
+				n.addAttribute("y", y);
+				n.addAttribute("ui.class", type.replace(' ', '_'));
+			}
+		}
+
+		else if (qName.equals("edge")) {
+			String function = attributes.getValue(attributes
+					.getIndex("function"));
+			String id = attributes.getValue(attributes.getIndex("id"));
+
+			if (!function.equals("internal")) {
+				String from = attributes.getValue(attributes.getIndex("from"));
+				String to = attributes.getValue(attributes.getIndex("to"));
+				Edge e = g.addEdge(id, from, to, true);
+				currentEdge = e;
+				e.addAttribute("ui.class", function);
+			}
+		}
+
+		else if (qName.equals("lane")) {
+			if (currentEdge != null) {
+				String maxspeed = attributes.getValue(attributes
+						.getIndex("maxspeed"));
+				String length = attributes.getValue(attributes
+						.getIndex("length"));
+				if (maxspeed != null && length != null) {
+					double weight = Double.parseDouble(length)
+							/ Double.parseDouble(maxspeed);
+					currentEdge.addAttribute("weight", weight);
+					currentEdge = null;
+				}
+
+			}
+		}
+	}
+
+	@Override
+	public void endDocument() throws SAXException {
+		String f = folderName + baseName + ".dgs";
+		try {
+			g.write(f);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public static void main(String args[]) {
+		SumoNetworkToDGS netParser = new SumoNetworkToDGS(args[0], args[1]);
+		try {
+			XMLReader parser = XMLReaderFactory.createXMLReader();
+			parser.setContentHandler(netParser);
+			parser.parse(new InputSource(args[0]));
+		} catch (Exception ex) {
+			ex.printStackTrace(System.err);
+		}
+	}
+}
