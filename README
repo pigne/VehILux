@@ -1,0 +1,5 @@
+
+VehILux is a new vehicular mobility model based on real traffic counting data. 
+
+It relies on two freely available sources of real information for the country of Luxembourg. The first source is traffic data collected by counting devices located on the Luxembourgian road network, while the second is geographical information about differ- ent types of areas: residential, industrial, commercial and other services. VehILux models vehicles commuting around the city of Luxembourg by considering two types of traffic, outer traffic with vehicles entering in the defined geographical area and inner traffic starting from residential zones located inside the geographical area. One part of the collected traf- fic data is used as input traffic, while another part is used to control the produced traffic and to fine-tune the model. VehILux is coupled with the microscopic road traffic simulator SUMO to produce realistic vehicular traces.
+
