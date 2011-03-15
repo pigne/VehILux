@@ -68,7 +68,10 @@ enum ZoneType {
 };
 
 /**
- * Main class that handles all the process of creating mobility traces based on
+ * Main class that handles all the process of creating mobility traces based on real data. 
+ * 
+ * This program needs:
+ * 
  */
 public class RouteGeneration {
 
@@ -77,22 +80,25 @@ public class RouteGeneration {
 	 * Project name. Is assumed to be the base name of all configuration files
 	 * (ex. MyProject.rou.xml, MyProject.net.xml)
 	 */
-	String baseName = "LuxembourgVille";
+	String baseName = "kirchberg";
 
 	/**
 	 * Path that to the folder containing configuration files.
 	 */
-	String baseFolder = "./test/";
+	String baseFolder = "./tests/Kirchberg/";
 
 	/**
 	 * Activate the debuging interface.
 	 */
-	boolean gui = true;
+	boolean gui = false;
 
 	/**
 	 * 
 	 */
-	int stopHour = 11;
+	int stopHour = 10;
+	
+	
+	String referenceEdge="56640729#2";
 
 	public static Color colorCOM = new Color(0xCFA9CB); // CFC4CD
 	public static Color colorCOM_light = new Color(255, 0, 225, 20);
@@ -129,7 +135,7 @@ public class RouteGeneration {
 
 	Loop nextLoop;
 
-	double insideFlowRatio = 0.5;
+	double insideFlowRatio = 0.2;
 
 	/**
 	 * @return the stopHour
@@ -208,7 +214,7 @@ public class RouteGeneration {
 
 	public static void main(String[] args) {
 		new RouteGeneration(args);
-		new ApproximativeEvaluation(args);
+		//new ApproximativeEvaluation(args);
 	}
 
 	public String createRandomPath(String djk, Node source) {
@@ -264,6 +270,10 @@ public class RouteGeneration {
 				break;
 			}
 		}
+		if(zone==null){
+			System.out.println("pickupOneDestination: null zone. Shouldn't be."+sum);
+		}
+			
 
 		// draw a point at random into the zone
 		Point2D.Double point = pointInZone(zone);
@@ -653,14 +663,13 @@ public class RouteGeneration {
 		// 
 		// -file example:
 		/*
-		 * <vtypes> <vtype id="porsche" accel="2" decel="7" sigma="0.6"
-		 * length="4" maxspeed="50" color="1,0,0" /> <vtype id="206" accel="1.7"
-		 * decel="6" sigma="0.5" length="4" maxspeed="40" color="0.4,1,0.4" />
-		 * <vtype id="306" accel="1.7" decel="6" sigma="0.5" length="4.5"
-		 * maxspeed="40" color="0.4,0,1" /> <vtype id="twingo" accel="1.4"
-		 * decel="6" sigma="0.8" length="3.5" maxspeed="35" color="0.4,0.8,1" />
-		 * <vtype id="cx" accel="1.1" decel="5" sigma="0.5" length="5"
-		 * maxspeed="35" color="0.9,0.9,0.9" /> </vtypes>
+		 * <vtypes> 
+		 * 	<vtype id="porsche" accel="2" decel="7" sigma="0.6"length="4" maxspeed="50" color="1,0,0" /> 
+		 * 	<vtype id="206" accel="1.7" decel="6" sigma="0.5" length="4" maxspeed="40" color="0.4,1,0.4" />
+		 * 	<vtype id="306" accel="1.7" decel="6" sigma="0.5" length="4.5" maxspeed="40" color="0.4,0,1" /> 
+		 * 	<vtype id="twingo" accel="1.4" decel="6" sigma="0.8" length="3.5" maxspeed="35" color="0.4,0.8,1" />
+		 * 	<vtype id="cx" accel="1.1" decel="5" sigma="0.5" length="5" maxspeed="35" color="0.9,0.9,0.9" /> 
+		 * </vtypes>
 		 */
 		//
 		// These types are used to generate vehicles, equally distributed.
@@ -970,7 +979,7 @@ public class RouteGeneration {
 					djk.init(graph);
 					djk.compute();
 					// a reference node that ensures this zone can reach the network.
-					path = djk.getShortestPath(graph.getNode("9647221"));
+					path = djk.getShortestPath(graph.getNode(referenceEdge));
 					limit++;
 				} while (path.empty());
 

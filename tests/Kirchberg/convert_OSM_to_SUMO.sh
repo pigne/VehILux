@@ -1,0 +1,1 @@
+netconvert --osm-files kirchberg.osm.xml -v --remove-isolated  --dismiss-loading-errors -o kirchberg.net.xml  --try-join-tls  --remove-edges.by-vclass rail_slow,rail_fast,bicycle,pedestrian --edges-min-speed 12 --guess-ramps --no-internal-links --no-turnarounds --guess-roundabouts
