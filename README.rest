@@ -6,9 +6,10 @@ It relies on two freely available sources of real information for the country of
 Refer to the `Technical Overview`_ wiki page for more details.
 
 
-If you plan to use ths project, please cite:
+If you plan to use this project, please cite:
 
 Yoann Pigné, Grégoire Danoy, Pascal Bouvry. '''A Vehicular Mobility Model based on Real Traffic Counting Data'''. In Thomas Strang et al., editors, Nets4Cars/Nets4Trains 2011, Volume 6596, Series Lecture Notes in Computer Science, Pages 131-142. ISBN: 978-3-642-19785-7. Springer, 2011.::
+
  @inproceedings{PIGNE:2011,
       author={Pigné, Yoann and Danoy, Grégoire and Bouvry, Pascal},
       title={A Vehicular Mobility Model based on Real Traffic Counting Data},
