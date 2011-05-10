@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<areas residential_proba="5" commercial_proba="80" industrial_proba="15">
+<area id="1" type="COMMERCIAL" x="20418" y="14500" radius="1500" probability="10"/>
+<area id="2" type="COMMERCIAL" x="22400" y="16700" radius="1500" probability="15"/>
+<area id="3" type="COMMERCIAL" x="17000" y="15200" radius="1000" probability="5"/>
+<area id="4" type="INDUSTRIAL" x="20300" y="14000" radius="6000" probability="10"/>
+<area id="5" type="RESIDENTIAL" x="19900" y="14500" radius="3400" probability="5"/>
+</areas> 
