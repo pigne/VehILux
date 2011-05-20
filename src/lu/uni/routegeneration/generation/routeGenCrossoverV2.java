@@ -25,12 +25,12 @@ public class routeGenCrossoverV2 extends Crossover {
         Variable[] var1 = offSpring[1].getDecisionVariables();
         int typeNum = ((ArrayInt)var0[1]).getLength();
 
-        int chrom_length = 1 + 1 + typeNum; //  area type probs, plus shifting ratio, plus area probs
+/*        int chrom_length = 1 + 1 + typeNum; //  area type probs, plus shifting ratio, plus area probs
         int place = (int)(Math.random()*chrom_length)+1;
         if (place>chrom_length) place = chrom_length;
 
-        System.out.println("place:"+place);
-        if (place>=1){ //exchanging area type probs
+//        if (place>=1){ //exchanging area type probs
+        if (Math.random()>0.5){ //exchanging area type probs
             for(int i=0;i<typeNum;i++){
                 int tmp = ((ArrayInt)var0[1]).getValue(i);
                 ((ArrayInt)var0[1]).setValue(i, ((ArrayInt)var1[1]).getValue(i));
@@ -38,7 +38,8 @@ public class routeGenCrossoverV2 extends Crossover {
             }
         }
 
-        if (place>=2){ //exchanging shifting ratio
+//        if (place>=2){ //exchanging shifting ratio
+        if (Math.random()>0.5){ //exchanging shifting ratio
             int tmp = (int)((Int)var0[3]).getValue();
             ((Int)var0[3]).setValue(((Int)var1[3]).getValue());
             ((Int)var1[3]).setValue(tmp);
@@ -52,6 +53,34 @@ public class routeGenCrossoverV2 extends Crossover {
             int tmp = ((ArrayInt)var0[0]).getValue(j);
             ((ArrayInt)var0[0]).setValue(j, ((ArrayInt)var1[0]).getValue(j));
             ((ArrayInt)var1[0]).setValue(j, tmp);
+        }
+*/
+
+        if (Math.random()>0.5){ //exchanging area type probs
+            for(int i=0;i<typeNum;i++){
+                int tmp = ((ArrayInt)var0[1]).getValue(i);
+                ((ArrayInt)var0[1]).setValue(i, ((ArrayInt)var1[1]).getValue(i));
+                ((ArrayInt)var1[1]).setValue(i, tmp);
+            }
+        }
+
+        if (Math.random()>0.5){ //exchanging shifting ratio
+            int tmp = (int)((Int)var0[3]).getValue();
+            ((Int)var0[3]).setValue(((Int)var1[3]).getValue());
+            ((Int)var1[3]).setValue(tmp);
+        }
+
+        int startIndex = 0;
+        for(int i=0; i<typeNum; i++){
+            int size = (int)((ArrayInt)var0[2]).getValue(i);
+            if (Math.random()>0.5){ //exchanging shifting ratio
+                for(int j=0;j<size;j++){
+                    int tmp = ((ArrayInt)var0[0]).getValue(startIndex+j);
+                    ((ArrayInt)var0[0]).setValue(startIndex+j, ((ArrayInt)var1[0]).getValue(startIndex+j));
+                    ((ArrayInt)var1[0]).setValue(startIndex+j, tmp);
+                }
+            }
+            startIndex+=size;
         }
 
         offSpring[0].setDecisionVariables(var0);

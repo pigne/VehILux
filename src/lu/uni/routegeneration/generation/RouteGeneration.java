@@ -1132,12 +1132,14 @@ public class RouteGeneration extends Problem {
             datamain();
             evalData.updateFitness();
             fitness = evalData.sumOfDifference;
+            //fitness = evalData.meanOfDifferencePercent;
             System.out.println("Sum:"+evalData.sumOfDifference+" F1:"+evalData.sumOfDifferenceF1+" D%:"+evalData.meanOfDifferencePercent);
             System.out.println("Res:"+ZoneType.RESIDENTIAL.probability+" Com:"+ZoneType.COMMERCIAL.probability+" Ind:"+ZoneType.INDUSTRIAL.probability);
             try{
                 System.out.println("Res Probs:"+areaAr.getValue(0)+" "+areaAr.getValue(1));
                 System.out.println("Com Probs:"+areaAr.getValue(2)+" "+areaAr.getValue(3)+" "+areaAr.getValue(4)+" "+areaAr.getValue(5));
                 System.out.println("Ind Probs:"+areaAr.getValue(6)+" "+areaAr.getValue(7));
+                System.out.println("Inside flow ratio(percent):"+ ((jmetal.base.variable.Int)vars[3]).getValue());
             }catch(JMException e){
 
             }

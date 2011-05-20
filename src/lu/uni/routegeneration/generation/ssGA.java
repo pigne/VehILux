@@ -30,11 +30,23 @@ public class ssGA extends Algorithm {
   public ssGA(Problem problem){
     this.problem_ = problem;                        
   } // SSGA
-  
+
+  public double[] FitnessHistory;
  /**
   * Execute the SSGA algorithm
  * @throws JMException 
   */
+  public double[] get_fitness_history(){
+        int populationSize = ((Integer)this.getInputParameter("populationSize")).intValue();
+        int maxEvaluations = ((Integer)this.getInputParameter("maxEvaluations")).intValue();
+        double[] r = new double[maxEvaluations - populationSize];
+        for(int i=0;i<(maxEvaluations - populationSize);i++){
+            r[i] = FitnessHistory[i];
+        }
+        return(r);
+  }
+
+
   public SolutionSet execute() throws JMException, ClassNotFoundException {
     int populationSize ;
     int maxEvaluations ;
@@ -52,10 +64,13 @@ public class ssGA extends Algorithm {
     Operator findWorstSolution ;
     findWorstSolution = new WorstSolutionSelection(comparator) ;
 
+
     // Read the parameters
     populationSize = ((Integer)this.getInputParameter("populationSize")).intValue();
     maxEvaluations = ((Integer)this.getInputParameter("maxEvaluations")).intValue();                
-   
+
+    FitnessHistory = new double[maxEvaluations - populationSize];
+
     // Initialize the variables
     population   = new SolutionSet(populationSize);        
     evaluations  = 0;                
@@ -80,12 +95,14 @@ public class ssGA extends Algorithm {
       }
     } //for       
 
+    FitnessHistory[evaluations - populationSize] = bestFitness;
 
     // main loop
     while (evaluations < maxEvaluations) {
+
       Solution [] parents = new Solution[2];
-      
-      // Selection
+
+        // Selection
       parents[0] = (Solution)selectionOperator.execute(population);
       parents[1] = (Solution)selectionOperator.execute(population);
  
@@ -124,7 +141,6 @@ public class ssGA extends Algorithm {
 
     return resultPopulation ;
   } // execute
-
 
 
 } // SSGA
