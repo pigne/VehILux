@@ -26,7 +26,7 @@ public class Area {
 	public Color color;
 	public double x;
 	public double y;
-	public double radius = 0;
+	public double radius;
 	double probability;
 	public ArrayList<Zone> zones;
 	public double sumSurfaceZones = 0.0;
