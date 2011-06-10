@@ -137,7 +137,7 @@ public class RouteGeneration extends Problem {
 	double insideFlowRatio = 0.5;
         EvaluationData evalData;
 
-        ArrayList<AreaType> areaTypes;
+     
 
 	/**
 	 * @return the stopHour
@@ -332,37 +332,9 @@ public class RouteGeneration extends Problem {
 
 	public RouteGeneration() {
 
-                areaTypes = new ArrayList<AreaType>();
-                addAreaType("Residential", 2);
-                addAreaType("Commercial", 4);
-                addAreaType("Industrial", 2);
+                
 
-                //inital values of Jmetal.Problem class variables
-                numberOfVariables_  = 4;
-                numberOfObjectives_ = 1;
-                numberOfConstraints_= 0;
-                problemName_        = "RouteGeneration";
-
-                try{
-                    solutionType_ = new RouteGenSolutionType(this) ;
-                    variableType_ = new Class[numberOfVariables_] ;
-                    length_       = new int[numberOfVariables_];
-                    variableType_[0] = Class.forName("jmetal.base.variable.ArrayInt") ;
-                    variableType_[1] = Class.forName("jmetal.base.variable.ArrayInt") ;
-                    variableType_[2] = Class.forName("jmetal.base.variable.ArrayInt") ;
-                    variableType_[3] = Class.forName("jmetal.base.variable.Int") ;
-
-                } catch(ClassNotFoundException e) {
-                    System.out.println("class not found exceptiion");
-                }
-
-
-                Calendar cal = new GregorianCalendar();
-                cal = Calendar.getInstance();
-                System.out.println("starting program at "+cal.get(Calendar.HOUR)+":"+cal.get(Calendar.MINUTE)+":"+cal.get(Calendar.SECOND));
-
-
-                File folder = new File(baseFolder);
+        File folder = new File(baseFolder);
 
 		zones = new HashMap<String, Zone>();
 		areas = new ArrayList<Area>();
@@ -539,62 +511,152 @@ public class RouteGeneration extends Problem {
 			}
 		}
 
+
+		// -------------------------------------------------------------------
 		// ---------------- Read Areas from .areas.xml file -------------------
 		//
-                // this part is removed and we get area parameters from solution variables now
+		// - File is read and the areas are created (Area class).
+		// - Areas are stored in the `areas` list.
+		// - Zone types probabilities are set.
 
+		//
+		// An `.areas.xml` example file::
 
-                // -------------------------------------------------------------------
-		// ------------- Read Vehicles types from .veh.xml file --------------
-		// 
-		// -file example:
 		/*
-		 * <vtypes> <vtype id="porsche" accel="2" decel="7" sigma="0.6"
-		 * length="4" maxspeed="50" color="1,0,0" /> <vtype id="206" accel="1.7"
-		 * decel="6" sigma="0.5" length="4" maxspeed="40" color="0.4,1,0.4" />
-		 * <vtype id="306" accel="1.7" decel="6" sigma="0.5" length="4.5"
-		 * maxspeed="40" color="0.4,0,1" /> <vtype id="twingo" accel="1.4"
-		 * decel="6" sigma="0.8" length="3.5" maxspeed="35" color="0.4,0.8,1" />
-		 * <vtype id="cx" accel="1.1" decel="5" sigma="0.5" length="5"
-		 * maxspeed="35" color="0.9,0.9,0.9" /> </vtypes>
+		 * <areas residential_proba="5" commercial_proba="80"
+		 * industrial_proba="15"> <area id="1" type="COMMERCIAL" x="20418"
+		 * y="14500" radius="1500" probability="10"/> <area id="2"
+		 * type="COMMERCIAL" x="22400" y="16700" radius="1500"
+		 * probability="15"/> </areas>
 		 */
-		//
-		// These types are used to generate vehicles, equally distributed.
-		//
-		//
-		vtypes = new ArrayList<VType>();
-		h = new DefaultHandler() {
-			@Override
-			public void startElement(String uri, String localName,
-					String qName, Attributes attributes) throws SAXException {
-				super.startElement(uri, localName, qName, attributes);
-				if (qName.equals("vtype")) {
-					VType vt = new VType();
-					vt.id = attributes.getValue(attributes.getIndex("id"));
-					vt.accel = attributes
-							.getValue(attributes.getIndex("accel"));
-					vt.color = attributes
-							.getValue(attributes.getIndex("color"));
-					vt.decel = attributes
-							.getValue(attributes.getIndex("decel"));
-					vt.length = attributes.getValue(attributes
-							.getIndex("length"));
-					vt.maxspeed = attributes.getValue(attributes
-							.getIndex("maxspeed"));
-					vt.sigma = attributes
-							.getValue(attributes.getIndex("sigma"));
-					vtypes.add(vt);
+
+		String areasFile = baseFolder + baseName + ".areas.xml";
+		Area defaultAreaRES = new Area();
+		defaultAreaRES.probability = 1;
+		defaultAreaRES.type = ZoneType.RESIDENTIAL;
+		Area defaultAreaCOM = new Area();
+		defaultAreaCOM.probability = 1;
+		defaultAreaCOM.type = ZoneType.COMMERCIAL;
+		Area defaultAreaIND = new Area();
+		defaultAreaIND.probability = 1;
+		defaultAreaIND.type = ZoneType.INDUSTRIAL;
+		areas.add(defaultAreaCOM);
+		areas.add(defaultAreaIND);
+		areas.add(defaultAreaRES);
+
+		File file = new File(areasFile);
+		if (file.exists()) {
+			class AreasHandler extends DefaultHandler {
+				Zone zone = null;
+				double sumRES = 0.0;
+				double sumCOM = 0.0;
+				double sumIND = 0.0;
+
+				@Override
+				public void startElement(String uri, String localName,
+						String qName, Attributes attributes)
+						throws SAXException {
+					super.startElement(uri, localName, qName, attributes);
+					if (qName.equals("areas")) {
+
+						double sum = 0.0;
+						sum += ZoneType.RESIDENTIAL.probability = Double
+								.parseDouble(attributes
+										.getValue("residential_proba"));
+
+						sum += ZoneType.COMMERCIAL.probability = Double
+								.parseDouble(attributes
+										.getValue("commercial_proba"));
+
+						sum += ZoneType.INDUSTRIAL.probability = Double
+								.parseDouble(attributes
+										.getValue("industrial_proba"));
+						ZoneType.RESIDENTIAL.probability /= sum;
+						ZoneType.COMMERCIAL.probability /= sum;
+						ZoneType.INDUSTRIAL.probability /= sum;
+						System.out
+								.println("sum proba types:"
+										+ (ZoneType.RESIDENTIAL.probability
+												+ ZoneType.COMMERCIAL.probability + ZoneType.INDUSTRIAL.probability));
+
+					}
+					if (qName.equals("area")) {
+						Area a = new Area();
+						a.id = attributes.getValue("id");
+						a.x = Double.parseDouble(attributes.getValue("x"));
+						a.y = Double.parseDouble(attributes.getValue("y"));
+						a.radius = Double.parseDouble(attributes
+								.getValue("radius"));
+						a.probability = Double.parseDouble(attributes
+								.getValue("probability"));
+						String type = attributes.getValue("type");
+						if (type.equals("RESIDENTIAL")) {
+							a.type = ZoneType.RESIDENTIAL;
+							a.color = colorRES_light;
+							sumRES += a.probability;
+						} else if (type.equals("INDUSTRIAL")) {
+							a.type = ZoneType.INDUSTRIAL;
+							a.color = colorIND_light;
+							sumIND += a.probability;
+						} else if (type.equals("COMMERCIAL")) {
+							a.type = ZoneType.COMMERCIAL;
+							a.color = colorCOM_light;
+							sumCOM += a.probability;
+						}
+						areas.add(a);
+					}
+				}
+
+				@Override
+				public void endDocument() throws SAXException {
+
+					// - Set up the probabilities for areas.
+					// - Note: the outside of any area has a basic weight of 1.
+
+					sumRES += 1;
+					sumCOM += 1;
+					sumIND += 1;
+					double sr = 0.0, sc = 0.0, si = 0.0;
+					System.out.printf("areas proba... %f %f %f%n", sumCOM,
+							sumIND, sumRES);
+					for (Area a : areas) {
+						switch (a.type) {
+						case COMMERCIAL:
+							a.probability /= sumCOM;
+							sc += a.probability;
+							break;
+						case INDUSTRIAL:
+							a.probability /= sumIND;
+							si += a.probability;
+							break;
+						case RESIDENTIAL:
+							a.probability /= sumRES;
+							sr += a.probability;
+							break;
+						}
+						System.out.printf("area proba %s: %f%n", a.id,
+								a.probability);
+					}
+					System.out
+							.printf("sum proba areas: %f %f %f%n", sc, si, sr);
 				}
 			}
-
-		};
-		try {
-			XMLReader parser = XMLReaderFactory.createXMLReader();
-			parser.setContentHandler(h);
-			parser.parse(new InputSource(baseFolder + baseName + ".veh.xml"));
-		} catch (Exception ex) {
-			ex.printStackTrace(System.err);
+			;
+			h = new AreasHandler();
+			try {
+				XMLReader parser = XMLReaderFactory.createXMLReader();
+				parser.setContentHandler(h);
+				parser.parse(new InputSource(new FileInputStream(file)));
+			} catch (Exception ex) {
+				ex.printStackTrace(System.err);
+			}
 		}
+		
+		
+		
+		
+		
+
 
 		// -------------------------------------------------------------------
 		// ------------------------ Read loops and flows ---------------------
@@ -727,55 +789,9 @@ public class RouteGeneration extends Problem {
 				hasIt, graph.getNodeCount());
 
 
-		// ----------------------- POLYGONES
-		File f = new File(baseFolder + baseName + ".shapes.xml");
-		if (!f.exists()) {
-			try {
-				sr = new StreamResult(baseFolder + baseName + ".shapes.xml");
-				xmlMain();
+	
 
-				tfh.startElement("", "", "shapes", ai);
-				for (Zone z : zones.values()) {
-					ai.clear();
-					ai.addAttribute("", "", "id", "CDATA", z.id);
-					ai.addAttribute("", "", "type", "CDATA", z.type.toString());
-					ai.addAttribute("", "", "color", "CDATA", String.format(
-							Locale.US, "%.2f,%.2f,%.2f",
-							z.color.getRed() / 255.0,
-							z.color.getGreen() / 255.0,
-							z.color.getBlue() / 255.0));
-					ai.addAttribute("", "", "fill", "CDATA", "1");
-					ai.addAttribute("", "", "layer", "CDATA", "-1");
-					ai.addAttribute("", "", "proba", "CDATA", String.format(
-							Locale.US, "%.8f", z.probability));
-					ai.addAttribute("", "", "surface", "CDATA", z.surface + "");
 
-					String s = "";
-					for (int i = 0; i < z.points.size(); i++) {
-						s += String.format(Locale.US, "%.0f,%.0f", z.points
-								.get(i).x, z.points.get(i).y);
-						if (i != z.points.size() - 1)
-							s += " ";
-					}
-					ai.addAttribute("", "", "shape", "CDATA", s);
-					tfh.startElement("", "", "poly", ai);
-					tfh.endElement("", "", "poly");
-				}
-				tfh.endElement("", "", "shapes");
-				tfh.endDocument();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-		}
-
-		// -------------------------------------------------------------------
-		// -------------- debuging Graphical User Interface ------------------
-
-		if (gui) {
-			ae = new AreasEditor(this);
-			ae.run();
-		}
 
 		// -------------------------------------------------------------------
 		// ---------- generate shortest paths for RESIDENTIAL zones ----------
@@ -791,57 +807,56 @@ public class RouteGeneration extends Problem {
 		int zone_count = 0;
 		ArrayList<Zone> toRemove = new ArrayList<Zone>();
 
-
 		String zone_info_filename = new String();
 		int zcount = 0;
-                for (Zone z : zones.values()) {
-                            zone_count++;
+		for (Zone z : zones.values()) {
+			zone_count++;
 
-                            if (z.type == ZoneType.RESIDENTIAL) {
-                                    System.out.printf("Shortest path for INNER TRAFFIC (residential zones) %d over %d  %n", zone_count, zones.size());
-                                    Path path = null;
-                                    Node n = null;
-                                    Dijkstra djk = null;
+			if (z.type == ZoneType.RESIDENTIAL) {
+				System.out
+						.printf(
+								"Shortest path for INNER TRAFFIC (residential zones) %d over %d  %n",
+								zone_count, zones.size());
+				Path path = null;
+				Node n = null;
+				Dijkstra djk = null;
 
-                                    int limit = 0;
-                                    do {
-                                            if (limit > 5) {
-                                                    toRemove.add(z);
-                                                    System.out.printf("zone %s should be removed.%n", z.id);
-                                                    break;
+				int limit = 0;
+				do {
+					if (limit > 5) {
+						toRemove.add(z);
+						System.out.printf("zone %s should be removed.%n", z.id);
+						break;
 
-                                            }
-                                            Point2D.Double point = pointInZone(z);
-                                            n = getClosestNode(point);
-                                            djk = new Dijkstra(Dijkstra.Element.node, "weight", n
-                                                            .getId());
-                                            djk.init(graph);
-                                            djk.compute();
-                                            // a reference node that ensures this zone can reach the network.
-                                            path = djk.getShortestPath(graph.getNode("9647221"));
-                                            limit++;
-                                    } while (path.empty());
-                                    z.shortestPath = djk.getParentEdgesString();
-                                    z.sourceNode = n;
-                                    djk = null;
+					}
+					Point2D.Double point = pointInZone(z);
+					n = getClosestNode(point);
+					djk = new Dijkstra(Dijkstra.Element.node, "weight", n
+							.getId());
+					djk.init(graph);
+					djk.compute();
+					// a reference node that ensures this zone can reach the
+					// network.
+					path = djk.getShortestPath(graph.getNode("9647221"));
+					limit++;
+				} while (path.empty());
+				z.shortestPath = djk.getParentEdgesString();
+				z.sourceNode = n;
+				djk = null;
 
-                            }
-                    }
+			}
+		}
 
-                    for (Zone z : toRemove) {
-                            zones.remove(z.id);
-                    }
+		for (Zone z : toRemove) {
+			zones.remove(z.id);
+		}
 
-                    int count = 0;
-                    cal = Calendar.getInstance();
-                    System.out.println("starting filling zones reference nodes at "+cal.get(Calendar.HOUR)+":"+cal.get(Calendar.MINUTE)+":"+cal.get(Calendar.SECOND) + "...");
-                    for (Zone z : zones.values()) {
-                        count++;
-                        fillZoneNodes(z);
-                    }
-                    System.out.println("done.");
-
-
+		int count = 0;
+		for (Zone z : zones.values()) {
+			count++;
+			fillZoneNodes(z);
+		}
+		System.out.println("done.");
 
 	}
 
@@ -948,12 +963,7 @@ public class RouteGeneration extends Problem {
             
             System.out.println("evaluation starts...");
             double fitness = 0;
-            Area a = null;
-
-            areas.clear();
-            for(Zone z : zones.values()){
-                z.area = null;
-            }
+           
 
             Variable[] vars = solution.getDecisionVariables();
             jmetal.base.variable.ArrayInt typeAr = (jmetal.base.variable.ArrayInt)(vars[1]);
@@ -971,6 +981,13 @@ public class RouteGeneration extends Problem {
             }
 
 
+            
+            
+            for(Area area : areas){
+            	area.probability 
+            }
+            
+            
             //filling area parameters
             //
             Area defaultAreaRES = new Area();
@@ -982,6 +999,12 @@ public class RouteGeneration extends Problem {
             defaultAreaRES.type = ZoneType.RESIDENTIAL;
             areas.add(defaultAreaRES);
 
+            
+            
+            
+            
+            
+            
             a = new Area();
             a.id = "R1";
             a.x = 19900;
@@ -1147,17 +1170,15 @@ public class RouteGeneration extends Problem {
             solution.setFitness(fitness);
         }
 
-        public int getAreaTypeNum(){
-            return areaTypes.size();
-        }
+		/**
+		 * @return
+		 */
+		public int getAreaCount() {
+			
+			return areas.size();
+		}
 
-        public void addAreaType(String name, int parts){
-            areaTypes.add(new AreaType(name,parts));
-        }
 
-        public int getAreaParts(int index){
-            return areaTypes.get(index).areaParts;
-        }
 
 }
 
