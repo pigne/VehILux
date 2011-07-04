@@ -10,24 +10,16 @@
  */
 package lu.uni.routegeneration.generation;
 
-import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.TreeSet;
 import java.util.Vector;
-import java.io.*;
-import java.util.Calendar;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -35,13 +27,11 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import lu.uni.routegeneration.evaluation.ApproximativeEvaluation;
 import lu.uni.routegeneration.evaluation.Detector;
 import lu.uni.routegeneration.evaluation.RealEvaluation;
 import lu.uni.routegeneration.net.RGServer;
 import lu.uni.routegeneration.ui.AreasEditor;
 
-import org.graphstream.algorithm.ConnectedComponents;
 import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.graph.ElementNotFoundException;
 import org.graphstream.graph.Graph;
@@ -59,12 +49,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;
-import com.sun.xml.internal.xsom.impl.scd.Iterators;
 
-import java.util.GregorianCalendar;
-import jmetal.base.*;
-import jmetal.base.variable.*;
-import jmetal.util.JMException;
 
 enum ZoneType {
 	RESIDENTIAL(0), INDUSTRIAL(0), COMMERCIAL(0);
