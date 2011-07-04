@@ -258,26 +258,24 @@ public class RouteGeneration extends Problem {
 	/**
 	 * @return
 	 */
-	private Node pickUpOneDestination() {
+//
+
+        private Node pickUpOneDestination() {
 		// select a zone based on its proba
 		Zone zone = null;
-		while(zone==null){
-                    double draw = Math.random();
-                    double sum = 0.0;
-                    for (Zone z : zones.values()) {
-                            sum += z.probability;
-                            if (sum > draw) {
-                                    zone = z;
-                                    break;
-                            }
-                    }
+		double drawZoneType = Math.random();
+                if(drawZoneType<ZoneType.COMMERCIAL.getProbability()){
+                    zone = pickZone(ZoneType.COMMERCIAL);
+                }else if (drawZoneType<(ZoneType.COMMERCIAL.getProbability()+ZoneType.INDUSTRIAL.getProbability())){
+                    zone = pickZone(ZoneType.INDUSTRIAL);
+                }else {
+                    zone = pickZone(ZoneType.RESIDENTIAL);
                 }
-
                 int randNode = (int)(Math.random()*5);
                 if (zone==null) System.out.println("null zone!");
                 return zone.near_nodes.get(randNode);
-
 	}
+
 
 	private Node getClosestNode(Point2D.Double p) {
 
@@ -334,7 +332,7 @@ public class RouteGeneration extends Problem {
 
                 areaTypes = new ArrayList<AreaType>();
                 addAreaType("Residential", 2);
-                addAreaType("Commercial", 4);
+                addAreaType("Commercial", 3);
                 addAreaType("Industrial", 2);
 
                 //inital values of Jmetal.Problem class variables
@@ -890,16 +888,22 @@ public class RouteGeneration extends Problem {
 		double rand = Math.random();
 		zone = null;
 		double sum = 0.0;
-		for (Zone z : zones.values()) {
-			if (z.type == ZoneType.RESIDENTIAL) {
-				sum += z.surface;
-				if (sum > (rand * sumResidentialSurface)) {
-					zone = z;
-					break;
-				}
-			}
-		}
-		if (zone == null) {
+
+
+
+//                for (Zone z : zones.values()) {
+//			if (z.type == ZoneType.RESIDENTIAL) {
+//				sum += z.surface;
+//				if (sum > (rand * sumResidentialSurface)) {
+//					zone = z;
+//					break;
+//				}
+//			}
+//		}
+
+                zone = pickZone(ZoneType.RESIDENTIAL);
+
+                if (zone == null) {
 			//System.out.printf("zone is NULL in goInsideFlow !!! rand=%f sum=%f%n", rand,sum);
 			return(null);
 		}
@@ -963,9 +967,9 @@ public class RouteGeneration extends Problem {
             //
 
             try{
-                ZoneType.RESIDENTIAL.probability = (double)typeAr.getValue(0)/100;
-                ZoneType.COMMERCIAL.probability  = (double)typeAr.getValue(1)/100;
-                ZoneType.INDUSTRIAL.probability  = (double)typeAr.getValue(2)/100;
+                ZoneType.RESIDENTIAL.probability = ((double)(typeAr.getValue(0)))/100;
+                ZoneType.COMMERCIAL.probability  = ((double)(typeAr.getValue(1)))/100;
+                ZoneType.INDUSTRIAL.probability  = ((double)(typeAr.getValue(2)))/100;
             }catch(JMException e){
                 System.out.println("JME exception");
             }
@@ -975,7 +979,7 @@ public class RouteGeneration extends Problem {
             //
             Area defaultAreaRES = new Area();
             try{
-                defaultAreaRES.probability = (double)areaAr.getValue(0)/100;
+                defaultAreaRES.probability = ((double)(areaAr.getValue(0)))/100;
             }catch(JMException e){
                 System.out.println("JME exception");
             }
@@ -988,7 +992,7 @@ public class RouteGeneration extends Problem {
             a.y = 14500;
             a.radius = 3400;
             try{
-                a.probability = (double)areaAr.getValue(1)/100;
+                a.probability = ((double)(areaAr.getValue(1)))/100;
             }catch(JMException e){
                 System.out.println("JME exception");
             }
@@ -999,7 +1003,7 @@ public class RouteGeneration extends Problem {
 
             Area defaultAreaCOM = new Area();
             try{
-                defaultAreaCOM.probability = (double)areaAr.getValue(2)/100;
+                defaultAreaCOM.probability = ((double)(areaAr.getValue(2)))/100;
             }catch(JMException e){
                 System.out.println("JME exception");
             }
@@ -1012,7 +1016,7 @@ public class RouteGeneration extends Problem {
             a.y = 14500;
             a.radius = 1500;
             try{
-                a.probability = (double)areaAr.getValue(3)/100;
+                a.probability = ((double)(areaAr.getValue(3)))/100;
             }catch(JMException e){
                 System.out.println("JME exception");
             }
@@ -1026,7 +1030,7 @@ public class RouteGeneration extends Problem {
             a.y = 16700;
             a.radius = 1500;
             try{
-                a.probability = (double)areaAr.getValue(4)/100;
+                a.probability = ((double)(areaAr.getValue(4)))/100;
             }catch(JMException e){
                 System.out.println("JME exception");
             }
@@ -1034,25 +1038,25 @@ public class RouteGeneration extends Problem {
             a.color = colorCOM_light;
             areas.add(a);
 
-            a = new Area();
-            a.id = "C3";
-            a.x = 17000;
-            a.y = 15200;
-            a.radius = 1000;
-            try{
-                a.probability = (double)areaAr.getValue(5)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-            a.type = ZoneType.COMMERCIAL;
-            a.color = colorCOM_light;
-            areas.add(a);
+//            a = new Area();
+//            a.id = "C3";
+//            a.x = 17000;
+//            a.y = 15200;
+//            a.radius = 1000;
+//            try{
+//                a.probability = 0;
+//            }catch(JMException e){
+//                System.out.println("JME exception");
+//            }
+//            a.type = ZoneType.COMMERCIAL;
+//            a.color = colorCOM_light;
+//            areas.add(a);
 
 
 
             Area defaultAreaIND = new Area();
             try{
-                defaultAreaIND.probability = (double)areaAr.getValue(6)/100;
+                defaultAreaIND.probability = ((double)(areaAr.getValue(5)))/100;
             }catch(JMException e){
                 System.out.println("JME exception");
             }
@@ -1065,7 +1069,7 @@ public class RouteGeneration extends Problem {
             a.y = 14000;
             a.radius = 6000;
             try{
-                a.probability = (double)areaAr.getValue(7)/100;
+                a.probability = ((double)(areaAr.getValue(6)))/100;
             }catch(JMException e){
                 System.out.println("JME exception");
             }
@@ -1122,11 +1126,19 @@ public class RouteGeneration extends Problem {
                     }
             }
 
-            for (Zone z : zones.values()) {
-                    z.probability = (z.surface / z.area.sumSurfaceZones)
-                                    * z.type.probability * z.area.probability;
-                    //System.out.printf(" surface: %.0f proba: %.8f Zone: %s%n",z.surface, z.probability, z.id);
-            }
+//            for (Zone z : zones.values()) {
+//                    z.probability = (z.surface / z.area.sumSurfaceZones)
+//                                    * z.type.probability * z.area.probability;
+//                    //System.out.printf(" surface: %.0f proba: %.8f Zone: %s%n",z.surface, z.probability, z.id);
+//            }
+
+//            for(Area ar : areas ){
+//                for (Zone zn : ar.zones ){
+//                    zn.probability = zn.surface/ar.sumSurfaceZones;
+//                }
+//            }
+
+
 
             evalData.resetPoints();
             datamain();
@@ -1137,8 +1149,8 @@ public class RouteGeneration extends Problem {
             System.out.println("Res:"+ZoneType.RESIDENTIAL.probability+" Com:"+ZoneType.COMMERCIAL.probability+" Ind:"+ZoneType.INDUSTRIAL.probability);
             try{
                 System.out.println("Res Probs:"+areaAr.getValue(0)+" "+areaAr.getValue(1));
-                System.out.println("Com Probs:"+areaAr.getValue(2)+" "+areaAr.getValue(3)+" "+areaAr.getValue(4)+" "+areaAr.getValue(5));
-                System.out.println("Ind Probs:"+areaAr.getValue(6)+" "+areaAr.getValue(7));
+                System.out.println("Com Probs:"+areaAr.getValue(2)+" "+areaAr.getValue(3)+" "+areaAr.getValue(4)+" ");
+                System.out.println("Ind Probs:"+areaAr.getValue(5)+" "+areaAr.getValue(6));
                 System.out.println("Inside flow ratio(percent):"+ ((jmetal.base.variable.Int)vars[3]).getValue());
             }catch(JMException e){
 
@@ -1157,6 +1169,35 @@ public class RouteGeneration extends Problem {
 
         public int getAreaParts(int index){
             return areaTypes.get(index).areaParts;
+        }
+
+        // picking one zone in a required Zone-Type
+        public Zone pickZone(ZoneType type){
+            Zone zn = null;
+            Area ar = null;
+            double rand = Math.random();
+            double sumProbs = 0;
+            //selecting area
+            for(Area a: areas){
+                if(a.type == type){
+                    sumProbs+=a.probability;
+                    if(rand < sumProbs){
+                        ar = a;
+                        break;
+                    }
+                }
+            }
+            double sum = 0;
+            rand = Math.random();
+            //selecting zone
+            for (Zone z : ar.zones ) {
+                sum += z.surface;
+                if (sum > (rand * ar.sumSurfaceZones)) {
+                        zn = z;
+                        break;
+                }
+            }
+            return zn;
         }
 
 }

@@ -31,12 +31,19 @@ import jmetal.qualityIndicator.QualityIndicator;
 public class RouteOpimization {
   public static Logger      logger_ ;      // Logger object
   public static FileHandler fileHandler_ ; // FileHandler object
-  public static final int population_number = 10;//should be an even number
-  public static final int generation_number = 14;
-  public static final int running_number = 10;
+  public static final int population_number = 50;   //should be an even number
+  //public static final int generation_number = 10; //is used for gGA
+  public static final int running_number = 0;
+  
+  //evaluation number for sGA
+  public static final int evaluation_number = 1000;
 
   //evaluation number for gGA
-  public static final int evaluation_number = population_number + generation_number*(population_number - 2);
+  //public static final int evaluation_number = population_number + generation_number*(population_number - 2);
+
+
+  //evaluation number for sGA
+
 
   public static void main(String [] args) throws
                                   JMException,
@@ -59,14 +66,20 @@ public class RouteOpimization {
     ArrayList<double[]> fitnessSets = new ArrayList<double[]>();
 
     problem = new RouteGeneration();
-    //algorithm = new ssGA(problem);
-    algorithm = new gGA(problem);
-    ((gGA)algorithm).generationNumber = generation_number;
+    algorithm = new ssGA(problem);
+    //algorithm = new gGA(problem);
+    //((gGA)algorithm).generationNumber = generation_number;
+
+    //int history_size=generation_number;   //for gGA
+    int history_size=evaluation_number-population_number;  //for sGA
+
+
 
     algorithm.setInputParameter("populationSize",population_number);
     algorithm.setInputParameter("maxEvaluations",evaluation_number);
 
-    crossover = new routeGenCrossoverV2();
+    crossover = new routeGenCrossoverV2();  // single-point crossover
+    //crossover = new routeGenCrossover();  // some other crossover
     mutation = new routeGenMutation();
 //    selection = new RandomSelection() ;
     selection = new BinaryTournament();
@@ -88,12 +101,13 @@ public class RouteOpimization {
             bestSolution = new Solution(population.get(0));
             bestfitness = bestSolution.getObjective(0); 
         }
-        double[] newfitnessHistory = ((gGA)algorithm).get_fitness_history();
+        double[] newfitnessHistory = ((ssGA)algorithm).get_fitness_history();
+//        double[] newfitnessHistory = ((gGA)algorithm).get_fitness_history();
         fitnessSets.add(newfitnessHistory);
     }
 
-    double[] FitnessProgress = new double[generation_number];
-    for(int i = 0;i< (generation_number);i++){
+    double[] FitnessProgress = new double[history_size];
+    for(int i = 0;i< (history_size);i++){
         double sum = 0;
         for(int j=0;j<running_number; j++){
             sum+=(fitnessSets.get(j))[i];
@@ -106,7 +120,7 @@ public class RouteOpimization {
     ((RouteGeneration)problem).evalData.writeResultsToFile();
 
     System.out.println("FitnessProgress");
-    for(int i = 0;i< (generation_number);i++){
+    for(int i = 0;i< (history_size);i++){
         System.out.println( i + " \t "+ FitnessProgress[i]);
     }
 

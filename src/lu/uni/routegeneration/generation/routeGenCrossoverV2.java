@@ -23,66 +23,46 @@ public class routeGenCrossoverV2 extends Crossover {
         offSpring[1] = new Solution(parents[1]);
         Variable[] var0 = offSpring[0].getDecisionVariables();
         Variable[] var1 = offSpring[1].getDecisionVariables();
+        ArrayInt array_type_probs0 = (ArrayInt)var0[1];
+        ArrayInt array_type_probs1 = (ArrayInt)var1[1];
+        ArrayInt area_probs0 = (ArrayInt)var0[0];
+        ArrayInt area_probs1 = (ArrayInt)var1[0];
+        ArrayInt area_nums = (ArrayInt)var0[2];
         int typeNum = ((ArrayInt)var0[1]).getLength();
 
-/*        int chrom_length = 1 + 1 + typeNum; //  area type probs, plus shifting ratio, plus area probs
-        int place = (int)(Math.random()*chrom_length)+1;
-        if (place>chrom_length) place = chrom_length;
+        int chrom_length = 1 + 1 + typeNum; //  number of genes: area type probs, plus shifting ratio, plus area probs
+        int place = (int)(Math.random()*(chrom_length-1))+1; // random place is >=1 and <chrom_length
+        //if (place>chrom_length) place = chrom_length;
 
-//        if (place>=1){ //exchanging area type probs
-        if (Math.random()>0.5){ //exchanging area type probs
+        //System.out.println("crossover point:"+place);
+
+        if (place>=1){ //exchanging area type probs
+//      if (Math.random()>0.5){ //exchanging area type probs
             for(int i=0;i<typeNum;i++){
-                int tmp = ((ArrayInt)var0[1]).getValue(i);
-                ((ArrayInt)var0[1]).setValue(i, ((ArrayInt)var1[1]).getValue(i));
-                ((ArrayInt)var1[1]).setValue(i, tmp);
+                int tmp = array_type_probs0.getValue(i);
+                array_type_probs0.setValue(i, array_type_probs1.getValue(i));
+                array_type_probs1.setValue(i, tmp);
             }
         }
 
-//        if (place>=2){ //exchanging shifting ratio
-        if (Math.random()>0.5){ //exchanging shifting ratio
+        if (place>=2){ //exchanging shifting ratio
+//        if (Math.random()>0.5){ //exchanging shifting ratio
             int tmp = (int)((Int)var0[3]).getValue();
             ((Int)var0[3]).setValue(((Int)var1[3]).getValue());
             ((Int)var1[3]).setValue(tmp);
         }
 
-        int count = 0;
-        for(int j=0; j<(place-2); j++){
-            count+=(int)((ArrayInt)var0[2]).getValue(j);
-        }
-        for(int j=0;j<count;j++){
-            int tmp = ((ArrayInt)var0[0]).getValue(j);
-            ((ArrayInt)var0[0]).setValue(j, ((ArrayInt)var1[0]).getValue(j));
-            ((ArrayInt)var1[0]).setValue(j, tmp);
-        }
-*/
-
-        if (Math.random()>0.5){ //exchanging area type probs
-            for(int i=0;i<typeNum;i++){
-                int tmp = ((ArrayInt)var0[1]).getValue(i);
-                ((ArrayInt)var0[1]).setValue(i, ((ArrayInt)var1[1]).getValue(i));
-                ((ArrayInt)var1[1]).setValue(i, tmp);
+        int area_count = place - 2; //number of area types whose area probibilities are to be exchanged
+        int index=0;
+        for(int i=0;i<area_count;i++){
+            int n = (int)(area_nums.getValue(i)); //number of areas in this area type
+            for(int j=0;j<n;j++){
+                int tmp = area_probs0.getValue(index+j);
+                area_probs0.setValue(index+j, area_probs1.getValue(index+j));
+                area_probs1.setValue(index+j, tmp);
             }
+            index +=n;
         }
-
-        if (Math.random()>0.5){ //exchanging shifting ratio
-            int tmp = (int)((Int)var0[3]).getValue();
-            ((Int)var0[3]).setValue(((Int)var1[3]).getValue());
-            ((Int)var1[3]).setValue(tmp);
-        }
-
-        int startIndex = 0;
-        for(int i=0; i<typeNum; i++){
-            int size = (int)((ArrayInt)var0[2]).getValue(i);
-            if (Math.random()>0.5){ //exchanging shifting ratio
-                for(int j=0;j<size;j++){
-                    int tmp = ((ArrayInt)var0[0]).getValue(startIndex+j);
-                    ((ArrayInt)var0[0]).setValue(startIndex+j, ((ArrayInt)var1[0]).getValue(startIndex+j));
-                    ((ArrayInt)var1[0]).setValue(startIndex+j, tmp);
-                }
-            }
-            startIndex+=size;
-        }
-
         offSpring[0].setDecisionVariables(var0);
         offSpring[1].setDecisionVariables(var1);
         return offSpring;//*/

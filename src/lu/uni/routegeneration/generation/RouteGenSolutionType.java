@@ -37,7 +37,7 @@ public class RouteGenSolutionType extends SolutionType {
                 RouteGeneration pr = (RouteGeneration)problem_;
                 variables[1] = new ArrayInt(pr.getAreaTypeNum());
                 variables[2] = new ArrayInt(pr.getAreaTypeNum());
-                variables[3] = new Int(0,100);
+                variables[3] = new Int(30,70);
 
                 int sumnum = 0;
                 for(int i=0;i<pr.getAreaTypeNum();i++){

@@ -91,15 +91,15 @@ public class ssGA extends Algorithm {
       population.add(newIndividual);
       if (newIndividual.getObjective(0)<bestFitness){
           bestFitness = newIndividual.getObjective(0);
-          RouteOpimization.logger_.info("evaluation:"+evaluations+"  best fitness:" + bestFitness);
+          //RouteOpimization.logger_.info("evaluation:"+evaluations+"  best fitness:" + bestFitness);
       }
     } //for       
 
-    FitnessHistory[evaluations - populationSize] = bestFitness;
 
     // main loop
     while (evaluations < maxEvaluations) {
 
+      FitnessHistory[evaluations - populationSize] = bestFitness;
       Solution [] parents = new Solution[2];
 
         // Selection
@@ -107,7 +107,9 @@ public class ssGA extends Algorithm {
       parents[1] = (Solution)selectionOperator.execute(population);
  
       // Crossover
-      Solution [] offspring = (Solution []) crossoverOperator.execute(parents);  
+      Solution [] offspring = (Solution []) crossoverOperator.execute(parents);
+      //Solution [] offspring = new Solution[2];
+      //offspring[0] = new Solution(problem_);
 
       // Mutation
       mutationOperator.execute(offspring[0]);
@@ -120,7 +122,7 @@ public class ssGA extends Algorithm {
       
       if (offspring[0].getObjective(0)<bestFitness){
           bestFitness = offspring[0].getObjective(0);
-          RouteOpimization.logger_.info("evaluation:"+evaluations+"  best fitness:" + bestFitness);
+      //    RouteOpimization.logger_.info("evaluation:"+evaluations+"  best fitness:" + bestFitness);
       }
 
 

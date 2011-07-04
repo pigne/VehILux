@@ -22,11 +22,13 @@ public class EvaluationPoint {
     int meanOfDifferencePercent = 0;
 
     public String toString(){
+        updateFitness(1, 11);
         String str = new String();
         str = id + " : ";
         for(int i=1;i<=11;i++){
             str=str + estimatedFlows[i] +" ";
         }
+        str = str + " f:" + sumOfDifference;
         return(str);
     }
 

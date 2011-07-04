@@ -107,14 +107,18 @@ public class gGA extends Algorithm {
         // Selection
         Solution [] parents = new Solution[2];
         parents[0] = (Solution)selectionOperator.execute(population);
-        parents[1] = (Solution)selectionOperator.execute(population);
+        do{
+            parents[1] = (Solution)selectionOperator.execute(population);
+        }while(parents[1].getFitness()==parents[0].getFitness());
         //Solution [] parents = null;
         //parents = (Solution[])selectionOperator.execute(population);
 
-
         // Crossover
-        Solution [] offspring = (Solution []) crossoverOperator.execute(parents);                
-          
+        Solution [] offspring = (Solution []) crossoverOperator.execute(parents);
+        //Solution [] offspring = new Solution[2];
+        //offspring[0] = new Solution(problem_);
+        //offspring[1] = new Solution(problem_);
+
         // Mutation
         mutationOperator.execute(offspring[0]);
         mutationOperator.execute(offspring[1]);

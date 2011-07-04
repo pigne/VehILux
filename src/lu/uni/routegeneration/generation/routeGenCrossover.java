@@ -16,6 +16,9 @@ import jmetal.base.variable.*;
  */
 public class routeGenCrossover extends Crossover {
 
+      public double alpha = 0.9;
+      public double beta =  0.2;
+
       public Object execute(Object object) throws JMException {
         Solution [] parents = (Solution [])object;
         Solution [] offSpring = new Solution[2];
@@ -25,7 +28,7 @@ public class routeGenCrossover extends Crossover {
         Variable[] var1 = offSpring[1].getDecisionVariables();
         int typeNum = ((ArrayInt)var0[1]).getLength();
 
-//        if(Math.random()>0.5){
+        if(Math.random()>beta){
             System.out.println("here");
             int[] t0 = new int[typeNum];
             int[] t1 = new int[typeNum];
@@ -38,21 +41,12 @@ public class routeGenCrossover extends Crossover {
                 ((ArrayInt)var0[1]).setValue(j, t0[j]);
                 ((ArrayInt)var1[1]).setValue(j, t1[j]);
             }
+          }
 
-  /*          if(Math.random()>0.5){
-                int s1 = ((ArrayInt)var0[0]).getLength();
-                for(int j=0;j<s1;j++){
-                    int tmp = ((ArrayInt)var0[0]).getValue(j);
-                    ((ArrayInt)var0[0]).setValue(j,((ArrayInt)var1[0]).getValue(j) );
-                    ((ArrayInt)var0[0]).setValue(j,tmp);
-                }
-            }*/
-
-//        }else{
-
-            int c = 0;
-            for(int i=0;i<typeNum;i++){
-                int size = ((ArrayInt)var0[2]).getValue(i);
+        int c = 0;
+        for(int i=0;i<typeNum;i++){
+            int size = ((ArrayInt)var0[2]).getValue(i);
+            if(Math.random()>beta){
                 int[] tmp0 = new int[size];
                 int[] tmp1 = new int[size];
                 int tc = c;
@@ -67,23 +61,23 @@ public class routeGenCrossover extends Crossover {
                     ((ArrayInt)var1[0]).setValue(tc, tmp1[j]);
                     tc++;
                 }
+            }else{
+                c+=size;
             }
+        }
 
-    /*        if(Math.random()>0.5){
-                int s1 = ((ArrayInt)var0[1]).getLength();
-                for(int j=0;j<s1;j++){
-                    int tmp = ((ArrayInt)var0[1]).getValue(j);
-                    ((ArrayInt)var0[1]).setValue(j,((ArrayInt)var1[1]).getValue(j) );
-                    ((ArrayInt)var0[1]).setValue(j,tmp);
-                }
-            }*/
+        if(Math.random()>beta){
+            double v1 = (double)var0[3].getValue();
+            double v2 = (double)var1[3].getValue();
+            var0[3].setValue(v1*(1-alpha)+v2*alpha);
+            var1[3].setValue(v2*(1-alpha)+v1*alpha);
+        }
 
-  //      }
+//        double r0 = (double)var0[3].getValue();
+//        double r1 = (double)var1[3].getValue();
+//        var0[3].setValue((r0+r1)/2);
+//        var1[3].setValue((r0+r1)/2);
 
-        double r0 = (double)var0[3].getValue();
-        double r1 = (double)var1[3].getValue();
-        var0[3].setValue((r0+r1)/2);
-        var1[3].setValue((r0+r1)/2);
 
         offSpring[0].setDecisionVariables(var0);
         offSpring[1].setDecisionVariables(var1);
@@ -93,6 +87,7 @@ public class routeGenCrossover extends Crossover {
       public void crossProbs(int[] p1, int[] p2, int size){
           int i1 = (int)(Math.random() * size);
           int i2 = (int)(Math.random() * size);
+          //int i2=i1;
           int tmp;
           tmp = p2[i2];
           p2[i2] = p1[i1];
@@ -107,8 +102,14 @@ public class routeGenCrossover extends Crossover {
           int s = 0;
           for(int i=0;i<size;i++){
 //              System.out.println(i+"-"+i1+"-"+p1[i]+"-"+sum+"-"+s);
-              if(i!=i1)
-                p1[i] = (int)(double)p1[i]*(100-p1[i1])/sum;
+              if(i!=i1){
+                if(sum!=0){
+                  p1[i] = (int)(double)p1[i]*(100-p1[i1])/sum;
+                } else {
+                  p1[i] = (100 - p1[i1])/(size-1);
+                }
+
+              }
               s+=p1[i];
           }
           if(s<100) p1[size-1]+=(100-s);
@@ -120,8 +121,14 @@ public class routeGenCrossover extends Crossover {
           sum-=p2[i2];
           s = 0;
           for(int i=0;i<size;i++){
-              if(i!=i2)
-                p2[i] = (int)(double)p2[i]*(100-p2[i2])/sum;
+              if(i!=i2){
+                if(sum!=0){
+                  p2[i] = (int)(double)p2[i]*(100-p2[i2])/sum;
+                } else {
+                  p2[i] = (100 - p2[i2])/(size-1);   
+                }
+
+              }
               s+=p2[i];
           }
           if(s<100) p2[size-1]+=(100-s);

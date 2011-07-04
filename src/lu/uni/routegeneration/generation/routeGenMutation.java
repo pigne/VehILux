@@ -18,75 +18,83 @@ public class routeGenMutation extends Mutation{
 
       public Object execute(Object object) throws JMException {
 
+        double mutation_prob = 0.9;
+        int rnd,place;
+        int sum,postSum,remaining;
+
         Solution solution = (Solution )object;
-        if(Math.random()<0.9) return(solution);
+        //if(Math.random()<0.9) return(solution);
         Variable[] var = solution.getDecisionVariables();
         int typeNum = ((ArrayInt)var[1]).getLength();
-        int rnd = (int)(Math.random()*100);
-        int place = (int)(Math.random()*typeNum);
-        ((ArrayInt)var[1]).setValue(place, rnd);
-        int sum=0;
-        for(int i=0;i<typeNum;i++){
-            if(i!=place)
-                sum+=((ArrayInt)var[1]).getValue(i);
+        if(Math.random()<mutation_prob){
+            rnd = (int)(Math.random()*100);
+            place = (int)(Math.random()*typeNum);
+            ((ArrayInt)var[1]).setValue(place, rnd);
+            sum=0;
+            for(int i=0;i<typeNum;i++){
+                if(i!=place)
+                    sum+=((ArrayInt)var[1]).getValue(i);
+            }
+            postSum = 0;
+            remaining = 100 - rnd;
+            for(int i=0;i<typeNum;i++){
+                double tmp1 = (double)((ArrayInt)var[1]).getValue(i)*remaining/sum;
+                if(i!=place)
+                    ((ArrayInt)var[1]).setValue(i, (int)tmp1);
+                postSum+=((ArrayInt)var[1]).getValue(i);
+            }
+            while (postSum<100){
+                ((ArrayInt)var[1]).setValue(place,((ArrayInt)var[1]).getValue(place)+1);
+                postSum++;
+            }
         }
-        int postSum = 0;
-        int remaining = 100 - rnd;
-        for(int i=0;i<typeNum;i++){
-            double tmp1 = (double)((ArrayInt)var[1]).getValue(i)*remaining/sum;
-            if(i!=place)
-                ((ArrayInt)var[1]).setValue(i, (int)tmp1);
-            postSum+=((ArrayInt)var[1]).getValue(i);
-        }
-        while (postSum<100){
-            ((ArrayInt)var[1]).setValue(place,((ArrayInt)var[1]).getValue(place)+1);
-            postSum++;
-        }
-
         int startIndex=0;
         for(int i=0;i<typeNum;i++){
 
             int size = ((ArrayInt)var[2]).getValue(i);
-            int[] tmp = new int[size];
-            for(int j=0;j<size;j++){
-                tmp[j]=((ArrayInt)var[0]).getValue(startIndex+j);
-            }
-            rnd = (int)(Math.random()*100);
-            if (rnd==0) rnd=1;
-            place = (int)(Math.random()*size);
-            ((ArrayInt)var[0]).setValue(startIndex+place, rnd);
-            
-            if(size>2){
-                sum=0;
-                for(int m=0;m<size;m++){
-                    if(m!=place)
-                        sum+=((ArrayInt)var[0]).getValue(startIndex+m);
+            if(Math.random()<mutation_prob){
+                int[] tmp = new int[size];
+                for(int j=0;j<size;j++){
+                    tmp[j]=((ArrayInt)var[0]).getValue(startIndex+j);
                 }
-                postSum = 0;
-                remaining = 100 - rnd;
-                for(int m=0;m<size;m++){
-                    if(m!=place)
-                        ((ArrayInt)var[0]).setValue(startIndex+m, ((ArrayInt)var[0]).getValue(startIndex+m)*remaining/sum);
-                    postSum+=((ArrayInt)var[0]).getValue(startIndex+m);
-                }
-                while(postSum<100){
-                    ((ArrayInt)var[0]).setValue(startIndex+place,((ArrayInt)var[0]).getValue(startIndex+place)+1);
-                    postSum++;
-                }
-            }else{
-                for(int m=0;m<size;m++){
-                    if(m!=place)
-                        ((ArrayInt)var[0]).setValue(startIndex+m,100-rnd);
-                    else
-                        ((ArrayInt)var[0]).setValue(startIndex+m,rnd);
-                }
-            }
+                rnd = (int)(Math.random()*100);
+                if (rnd==0) rnd=1;
+                place = (int)(Math.random()*size);
+                ((ArrayInt)var[0]).setValue(startIndex+place, rnd);
 
+                if(size>2){
+                    sum=0;
+                    for(int m=0;m<size;m++){
+                        if(m!=place)
+                            sum+=((ArrayInt)var[0]).getValue(startIndex+m);
+                    }
+                    postSum = 0;
+                    remaining = 100 - rnd;
+                    for(int m=0;m<size;m++){
+                        if(m!=place)
+                            ((ArrayInt)var[0]).setValue(startIndex+m, ((ArrayInt)var[0]).getValue(startIndex+m)*remaining/sum);
+                        postSum+=((ArrayInt)var[0]).getValue(startIndex+m);
+                    }
+                    while(postSum<100){
+                        ((ArrayInt)var[0]).setValue(startIndex+place,((ArrayInt)var[0]).getValue(startIndex+place)+1);
+                        postSum++;
+                    }
+                }else{
+                    for(int m=0;m<size;m++){
+                        if(m!=place)
+                            ((ArrayInt)var[0]).setValue(startIndex+m,100-rnd);
+                        else
+                            ((ArrayInt)var[0]).setValue(startIndex+m,rnd);
+                    }
+                }
+            }
             startIndex+=size;
         }
 
-        int r= (int)(Math.random()*100);
-        var[3].setValue((double)r);
+        if(Math.random()<mutation_prob){
+            int r= (int)(Math.random()*(70-30))+30;
+            var[3].setValue((double)r);
+        }
 
         solution.setDecisionVariables(var);
         return solution;
