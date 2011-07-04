@@ -85,18 +85,9 @@ public class RealEvaluation {
 	Detector currentDetector = null;
 	File currentFile = null;
 	String currentDetectorName;
-	HashMap<String, Detector> detectors;
-	HashMap<String, Detector> controls;
+	public HashMap<String, Detector> controls;
 
-	class Detector {
-		String id;
-		int[] vehicles;
-
-		Detector() {
-			vehicles = new int[stopHour];
-		}
-
-	}
+	
 
 	class CLoopHandler extends DefaultHandler {
 
@@ -107,8 +98,9 @@ public class RealEvaluation {
 
 			if (qName.equals("loop")) {
 				currentDetectorName = attributes.getValue("id");
-				currentDetector = new Detector();
+				currentDetector = new Detector(stopHour);
 				currentDetector.id = currentDetectorName;
+				currentDetector.edge = attributes.getValue("edge");
 				controls.put(currentDetectorName, currentDetector);
 			} else if (qName.equals("flow")) {
 				int h = (int) (Double.parseDouble(attributes.getValue("hour")));
@@ -125,12 +117,11 @@ public class RealEvaluation {
 
 	};
 
-	public RealEvaluation(String[] args) {
-		org.util.Environment.getGlobalEnvironment().readCommandLine(args);
-		org.util.Environment.getGlobalEnvironment().initializeFieldsOf(this);
+	public RealEvaluation() {
+		//org.util.Environment.getGlobalEnvironment().readCommandLine(args);
+		//org.util.Environment.getGlobalEnvironment().initializeFieldsOf(this);
 		DefaultHandler h;
 
-		detectors = new HashMap<String, Detector>();
 		controls = new HashMap<String, Detector>();
 
 		PrintStream out = null;
@@ -169,12 +160,37 @@ public class RealEvaluation {
 		out.close();
 
 	}
+	
+	
+	public double compareTo(HashMap<String, Detector> solution){
+		
+		double[] sum =new double[stopHour];
+		
+		for(String id : solution.keySet()){
+			Detector sd = solution.get(id);
+ 			Detector cd = controls.get(id);
+ 			if(cd == null){
+ 				System.err.println("Detector Error. Does not exist.");
+ 			}
+ 			if(sd.vehicles.length != cd.vehicles.length){
+ 				System.err.println("Detector Error. Solution and control length differ");
+ 			}
+ 			for(int i = 0 ; i<sd.vehicles.length; i++){
+ 				sum[i]+=Math.abs((sd.vehicles[i]-cd.vehicles[i]));
+ 			}
+		}
+		double ssum=0.0;
+		for(double v : sum){
+	 		ssum+=v;
+		}
+	 	return ssum;
+	}
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		new RealEvaluation(args);
+		new RealEvaluation();
 		System.out.println("Done.");
 
 	}

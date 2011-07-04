@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <loops>
-  <loop direction="Lorentzweiler - Walferdange" id="401">
+  <loop direction="Lorentzweiler - Walferdange" id="401" edge="-22964079#7">
     <flow cars="49" hour="1" trucks="4"/>
     <flow cars="26" hour="2" trucks="2"/>
     <flow cars="18" hour="3" trucks="3"/>
@@ -26,7 +26,7 @@
     <flow cars="200" hour="23" trucks="6"/>
     <flow cars="123" hour="24" trucks="3"/>
   </loop>
-  <loop direction="Bereldange - Biergerkraiz" id="415">
+  <loop direction="Bereldange - Biergerkraiz" id="415" edge="-75627896#1">
     <flow cars="22" hour="1" trucks="0"/>
     <flow cars="11" hour="2" trucks="0"/>
     <flow cars="7" hour="3" trucks="1"/>
@@ -52,7 +52,7 @@
     <flow cars="102" hour="23" trucks="1"/>
     <flow cars="63" hour="24" trucks="1"/>
   </loop>
-  <loop direction="Waldhof - Dommeldange" id="403">
+  <loop direction="Waldhof - Dommeldange" id="403" edge="-80015627#0">
     <flow cars="27" hour="1" trucks="5"/>
     <flow cars="13" hour="2" trucks="1"/>
     <flow cars="7" hour="3" trucks="1"/>
@@ -78,7 +78,7 @@
     <flow cars="94" hour="23" trucks="12"/>
     <flow cars="57" hour="24" trucks="6"/>
   </loop>
-  <loop direction="Echangeur Potaschbierg - Luxembourg" id="1431">
+  <loop direction="Echangeur Potaschbierg - Luxembourg" id="1431" edge="30143811#2">
     <flow cars="62" hour="1" trucks="21"/>
     <flow cars="52" hour="2" trucks="18"/>
     <flow cars="36" hour="3" trucks="17"/>
@@ -104,7 +104,7 @@
     <flow cars="212" hour="23" trucks="27"/>
     <flow cars="116" hour="24" trucks="25"/>
   </loop>
-  <loop direction="Echangeur Kirchberg - Echangeur Irrgarten" id="1429">
+  <loop direction="Echangeur Kirchberg - Echangeur Irrgarten" id="1429" edge="71121158">
     <flow cars="148" hour="1" trucks="11"/>
     <flow cars="96" hour="2" trucks="10"/>
     <flow cars="48" hour="3" trucks="16"/>
@@ -130,7 +130,7 @@
     <flow cars="355" hour="23" trucks="25"/>
     <flow cars="250" hour="24" trucks="19"/>
   </loop>
-  <loop direction="Irrgarten - Luxembourg" id="400">
+  <loop direction="Irrgarten - Luxembourg" id="400" edge="83063543#3">
     <flow cars="51" hour="1" trucks="4"/>
     <flow cars="35" hour="2" trucks="3"/>
     <flow cars="19" hour="3" trucks="1"/>
@@ -156,7 +156,7 @@
     <flow cars="317" hour="23" trucks="21"/>
     <flow cars="221" hour="24" trucks="19"/>
   </loop>
-  <loop direction="Kalchesbreck - Irrgarten" id="404">
+  <loop direction="Kalchesbreck - Irrgarten" id="404" edge="-26585595#0">
     <flow cars="66" hour="1" trucks="1"/>
     <flow cars="41" hour="2" trucks="0"/>
     <flow cars="16" hour="3" trucks="1"/>
@@ -182,7 +182,7 @@
     <flow cars="237" hour="23" trucks="3"/>
     <flow cars="151" hour="24" trucks="2"/>
   </loop>
-  <loop direction="Remich - Luxembourg" id="432">
+  <loop direction="Remich - Luxembourg" id="432" edge="-8138897#3">
     <flow cars="9" hour="1" trucks="0"/>
     <flow cars="7" hour="2" trucks="1"/>
     <flow cars="6" hour="3" trucks="0"/>
@@ -208,7 +208,7 @@
     <flow cars="41" hour="23" trucks="2"/>
     <flow cars="21" hour="24" trucks="2"/>
   </loop>
-  <loop direction="Remich - Luxembourg" id="433">
+  <loop direction="Remich - Luxembourg" id="433" edge="-8599689#1">
     <flow cars="26" hour="1" trucks="1"/>
     <flow cars="20" hour="2" trucks="1"/>
     <flow cars="13" hour="3" trucks="1"/>
@@ -234,7 +234,7 @@
     <flow cars="85" hour="23" trucks="1"/>
     <flow cars="58" hour="24" trucks="2"/>
   </loop>
-  <loop direction="Hesperange - Luxembourg" id="445">
+  <loop direction="Hesperange - Luxembourg" id="445" edge ="-56760938#1">
     <flow cars="26" hour="1" trucks="3"/>
     <flow cars="18" hour="2" trucks="1"/>
     <flow cars="13" hour="3" trucks="0"/>
@@ -260,7 +260,7 @@
     <flow cars="93" hour="23" trucks="7"/>
     <flow cars="72" hour="24" trucks="5"/>
   </loop>
-  <loop direction="Bertrange - Helfent" id="412">
+  <loop direction="Bertrange - Helfent" id="412" edge="-28961985">
     <flow cars="26" hour="1" trucks="2"/>
     <flow cars="15" hour="2" trucks="2"/>
     <flow cars="8" hour="3" trucks="1"/>
@@ -286,7 +286,7 @@
     <flow cars="93" hour="23" trucks="5"/>
     <flow cars="59" hour="24" trucks="3"/>
   </loop>
-  <loop direction="Bertrange - Z.I. Bourmicht" id="420">
+  <loop direction="Bertrange - Z.I. Bourmicht" id="420" edge="-34425561">
     <flow cars="18" hour="1" trucks="0"/>
     <flow cars="12" hour="2" trucks="1"/>
     <flow cars="5" hour="3" trucks="0"/>
@@ -312,7 +312,7 @@
     <flow cars="59" hour="23" trucks="2"/>
     <flow cars="30" hour="24" trucks="3"/>
   </loop>
-  <loop direction="Dippach - Luxembourg" id="407">
+  <loop direction="Dippach - Luxembourg" id="407" edge="-54436866#12">
     <flow cars="29" hour="1" trucks="4"/>
     <flow cars="18" hour="2" trucks="2"/>
     <flow cars="13" hour="3" trucks="3"/>

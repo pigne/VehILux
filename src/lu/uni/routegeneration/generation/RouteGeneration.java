@@ -18,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -35,6 +36,9 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
 import lu.uni.routegeneration.evaluation.ApproximativeEvaluation;
+import lu.uni.routegeneration.evaluation.Detector;
+import lu.uni.routegeneration.evaluation.RealEvaluation;
+import lu.uni.routegeneration.net.RGServer;
 import lu.uni.routegeneration.ui.AreasEditor;
 
 import org.graphstream.algorithm.ConnectedComponents;
@@ -55,6 +59,8 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;
+import com.sun.xml.internal.xsom.impl.scd.Iterators;
+
 import java.util.GregorianCalendar;
 import jmetal.base.*;
 import jmetal.base.variable.*;
@@ -77,7 +83,7 @@ enum ZoneType {
 /**
  * Main class that handles all the process of creating mobility traces based on
  */
-public class RouteGeneration extends Problem {
+public class RouteGeneration {
 
 	// ----------- PARAMETERS ----------
 	/**
@@ -91,22 +97,14 @@ public class RouteGeneration extends Problem {
 	 */
 	String baseFolder = "./test/";
 
-	/**
-	 * Activate the debuging interface.
-	 */
-	boolean gui = false;
-
+	
 	/**
 	 * 
 	 */
 	int stopHour = 11;
 
-	public static Color colorCOM = new Color(0xCFA9CB); // CFC4CD
-	public static Color colorCOM_light = new Color(255, 0, 225, 20);
-	public static Color colorRES = new Color(0xAACFCB); // C4CFCE
-	public static Color colorRES_light = new Color(0, 255, 255, 20);
-	public static Color colorIND = new Color(0xCFC1A9); // CFCBC4
-	public static Color colorIND_light = new Color(255, 170, 0, 20);
+
+	HashMap<String, Detector> currentSolution;
 
 	int stopTime = stopHour * 3600;
 
@@ -122,10 +120,8 @@ public class RouteGeneration extends Problem {
 
 	int val = 0;
 
-	ArrayList<VType> vtypes;
-	//TreeSet<Loop> loops;
 	ArrayList<Loop> loops;
-        Graph graph;
+	Graph graph;
 
 	// Xml writing
 	BufferedReader br;
@@ -135,10 +131,7 @@ public class RouteGeneration extends Problem {
 	AreasEditor ae;
 	Loop nextLoop;
 	double insideFlowRatio = 0.5;
-        EvaluationData evalData;
-
-     
-
+	
 	/**
 	 * @return the stopHour
 	 */
@@ -199,14 +192,15 @@ public class RouteGeneration extends Problem {
 		this.insideFlowRatio = insideFlowRatio;
 	}
 
-
-
 	double outsideFlow[];
 	int currentHour = 0;
 
 	double sumResidentialSurface = 0.0;
 
 	Flow nextFlow;
+	
+	
+	public int port=0;
 
 	private String styleSheet = "graph { padding: 60px; fill-color:#eeeeee;}"
 			+ "node { z-index:3; size: 1px; fill-color: #777777; }"
@@ -216,24 +210,38 @@ public class RouteGeneration extends Problem {
 			+ "edge.path {fill-color: #ff4040;}";
 	double currentTime = 0;
 
+	private Area defaultAreaIND;
 
-	public String createRandomPath(String djk, Node source) {
+	private Area defaultAreaCOM;
+
+	private Area defaultAreaRES;
+
+	private RealEvaluation evaluator;
+
+	private HashMap<Node, String> realNodes;
+
+	private String referenceNodeId= "9647221";
+	private Dijkstra referenceDjk;
+
+	private ArrayList<Zone> zonesToRemove;
+	
+	public Path createRandomPath(String djk, Node source) {
 
 		Path p = Dijkstra.getShortestPath(djk, source, pickUpOneDestination());
 		if (p.empty()) {
 			return null;
 		} else {
+			return p;
 
-			StringBuilder sb = new StringBuilder();
-			List<Node> l = p.getNodePath();
-			for (int i = l.size() - 1; i >= 0; i--) {
-				l.get(i).addAttribute("ui.class", "path");
-				sb.append(l.get(i).getId());
-				if (i > 0)
-					sb.append(" ");
-			}
-
-			return sb.toString();
+			/*
+			 * StringBuilder sb = new StringBuilder();
+			 * 
+			 * List<Node> l = p.getNodePath(); for (int i = l.size() - 1; i >=
+			 * 0; i--) { l.get(i).addAttribute("ui.class", "path");
+			 * sb.append(l.get(i).getId()); if (i > 0) sb.append(" "); }
+			 * 
+			 * return sb.toString();
+			 */
 		}
 	}
 
@@ -248,10 +256,7 @@ public class RouteGeneration extends Problem {
 					+ zone.min_y_boundary;
 		} while (!isIn(point, zone));
 
-		if (gui) {
-			destinations.add(point);
-			ae.mbox.post("Segregation", point);
-		}
+		
 		return point;
 	}
 
@@ -261,21 +266,20 @@ public class RouteGeneration extends Problem {
 	private Node pickUpOneDestination() {
 		// select a zone based on its proba
 		Zone zone = null;
-		while(zone==null){
-                    double draw = Math.random();
-                    double sum = 0.0;
-                    for (Zone z : zones.values()) {
-                            sum += z.probability;
-                            if (sum > draw) {
-                                    zone = z;
-                                    break;
-                            }
-                    }
-                }
+		while (zone == null) {
+			double draw = Math.random();
+			double sum = 0.0;
+			for (Zone z : zones.values()) {
+				sum += z.probability;
+				if (sum > draw) {
+					zone = z;
+					break;
+				}
+			}
+		}
 
-                int randNode = (int)(Math.random()*5);
-                if (zone==null) System.out.println("null zone!");
-                return zone.near_nodes.get(randNode);
+		int randNode = (int) (Math.random() * zone.near_nodes.size());
+		return zone.near_nodes.get(randNode);
 
 	}
 
@@ -314,8 +318,8 @@ public class RouteGeneration extends Problem {
 		Point2D.Double other = new Point2D.Double(zone.max_x_boundary, point.y);
 		int n = 0;
 		for (int i = 0; i < zone.points.size() - 1; i++) {
-			if (intersect(point, other, zone.points.get(i), zone.points
-					.get(i + 1)))
+			if (intersect(point, other, zone.points.get(i),
+					zone.points.get(i + 1)))
 				n++;
 		}
 		return n % 2 == 1;
@@ -331,15 +335,27 @@ public class RouteGeneration extends Problem {
 	}
 
 	public RouteGeneration() {
+		
+		/*
+		Thread t = new Thread(){
+			public void run() {org.util.ui.MemoryMonitor.show();};
+		};
+		t.start();
+		*/
 
-                
+		//org.util.Environment.getGlobalEnvironment().readCommandLine(args);
+		//org.util.Environment.getGlobalEnvironment().initializeFieldsOf(this);
 
-        File folder = new File(baseFolder);
+		evaluator = new RealEvaluation();
+		currentSolution = new HashMap<String, Detector>();
+		for(String id : evaluator.controls.keySet()){
+			currentSolution.put(id, new Detector(stopHour));
+		}
+		File folder = new File(baseFolder);
 
 		zones = new HashMap<String, Zone>();
 		areas = new ArrayList<Area>();
 		edges = new ArrayList<Lane>();
-                evalData = new EvaluationData();
 		destinations = new Vector<Point2D.Double>();
 		DefaultHandler h;
 		ArrayList<Lane> Edges = new ArrayList<Lane>();
@@ -348,6 +364,7 @@ public class RouteGeneration extends Problem {
 
 		// -------------------------------------------------------------------
 		// -------------------------- NET FILE -------------------------------
+		System.out.println("__Netfile");
 
 		String netFile = baseName + ".net.xml";
 		h = new DefaultHandler() {
@@ -401,6 +418,7 @@ public class RouteGeneration extends Problem {
 		// residential zone?
 		// - pros: speed up computation
 		// - cons: larger files stored, strengthen dependency to DGS file
+		System.out.println("__Zones");
 
 		String OSMFile = baseName + ".osm.xml";
 
@@ -437,19 +455,16 @@ public class RouteGeneration extends Problem {
 						String landuse = attributes.getValue("v");
 						if (landuse.equals("residential")) {
 							zone.type = ZoneType.RESIDENTIAL;
-							zone.color = colorRES;
 						} else if (landuse.equals("industrial")) {
 							zone.type = ZoneType.INDUSTRIAL;
-							zone.color = colorIND;
 						} else if (landuse.equals("commercial")
 								|| landuse.equals("retail")) {
 							zone.type = ZoneType.COMMERCIAL;
-							zone.color = colorCOM;
 						}
 					} else if (attributes.getValue("k").equals("shop")
 							|| attributes.getValue("k").equals("amenity")) {
 						zone.type = ZoneType.COMMERCIAL;
-						zone.color = colorCOM;
+						
 					}
 				}
 			}
@@ -511,7 +526,6 @@ public class RouteGeneration extends Problem {
 			}
 		}
 
-
 		// -------------------------------------------------------------------
 		// ---------------- Read Areas from .areas.xml file -------------------
 		//
@@ -529,20 +543,21 @@ public class RouteGeneration extends Problem {
 		 * type="COMMERCIAL" x="22400" y="16700" radius="1500"
 		 * probability="15"/> </areas>
 		 */
+		System.out.println("__Areas");
 
 		String areasFile = baseFolder + baseName + ".areas.xml";
-		Area defaultAreaRES = new Area();
+		defaultAreaRES = new Area();
 		defaultAreaRES.probability = 1;
 		defaultAreaRES.type = ZoneType.RESIDENTIAL;
-		Area defaultAreaCOM = new Area();
+		defaultAreaCOM = new Area();
 		defaultAreaCOM.probability = 1;
 		defaultAreaCOM.type = ZoneType.COMMERCIAL;
-		Area defaultAreaIND = new Area();
+		defaultAreaIND = new Area();
 		defaultAreaIND.probability = 1;
 		defaultAreaIND.type = ZoneType.INDUSTRIAL;
-		areas.add(defaultAreaCOM);
-		areas.add(defaultAreaIND);
-		areas.add(defaultAreaRES);
+		// areas.add(defaultAreaCOM);
+		// areas.add(defaultAreaIND);
+		// areas.add(defaultAreaRES);
 
 		File file = new File(areasFile);
 		if (file.exists()) {
@@ -592,15 +607,12 @@ public class RouteGeneration extends Problem {
 						String type = attributes.getValue("type");
 						if (type.equals("RESIDENTIAL")) {
 							a.type = ZoneType.RESIDENTIAL;
-							a.color = colorRES_light;
 							sumRES += a.probability;
 						} else if (type.equals("INDUSTRIAL")) {
 							a.type = ZoneType.INDUSTRIAL;
-							a.color = colorIND_light;
 							sumIND += a.probability;
 						} else if (type.equals("COMMERCIAL")) {
 							a.type = ZoneType.COMMERCIAL;
-							a.color = colorCOM_light;
 							sumCOM += a.probability;
 						}
 						areas.add(a);
@@ -637,6 +649,10 @@ public class RouteGeneration extends Problem {
 						System.out.printf("area proba %s: %f%n", a.id,
 								a.probability);
 					}
+					defaultAreaCOM.probability /= sumCOM;
+					defaultAreaIND.probability /= sumIND;
+					defaultAreaRES.probability /= sumRES;
+
 					System.out
 							.printf("sum proba areas: %f %f %f%n", sc, si, sr);
 				}
@@ -651,12 +667,52 @@ public class RouteGeneration extends Problem {
 				ex.printStackTrace(System.err);
 			}
 		}
-		
-		
-		
-		
-		
 
+		// -------------------------------------------------------------------
+		// ------------- compute which areas on which zone -----------------
+
+		System.out.println("__Areas<->Zones");
+
+		for (Zone z : zones.values()) {
+			for (Area a : areas) {
+				if (z.area == null && a.type == z.type) {
+					for (Point2D.Double p : z.points) {
+						if (a.radius > euclideanDistance(a.x, a.y, p.x, p.y)) {
+							//System.out.println(z.id + " in area" + a.id);
+							z.area = a;
+							break;
+						}
+					}
+				}
+
+			}
+		}
+
+		for (Zone z : zones.values()) {
+
+			if (z.area == null) {
+				switch (z.type) {
+				case COMMERCIAL:
+					z.area = defaultAreaCOM;
+					z.area.zones.add(z);
+					z.area.sumSurfaceZones += z.surface;
+					break;
+				case INDUSTRIAL:
+					z.area = defaultAreaIND;
+					z.area.zones.add(z);
+					z.area.sumSurfaceZones += z.surface;
+					break;
+				case RESIDENTIAL:
+					z.area = defaultAreaRES;
+					z.area.zones.add(z);
+					z.area.sumSurfaceZones += z.surface;
+					break;
+				}
+			} else {
+				z.area.zones.add(z);
+				z.area.sumSurfaceZones += z.surface;
+			}
+		}
 
 		// -------------------------------------------------------------------
 		// ------------------------ Read loops and flows ---------------------
@@ -667,6 +723,7 @@ public class RouteGeneration extends Problem {
 		// .net.xml file)
 		// - For each loop a Loop object is created.
 		// - For each loop, flows are created: one per hour.
+		System.out.println("__Flows");
 
 		loops = new ArrayList<Loop>();
 		h = new DefaultHandler() {
@@ -712,7 +769,6 @@ public class RouteGeneration extends Problem {
 				if (qName.equals("loop")) {
 					loops.add(currentLoop);
 				} else if (qName.equals("flow")) {
-					currentFlow.next();
 					currentLoop.flows.add(currentFlow);
 				}
 			}
@@ -729,9 +785,10 @@ public class RouteGeneration extends Problem {
 
 		// -------------------------------------------------------------------
 		// -------- Initialize the Graph for ShortestPath computation---------
+		System.out.println("__Graph");
 
 		graph = new SingleGraph("", false, true);
-                graph.addAttribute("ui.stylesheet", styleSheet);
+		graph.addAttribute("ui.stylesheet", styleSheet);
 
 		// ------ For a graphical output of the graph (very slow...)
 		// graph.addAttribute("ui.antialias");
@@ -745,9 +802,7 @@ public class RouteGeneration extends Problem {
 			try {
 				XMLReader parser = XMLReaderFactory.createXMLReader();
 				parser.setContentHandler(netParser);
-				parser
-						.parse(new InputSource(baseFolder + baseName
-								+ ".net.xml"));
+				parser.parse(new InputSource(baseFolder + baseName + ".net.xml"));
 				System.out.println("OK");
 			} catch (Exception ex) {
 				System.out.println("ERROR");
@@ -768,9 +823,13 @@ public class RouteGeneration extends Problem {
 			e.printStackTrace();
 		}
 
+		realNodes = new HashMap<Node, String>();
+		for (Detector d : evaluator.controls.values()) {
+			realNodes.put(graph.getNode(d.edge), d.id);
+		}
 		// -------------------------------------------------------------------
 		// ------------------------ test sources from loops ------------------
-		// 
+		//
 		// - Loops' base edge have to exist in the graph so that a Dijkstra
 		// shortest path can be computed.
 
@@ -788,10 +847,20 @@ public class RouteGeneration extends Problem {
 		System.out.printf("%d nodes have the \"weight\" attribute over %d%n",
 				hasIt, graph.getNodeCount());
 
-
-	
-
-
+		referenceDjk = new Dijkstra(Dijkstra.Element.node, "weight",
+					referenceNodeId);
+		referenceDjk.init(graph);
+		referenceDjk.compute();
+		// -------------------------------------------------------------------
+		// ---------- generate shortest paths for outer zones ----------
+		System.out.println("__Flows ShortestPaths");
+		for (Loop loop : loops) {
+			Dijkstra djk = new Dijkstra(Dijkstra.Element.node, "weight",
+					loop.edge);
+			djk.init(graph);
+			djk.compute();
+			loop.dijkstra = djk.getParentEdgesString();
+		}
 
 		// -------------------------------------------------------------------
 		// ---------- generate shortest paths for RESIDENTIAL zones ----------
@@ -802,20 +871,17 @@ public class RouteGeneration extends Problem {
 		// This process is VERY slow and should be changed for optimization
 		// purposed. One possibility : store the shortest path in the DGS file.
 		//
-		
-		
-		int zone_count = 0;
-		ArrayList<Zone> toRemove = new ArrayList<Zone>();
+		System.out.println("__Residential Zones ShortestPaths");
 
-		String zone_info_filename = new String();
-		int zcount = 0;
+		int zone_count = 0;
+		zonesToRemove = new ArrayList<Zone>();
+
 		for (Zone z : zones.values()) {
 			zone_count++;
 
 			if (z.type == ZoneType.RESIDENTIAL) {
 				System.out
-						.printf(
-								"Shortest path for INNER TRAFFIC (residential zones) %d over %d  %n",
+						.printf("Shortest path for INNER TRAFFIC (residential zones) %d over %d  %n",
 								zone_count, zones.size());
 				Path path = null;
 				Node n = null;
@@ -824,20 +890,20 @@ public class RouteGeneration extends Problem {
 				int limit = 0;
 				do {
 					if (limit > 5) {
-						toRemove.add(z);
+						zonesToRemove.add(z);
 						System.out.printf("zone %s should be removed.%n", z.id);
 						break;
 
 					}
 					Point2D.Double point = pointInZone(z);
 					n = getClosestNode(point);
-					djk = new Dijkstra(Dijkstra.Element.node, "weight", n
-							.getId());
+					djk = new Dijkstra(Dijkstra.Element.node, "weight",
+							n.getId());
 					djk.init(graph);
 					djk.compute();
 					// a reference node that ensures this zone can reach the
 					// network.
-					path = djk.getShortestPath(graph.getNode("9647221"));
+					path = djk.getShortestPath(graph.getNode(referenceNodeId));
 					limit++;
 				} while (path.empty());
 				z.shortestPath = djk.getParentEdgesString();
@@ -847,58 +913,121 @@ public class RouteGeneration extends Problem {
 			}
 		}
 
-		for (Zone z : toRemove) {
+		for (Zone z : zonesToRemove) {
 			zones.remove(z.id);
 		}
+		if(zonesToRemove.size()>0){
+			System.out.printf("Removing %d zones for having no route to the reste of the map.%n",zonesToRemove.size());
+		}
+		zonesToRemove.clear();
 
-		int count = 0;
 		for (Zone z : zones.values()) {
-			count++;
 			fillZoneNodes(z);
 		}
-		System.out.println("done.");
+		if(zonesToRemove.size()>0){
+			System.out.printf("Removing %d zones for being unreachable from the rest of the map.%n",zonesToRemove.size());
+		}
+		for (Zone z : zonesToRemove) {
+			zones.remove(z.id);
+		}
+		
+		
+		// update probas after the all zone removing stuff
+		for(Area a : areas){
+			a.sumSurfaceZones=0;
+		}
+		defaultAreaCOM.sumSurfaceZones=0;
+		defaultAreaRES.sumSurfaceZones=0;
+		defaultAreaIND.sumSurfaceZones=0;
+		sumResidentialSurface=0;
+		for (Zone z : zones.values()) {
+			z.area.sumSurfaceZones += z.surface;
+			if (z.type == ZoneType.RESIDENTIAL) {
+				sumResidentialSurface += z.surface;
+			}
+		}
+		
+		
+		
+		// recompute probabilities !!
 
+		for (Zone z : zones.values()) {
+
+			z.probability = (z.surface / z.area.sumSurfaceZones)
+					* z.type.probability * z.area.probability;
+		}
+
+		
+		
+		
+		
+		System.out.println("Init Done.");
+		if(port!=0){
+			System.out.println("Starting listenning on port "+port);
+			try {
+				new RGServer(this, port);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
-        //does the flow generation process
-        public void datamain() {
+	// does the flow generation process
+	public void flowGeneration() {
 
-            int[] flowCounter = new int[stopHour+1];
-            for(Loop nextLoop : loops){
-                for (Flow nextFlow: nextLoop.flows) {
-                    if(nextFlow.hour>stopHour) continue;
-                    String path;
-                    int cnt = 0;
-                    nextFlow.reset();
-                    while ((path=nextFlow.goOne())!=null){
-                        cnt++;
-                        for(EvaluationPoint ev: evalData.points){
-                            ev.updateEstimate(path, nextFlow.hour);
-                        }
-                        //inside flow
-                        if (Math.random() < insideFlowRatio) {
-                            path = goInsideFlow();
-                            if (path!=null) {
-                                for(EvaluationPoint ev: evalData.points){
-                                    ev.updateEstimate(path, nextFlow.hour);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+		for (Loop loop : loops) {
 
-            //showing the results of counting flows on control points:
-            for(EvaluationPoint ev: evalData.points){
-                System.out.println(ev);
-            }
+			for (Flow flow : loop.flows) {
+				if (flow.hour > stopHour)
+					continue;
+				Path path;
+				for (int cars = 0; cars < flow.car; cars++) {
+					do{
+						path = createRandomPath(loop.dijkstra,graph.getNode(loop.edge));
+						if(path == null){
+							System.out.println("Outer raffic infinit loop: "+loop.edge+" flow:"+flow.hour );
+						}
+					}while(path==null);
+					flowGenerationUp(flow, path);
 
-        }
+					// inside flow
+					if (Math.random() < insideFlowRatio) {
+						do{
+							//System.out.print(">");
+							path = goInsideFlow();
+							//System.out.println("<");
+						}while(path==null);
+						flowGenerationUp(flow, path);
+					}
+				}
+			}
+		}
+	}
 
+	/**
+	 * @param flow
+	 * @param path
+	 */
+	private void flowGenerationUp(Flow flow, Path path) {
+		for (Node n : path.getNodePath()) {
 
-	private String goInsideFlow() {
-		// at currentTime
+			String cNode = realNodes.get(n);
+			if (cNode != null) {
+				Detector d = currentSolution.get(cNode);
+				if (d == null) {
+					d = currentSolution.put(cNode, new Detector(
+							stopHour));
+				}
+				d.vehicles[flow.hour - 1] += 1;
+				// should break here...
+			}
+		}
+	}
 
+	private Path goInsideFlow() {
+		//System.out.println(">InsideFlow");
 		Zone zone = null;
 		String path = null;
 
@@ -915,24 +1044,22 @@ public class RouteGeneration extends Problem {
 			}
 		}
 		if (zone == null) {
-			//System.out.printf("zone is NULL in goInsideFlow !!! rand=%f sum=%f%n", rand,sum);
-			return(null);
+			System.out.printf("zone is NULL in goInsideFlow !!! rand=%f sum=%f%n",rand,sum);
+			return (null);
 		}
-		String p = null;
+		Path p = null;
 		int count = 0;
 		do {
-			if (count > 10) {
+			if (count > 3) {
 				System.out.println("infinite loop on zone " + zone.id);
-				return(null);
+				return (null);
 			}
 			p = createRandomPath(zone.shortestPath, zone.sourceNode);
 			count++;
 
 		} while (p == null);
-                return(p);
+		return (p);
 	}
-
-
 
 	private double euclideanDistance(double x, double y, double x2, double y2) {
 		return Math.sqrt(Math.pow((x - x2), 2) + Math.pow((y - y2), 2));
@@ -947,238 +1074,180 @@ public class RouteGeneration extends Problem {
 		serTf.setOutputProperty(OutputKeys.ENCODING, "utf-8");
 		serTf.setOutputProperty(OutputKeys.INDENT, "yes");
 		tfh.setResult(sr);
-        	tfh.startDocument();
+		tfh.startDocument();
 		ai = new AttributesImpl();
 	}
 
-        public void fillZoneNodes(Zone z){
-                for (int i=0;i<5;i++){
-                    Point2D.Double point = pointInZone(z);
-                    z.near_nodes.add(getClosestNode(point));
-                }
-        }
+	public void fillZoneNodes(Zone z) {
+		for (int i = 0; i < 5; i++) {
 
+			int times = 0;
+			Node n = null;
+			do {
+				Point2D.Double point = pointInZone(z);
+				n = getClosestNode(point);
 
-        public void evaluate(Solution solution) {
-            
-            System.out.println("evaluation starts...");
-            double fitness = 0;
-           
+				// test this node
+				if (referenceDjk.getShortestPath(n).empty()) {
+					//System.out
+					//		.println("FillZoneNodes: this node can't be reached:"
+					//				+ n);
+					n = null;
+				}
 
-            Variable[] vars = solution.getDecisionVariables();
-            jmetal.base.variable.ArrayInt typeAr = (jmetal.base.variable.ArrayInt)(vars[1]);
-            jmetal.base.variable.ArrayInt areaAr = (jmetal.base.variable.ArrayInt)(vars[0]);
+				times++;
+				if (times > 5) {
+					//System.out
+					//		.println("FillZoneNodes: giving up for node " + i);
 
-            //filling area type probabilites :
-            //
-
-            try{
-                ZoneType.RESIDENTIAL.probability = (double)typeAr.getValue(0)/100;
-                ZoneType.COMMERCIAL.probability  = (double)typeAr.getValue(1)/100;
-                ZoneType.INDUSTRIAL.probability  = (double)typeAr.getValue(2)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-
-
-            
-            
-            for(Area area : areas){
-            	area.probability 
-            }
-            
-            
-            //filling area parameters
-            //
-            Area defaultAreaRES = new Area();
-            try{
-                defaultAreaRES.probability = (double)areaAr.getValue(0)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-            defaultAreaRES.type = ZoneType.RESIDENTIAL;
-            areas.add(defaultAreaRES);
-
-            
-            
-            
-            
-            
-            
-            a = new Area();
-            a.id = "R1";
-            a.x = 19900;
-            a.y = 14500;
-            a.radius = 3400;
-            try{
-                a.probability = (double)areaAr.getValue(1)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-            a.type = ZoneType.RESIDENTIAL;
-            a.color = colorCOM_light;
-            areas.add(a);
-
-
-            Area defaultAreaCOM = new Area();
-            try{
-                defaultAreaCOM.probability = (double)areaAr.getValue(2)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-            defaultAreaCOM.type = ZoneType.COMMERCIAL;
-            areas.add(defaultAreaCOM);
-
-            a = new Area();
-            a.id = "C1";
-            a.x = 20418;
-            a.y = 14500;
-            a.radius = 1500;
-            try{
-                a.probability = (double)areaAr.getValue(3)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-            a.type = ZoneType.COMMERCIAL;
-            a.color = colorCOM_light;
-            areas.add(a);
-
-            a = new Area();
-            a.id = "C2";
-            a.x = 22418;
-            a.y = 16700;
-            a.radius = 1500;
-            try{
-                a.probability = (double)areaAr.getValue(4)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-            a.type = ZoneType.COMMERCIAL;
-            a.color = colorCOM_light;
-            areas.add(a);
-
-            a = new Area();
-            a.id = "C3";
-            a.x = 17000;
-            a.y = 15200;
-            a.radius = 1000;
-            try{
-                a.probability = (double)areaAr.getValue(5)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-            a.type = ZoneType.COMMERCIAL;
-            a.color = colorCOM_light;
-            areas.add(a);
-
-
-
-            Area defaultAreaIND = new Area();
-            try{
-                defaultAreaIND.probability = (double)areaAr.getValue(6)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-            defaultAreaIND.type = ZoneType.INDUSTRIAL;
-            areas.add(defaultAreaIND);
-
-            a = new Area();
-            a.id = "I1";
-            a.x = 20300;
-            a.y = 14000;
-            a.radius = 6000;
-            try{
-                a.probability = (double)areaAr.getValue(7)/100;
-            }catch(JMException e){
-                System.out.println("JME exception");
-            }
-            a.type = ZoneType.INDUSTRIAL;
-            a.color = colorCOM_light;
-            areas.add(a);
-
-
-            insideFlowRatio = (double)((jmetal.base.variable.Int)vars[3]).getValue()/100;
-
-                // -------------------------------------------------------------------
-                // ------------- Compute Probabilities for each zone -----------------
-
-            // compute which areas on which zone.
-            for (Zone z : zones.values()) {
-                for (Area a1 : areas) {
-                   if (z.area == null && a1.type == z.type) {
-                        for (Point2D.Double p : z.points) {
-                            if (a1.radius > euclideanDistance(a1.x, a1.y, p.x, p.y)) {
-                                //System.out.println(z.id + " in area" + a.id);
-                                z.area = a1;
-                                break;
-                            }
-                        }
-                    }
-
-                }
-            }
-
-                // compute proba of zones
-            for (Zone z : zones.values()) {
-
-                    if (z.area == null) {
-                            switch (z.type) {
-                            case COMMERCIAL:
-                                    z.area = defaultAreaCOM;
-                                    z.area.zones.add(z);
-                                    z.area.sumSurfaceZones += z.surface;
-                                    break;
-                            case INDUSTRIAL:
-                                    z.area = defaultAreaIND;
-                                    z.area.zones.add(z);
-                                    z.area.sumSurfaceZones += z.surface;
-                                    break;
-                            case RESIDENTIAL:
-                                    z.area = defaultAreaRES;
-                                    z.area.zones.add(z);
-                                    z.area.sumSurfaceZones += z.surface;
-                                    break;
-                            }
-                    } else {
-                            z.area.zones.add(z);
-                            z.area.sumSurfaceZones += z.surface;
-                    }
-            }
-
-            for (Zone z : zones.values()) {
-                    z.probability = (z.surface / z.area.sumSurfaceZones)
-                                    * z.type.probability * z.area.probability;
-                    //System.out.printf(" surface: %.0f proba: %.8f Zone: %s%n",z.surface, z.probability, z.id);
-            }
-
-            evalData.resetPoints();
-            datamain();
-            evalData.updateFitness();
-            fitness = evalData.sumOfDifference;
-            //fitness = evalData.meanOfDifferencePercent;
-            System.out.println("Sum:"+evalData.sumOfDifference+" F1:"+evalData.sumOfDifferenceF1+" D%:"+evalData.meanOfDifferencePercent);
-            System.out.println("Res:"+ZoneType.RESIDENTIAL.probability+" Com:"+ZoneType.COMMERCIAL.probability+" Ind:"+ZoneType.INDUSTRIAL.probability);
-            try{
-                System.out.println("Res Probs:"+areaAr.getValue(0)+" "+areaAr.getValue(1));
-                System.out.println("Com Probs:"+areaAr.getValue(2)+" "+areaAr.getValue(3)+" "+areaAr.getValue(4)+" "+areaAr.getValue(5));
-                System.out.println("Ind Probs:"+areaAr.getValue(6)+" "+areaAr.getValue(7));
-                System.out.println("Inside flow ratio(percent):"+ ((jmetal.base.variable.Int)vars[3]).getValue());
-            }catch(JMException e){
-
-            }
-            solution.setObjective(0, fitness);
-            solution.setFitness(fitness);
-        }
-
-		/**
-		 * @return
-		 */
-		public int getAreaCount() {
-			
-			return areas.size();
+				}
+			} while (n == null && times <= 5);
+			if (n != null) {
+				z.near_nodes.add(n);
+			}
+		}
+		if(z.near_nodes.size()==0){
+			//System.out
+			//.println("FillZoneNodes: WILL REMOVE zone"+z);
+			zonesToRemove.add(z);
 		}
 
+	}
+
+	public double fitness(double[] individual) {
+
+		System.out.println("evaluation starts with params: "+Arrays.toString(individual));
+		long start = System.currentTimeMillis();
+		double fitness = 0;
+
+		ZoneType.RESIDENTIAL.probability = individual[0];
+		ZoneType.INDUSTRIAL.probability = individual[1];
+		ZoneType.COMMERCIAL.probability = individual[2];
+		insideFlowRatio = individual[3];
+		for (int i = 4; i < individual.length; i++) {
+			areas.get(i - 4).probability = individual[i];
+		}
+
+		double sum = ZoneType.RESIDENTIAL.probability
+				+ ZoneType.INDUSTRIAL.probability
+				+ ZoneType.COMMERCIAL.probability;
+		ZoneType.RESIDENTIAL.probability /= sum;
+		ZoneType.INDUSTRIAL.probability /= sum;
+		ZoneType.COMMERCIAL.probability /= sum;
+
+		double sumRES = 1;
+		double sumCOM = 1;
+		double sumIND = 1;
+		for (Area a : areas) {
+			switch (a.type) {
+			case COMMERCIAL:
+				sumCOM += a.probability;
+				break;
+			case INDUSTRIAL:
+				sumIND += a.probability;
+				break;
+			case RESIDENTIAL:
+				sumRES += a.probability;
+				break;
+			}
+			//System.out.printf("area proba %s: %f%n", a.id, a.probability);
+		}
+		for (Area a : areas) {
+			switch (a.type) {
+			case COMMERCIAL:
+				a.probability /= sumCOM;
+				break;
+			case INDUSTRIAL:
+				a.probability /= sumIND;
+				break;
+			case RESIDENTIAL:
+				a.probability /= sumRES;
+				break;
+			}
+			//System.out.printf("area proba %s: %f%n", a.id, a.probability);
+		}
+
+		defaultAreaCOM.probability = 1/sumCOM;
+		defaultAreaIND.probability = 1/sumIND;
+		defaultAreaRES.probability = 1/sumRES;
+
+		// recompute probabilities !!
+
+		for (Zone z : zones.values()) {
+
+			z.probability = (z.surface / z.area.sumSurfaceZones)
+					* z.type.probability * z.area.probability;
+		}
+
+		for(Detector d : currentSolution.values()){
+			d.reset();
+		}
+		flowGeneration();
+		fitness = evaluator.compareTo(currentSolution);
+
+		
+		System.out.printf("%.1f s%n",(System.currentTimeMillis()-start)/1000.0);
+		return fitness;
+
+	}
+
+	public String[] getParametersNames() {
+
+		ArrayList<String> paramsNames = new ArrayList<String>();
+
+		// Zone types
+		paramsNames.add("Residential Type");
+		paramsNames.add("Industrial Type");
+		paramsNames.add("Commercial Type");
+
+		// inner traffic ratio
+		paramsNames.add("Inner Traffic");
+
+		// loop through areas
+		for (Area a : areas) {
+			switch(a.type){
+			case COMMERCIAL: paramsNames.add("COM(" + a.id + ")");break;
+			case INDUSTRIAL: paramsNames.add("IND(" + a.id + ")");break;
+			case RESIDENTIAL: paramsNames.add("RES(" + a.id + ")");break;
+			}
+		}
+
+		String[] strings = new String[paramsNames.size()];
+		return paramsNames.toArray(strings);
+	}
+
+	public double[][] getParametersBoundaries() {
+
+		double[] min = new double[4 + areas.size()];
+		double[] max = new double[4 + areas.size()];
+
+		min[0] = 1.0;
+		min[1] = 1.0;
+		min[2] = 1.0;
+
+		min[3] = 0.3;
+
+		max[0] = 100.0;
+		max[1] = 100.0;
+		max[2] = 100.0;
+
+		max[3] = 0.7;
+
+		for (int i = 0; i < areas.size(); i++) {
+			min[4 + i] = 1.0;
+			max[4 + i] = 10.0;
+		}
+
+		double bounds[][] = new double[2][min.length];
+		bounds[0] = min;
+		bounds[1] = max;
+
+		return bounds;
+	}
 
 
+	public static void main(String[] args) {
+		new RouteGeneration();
+		//new ApproximativeEvaluation(args);
+	}
 }
-

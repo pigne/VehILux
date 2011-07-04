@@ -1,0 +1,193 @@
+require(rJava)
+library(foreign)
+setwd("./lib")
+a<-list.files()
+setwd("..")
+.jinit(classpath=paste(getwd(),"/bin/",sep=""),parameters="-Xmx2g -Djava.awt.headless=false")
+jars<-grep(".*jar", a, value=TRUE)
+for(jar in jars){
+.jaddClassPath(paste(getwd(),"/lib/",jar,sep=""))
+}
+#rg <- new(J("lu.uni.routegeneration.r.RTest")) 
+rg<-.jnew("lu/uni/routegeneration/generation/RouteGeneration")
+params = rg$getParametersNames()
+params
+boundaries = rg$getParametersBoundaries()
+min = boundaries[1,]
+max = boundaries[2,]
+library("sensitivity")
+sa <- morris (model=NULL, 
+factors=params,
+r=10,
+design=list( type="oat", levels=4, grid.jump=2),
+binf=min,
+bsup=max
+)
+#write.table (sa$X, row.names=FALSE, col.names=FALSE)
+#y= matrix(nrow=length(sa$X[,1]),ncol=1)
+y=c()
+for(i in 1:length(sa$X[,1])){
+  res=rg$fitness(sa$X[i,])
+  res
+  y=c(y,res)
+}
+tell(sa, y)
+plot(sa, xlim=c(0,2))
+y
+write.table (sa$X,y)
+sa$X
+write.table (sa$X,y, row.names=FALSE, col.names=FALSE))
+write.table (sa$X,y, row.names=FALSE, col.names=FALSE)
+write.table (sa$X, row.names=FALSE, col.names=FALSE)
+write.table (sa$X[,1], row.names=FALSE, col.names=FALSE)
+write.table (sa$X[,1],y row.names=FALSE, col.names=FALSE)
+write.table (sa$X[,1],y, row.names=FALSE, col.names=FALSE)
+write.table (c(sa$X[,1],y), row.names=FALSE, col.names=FALSE)
+write.table (matrix(c(sa$X[,1],y),ncol=2), row.names=FALSE, col.names=FALSE)
+write.table (matrix(c(sa$X,y),ncol=10), row.names=FALSE, col.names=FALSE)
+plot(matrix(c(sa$X,y),ncol=10))
+unlist(matrix(c(sa$X,y),ncol=10)))
+unlist(matrix(c(sa$X,y),ncol=10))
+matrix(c(sa$X,y),ncol=10)
+mm<-matrix(c(sa$X,y),ncol=10)
+mm<-matrix(c(sa$X[,4],y),ncol=2)
+mm
+plot(1:length(y),y,type='l')
+plot(1:length(y),sa$X[,4],type='l',col=red)
+plot(1:length(y),sa$X[,4],type='l',col='red')
+plot(1:length(y),y/max(y),type='l')
+points(1:length(y),sa$X[,4],type='l',col='red')
+plot(1:length(y),y/max(y),type='l')
+plot(1:length(y),y/max(y))
+plot(1:length(y),y/max(y),type='l')
+points(1:length(y),sa$X[,4],col='red')
+plot(1:length(y),sa$X[,4],col='red')
+points(1:length(y),y/max(y),type='l')
+plot(1:length(y),sa$X[,4],col='red')
+points(1:length(y),(y-min(y))/max(y),type='l')
+plot(1:length(y),sa$X[,4],col='red')
+points(1:length(y),(y-min(y))/(max(y)-min(y)),type='l')
+plot(sa, xlim=c(0,2))
+y
+write.table (sa$X, row.names=FALSE, col.names=TRUE)
+write.table (sa$X, row.names=FALSE, file="analysis/morris-all-experiments.txt", col.names=TRUE)
+colnames(y)
+colnames(y)<-"fitness"
+colnames(y)<-c("fitness"
+)
+colnames(y)<-c("fitness")
+write.table (y, row.names=FALSE,  col.names=FALSE)
+write.table (y, row.names=FALSE, file="analysis/morris-all-experiments.txt", col.names=TRUE)
+write.table (sa$X, row.names=FALSE, file="analysis/morris-all-experiments.txt", col.names=TRUE)
+write.table (y, row.names=FALSE, file="analysis/morris-all-fitness.txt", col.names=TRUE)
+plot(sa, xlim=c(0,2))
+plot(sa, xlim=c(0,2), cex=0.8)
+plot(sa, xlim=c(0,2), cex=0.6)
+plot(sa, xlim=c(0,2), cex=0.1)
+plot(sa, xlim=c(0,2), cex=0.6)
+plot(sa )
+plot
+sensitivity::plot3d.morris
+sensitivity::plot3d.morris(sa)
+require(rgl)
+sensitivity::plot3d.morris(sa)
+mm
+mm<-matrix(c(sa$X,y),ncol=10)
+mm
+min(y)
+sensitivity::plot3d.morris
+mplot <- function (x, alpha = c(0.2, 0), sphere.size = 1) 
+{
+    library(rgl)
+    spheres.rad <- max((apply(x$ee, 2, max) - apply(x$ee, 2, 
+        min))/100) * sphere.size
+    color = "grey"
+    cone.nfaces = 100
+    mu <- apply(x$ee, 2, mean)
+    mu.star <- apply(x$ee, 2, function(x) mean(abs(x)))
+    sigma <- apply(x$ee, 2, sd)
+    open3d()
+    xmax <- max(mu.star)
+    zmax <- max(max(sigma), xmax)
+    n <- 100
+    theta <- seq(from = 0, to = pi, length.out = n + 1)
+    x <- rep(c(0, xmax, xmax), n)
+    y <- as.numeric(rbind(rep(0, n), -xmax * cos(theta[-(n + 
+        1)]), -xmax * cos(theta[-1])))
+    z <- as.numeric(rbind(rep(0, n), xmax * sin(theta[-(n + 1)]), 
+        xmax * sin(theta[-1])))
+    triangles3d(x, y, z, color = color, alpha = alpha[1])
+    x <- rep(c(0, xmax, xmax, 0), 2)
+    y <- c(0, -xmax, -xmax, 0, 0, xmax, xmax, 0)
+    z <- c(0, 0, zmax, zmax, 0, 0, zmax, zmax)
+    quads3d(x, y, z, color = color, alpha = alpha[2])
+    plot3d(mu.star, mu, sigma, type = "s", radius = spheres.rad, 
+        add = TRUE)
+    axes3d()
+    title3d(xlab = expression(paste(mu,"*",sep='')), ylab = "mu", zlab = "sigma")
+}
+mplot(sa)
+mplot <- function (x, alpha = c(0.2, 0), sphere.size = 1) 
+{
+    library(rgl)
+    spheres.rad <- max((apply(x$ee, 2, max) - apply(x$ee, 2, 
+        min))/100) * sphere.size
+    color = "grey"
+    cone.nfaces = 100
+    mu <- apply(x$ee, 2, mean)
+    mu.star <- apply(x$ee, 2, function(x) mean(abs(x)))
+    sigma <- apply(x$ee, 2, sd)
+    open3d()
+    xmax <- max(mu.star)
+    zmax <- max(max(sigma), xmax)
+    n <- 100
+    theta <- seq(from = 0, to = pi, length.out = n + 1)
+    x <- rep(c(0, xmax, xmax), n)
+    y <- as.numeric(rbind(rep(0, n), -xmax * cos(theta[-(n + 
+        1)]), -xmax * cos(theta[-1])))
+    z <- as.numeric(rbind(rep(0, n), xmax * sin(theta[-(n + 1)]), 
+        xmax * sin(theta[-1])))
+    triangles3d(x, y, z, color = color, alpha = alpha[1])
+    x <- rep(c(0, xmax, xmax, 0), 2)
+    y <- c(0, -xmax, -xmax, 0, 0, xmax, xmax, 0)
+    z <- c(0, 0, zmax, zmax, 0, 0, zmax, zmax)
+    quads3d(x, y, z, color = color, alpha = alpha[2])
+    plot3d(mu.star, mu, sigma, type = "s", radius = spheres.rad, 
+        add = TRUE)
+    axes3d()
+    title3d(xlab = expression(mu,"*"), ylab = "mu", zlab = "sigma")
+}
+mplot(sa)
+sensitivity::morris
+?morris
+sensitivity::morris.fun
+sensitivity::morris
+X$model
+sa$X
+mm
+colnames(mm)<-c(1,2,3,4,5,6,7,8,9,"XX")
+plot(mm)
+sensitivity::morris
+mm<-matrix(c(sa$X[,4],y),ncol=2)
+mm
+sort(mm)
+sort(mm)
+mm
+sort(mm)
+?sort
+sort(mm,partial=mm[,1])
+mm[,1]
+?tell
+plot(sa)
+?plot
+sa$ee
+sa$scale
+sa$y
+sa$r
+sa$model
+sa$factors
+sa$call
+sa$binf
+?save
+save(sa,file="analysis/RData")
+savehistory(file="analysis/RHistory")
