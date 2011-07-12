@@ -99,7 +99,11 @@ public class RouteGeneration {
 	/**
 	 * 
 	 */
+<<<<<<< Updated upstream
 	int stopHour = 1;
+=======
+	int stopHour = 11;
+>>>>>>> Stashed changes
 	
 	
 	String referenceEdge="56640729#2";
