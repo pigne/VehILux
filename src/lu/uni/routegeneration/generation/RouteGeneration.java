@@ -15,6 +15,7 @@ import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +54,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;
 
+import de.erichseifert.vectorgraphics2d.PDFGraphics2D;
+import de.erichseifert.vectorgraphics2d.VectorGraphics2D;
+
 enum ZoneType {
 	RESIDENTIAL(0), INDUSTRIAL(0), COMMERCIAL(0);
 
@@ -80,31 +84,31 @@ public class RouteGeneration {
 	 * Project name. Is assumed to be the base name of all configuration files
 	 * (ex. MyProject.rou.xml, MyProject.net.xml)
 	 */
-	String baseName = "kirchberg";
+	String baseName = "LuxembourgVille";
 
 	/**
 	 * Path that to the folder containing configuration files.
 	 */
-	String baseFolder = "./tests/Kirchberg/";
+	String baseFolder = "./tests/LuxembourgVille/";
 
 	/**
 	 * Activate the debuging interface.
 	 */
-	boolean gui = false;
+	boolean gui = true;
 
 	/**
 	 * 
 	 */
-	int stopHour = 10;
+	int stopHour = 1;
 	
 	
 	String referenceEdge="56640729#2";
 
-	public static Color colorCOM = new Color(0xCFA9CB); // CFC4CD
+	public static Color colorCOM = new Color(0x358DA5); //(0xCFA9CB); // CFC4CD
 	public static Color colorCOM_light = new Color(255, 0, 225, 20);
-	public static Color colorRES = new Color(0xAACFCB); // C4CFCE
+	public static Color colorRES = new Color(0x99D991);  //(0xAACFCB); // C4CFCE
 	public static Color colorRES_light = new Color(0, 255, 255, 20);
-	public static Color colorIND = new Color(0xCFC1A9); // CFCBC4
+	public static Color colorIND = new Color(0x5A4D20);  //(0xCFC1A9); // CFCBC4
 	public static Color colorIND_light = new Color(255, 170, 0, 20);
 
 	int stopTime = stopHour * 3600;
@@ -940,11 +944,61 @@ public class RouteGeneration {
 		// -------------------------------------------------------------------
 		// -------------- debuging Graphical User Interface ------------------
 
+		
+		HashMap<Area, ArrayList<Double>> nbZones = new HashMap<Area, ArrayList<Double>>();
+		
+		for (Zone z : zones.values()) {
+			ArrayList<Double> list = nbZones.get(z.area);
+			if(list==null){
+				list = new ArrayList<Double>();
+			}
+			list.add(z.surface);
+			nbZones.put(z.area, list);
+		}
+		for(Area a : nbZones.keySet()){
+			double sumSurface = 0;
+			for(Double d : nbZones.get(a)){
+				sumSurface+=d;
+			}
+			System.out.printf("%s (%s) (%f,%f): zones:%d  surface:%.0f disk_area:%.0f density:%.3f  disperssion:%f %n", 
+					a.id, a.type, a.x,a.y,nbZones.get(a).size(), sumSurface, (double)(a.radius*a.radius*Math.PI), sumSurface / (double)(a.radius*a.radius*Math.PI) ,
+					 100000*(double)nbZones.get(a).size()/(double)sumSurface);
+		}
+		System.out.println("Stoping here.");
+		System.exit(0);
 		if (gui) {
 			ae = new AreasEditor(this);
 			ae.run();
-		}
+			try {
+				System.in.read();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			PDFGraphics2D g = new PDFGraphics2D(0.0, 0.0, ae.editorPanel
+					.getWidth(), ae.editorPanel.getHeight());
+			g.setFontRendering(VectorGraphics2D.FontRendering.VECTORS);
+			ae.editorPanel.paint(g);
 
+			try {
+				FileOutputStream ff = new FileOutputStream("screenshot.pdf");
+				try {
+					ff.write(g.getBytes());
+				} finally {
+					ff.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+
+			
+			
+			
+		}
+		System.exit(0);
 		// -------------------------------------------------------------------
 		// ---------- generate shortest paths for RESIDENTIAL zones ----------
 		//

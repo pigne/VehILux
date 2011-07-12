@@ -43,7 +43,7 @@ public class AreasEditor implements ActionListener, MBoxListener {
 	UIMemoryPanel uim;
 	Timer timer;
 	JFrame window;
-	EditorPanel editorPanel;
+	public EditorPanel editorPanel;
 	int count=0;
 
 	public MBoxStandalone mbox;
@@ -77,7 +77,7 @@ public class AreasEditor implements ActionListener, MBoxListener {
 		editorPanel = new EditorPanel(this);
 		editorPanel.setBackground(Color.white);
 		window = new JFrame("Areas Editor");
-		window.setPreferredSize(new Dimension(800, 600));
+		window.setPreferredSize(new Dimension(2475, 3300));
 		window.setBackground(Color.white);
 		window.setLayout(new BorderLayout(5, 5));
 

@@ -1,0 +1,243 @@
+<loops>
+  <loop direction="Remich - Luxembourg" id="432" edge="-26449605#6">
+    <flow cars="9" hour="1" trucks="0"/>
+    <flow cars="7" hour="2" trucks="1"/>
+    <flow cars="6" hour="3" trucks="0"/>
+    <flow cars="2" hour="4" trucks="0"/>
+    <flow cars="6" hour="5" trucks="1"/>
+    <flow cars="28" hour="6" trucks="3"/>
+    <flow cars="112" hour="7" trucks="7"/>
+    <flow cars="277" hour="8" trucks="7"/>
+    <flow cars="295" hour="9" trucks="10"/>
+    <flow cars="230" hour="10" trucks="7"/>
+    <flow cars="218" hour="11" trucks="8"/>
+    <flow cars="209" hour="12" trucks="6"/>
+    <flow cars="222" hour="13" trucks="7"/>
+    <flow cars="241" hour="14" trucks="10"/>
+    <flow cars="271" hour="15" trucks="4"/>
+    <flow cars="234" hour="16" trucks="9"/>
+    <flow cars="256" hour="17" trucks="6"/>
+    <flow cars="218" hour="18" trucks="7"/>
+    <flow cars="178" hour="19" trucks="4"/>
+    <flow cars="137" hour="20" trucks="5"/>
+    <flow cars="81" hour="21" trucks="3"/>
+    <flow cars="57" hour="22" trucks="3"/>
+    <flow cars="41" hour="23" trucks="2"/>
+    <flow cars="21" hour="24" trucks="2"/>
+  </loop>
+
+
+  <loop direction="Remich - Luxembourg" id="433" edge="-8599689">
+    <flow cars="26" hour="1" trucks="1"/>
+    <flow cars="20" hour="2" trucks="1"/>
+    <flow cars="13" hour="3" trucks="1"/>
+    <flow cars="15" hour="4" trucks="2"/>
+    <flow cars="37" hour="5" trucks="6"/>
+    <flow cars="160" hour="6" trucks="13"/>
+    <flow cars="494" hour="7" trucks="37"/>
+    <flow cars="673" hour="8" trucks="39"/>
+    <flow cars="496" hour="9" trucks="36"/>
+    <flow cars="378" hour="10" trucks="40"/>
+    <flow cars="291" hour="11" trucks="30"/>
+    <flow cars="261" hour="12" trucks="32"/>
+    <flow cars="251" hour="13" trucks="25"/>
+    <flow cars="341" hour="14" trucks="29"/>
+    <flow cars="341" hour="15" trucks="35"/>
+    <flow cars="299" hour="16" trucks="38"/>
+    <flow cars="306" hour="17" trucks="40"/>
+    <flow cars="257" hour="18" trucks="18"/>
+    <flow cars="253" hour="19" trucks="12"/>
+    <flow cars="204" hour="20" trucks="5"/>
+    <flow cars="154" hour="21" trucks="5"/>
+    <flow cars="151" hour="22" trucks="3"/>
+    <flow cars="85" hour="23" trucks="1"/>
+    <flow cars="58" hour="24" trucks="2"/>
+  </loop>
+<loop direction="Kopstal - Luxembourg" id="405" edge="25746712#0" >
+    <flow cars="43" hour="1" trucks="3"/>
+    <flow cars="32" hour="2" trucks="1"/>
+    <flow cars="12" hour="3" trucks="0"/>
+    <flow cars="25" hour="4" trucks="4"/>
+    <flow cars="50" hour="5" trucks="3"/>
+    <flow cars="88" hour="6" trucks="6"/>
+    <flow cars="465" hour="7" trucks="15"/>
+    <flow cars="668" hour="8" trucks="27"/>
+    <flow cars="613" hour="9" trucks="25"/>
+    <flow cars="429" hour="10" trucks="22"/>
+    <flow cars="380" hour="11" trucks="24"/>
+    <flow cars="347" hour="12" trucks="21"/>
+    <flow cars="323" hour="13" trucks="22"/>
+    <flow cars="391" hour="14" trucks="26"/>
+    <flow cars="470" hour="15" trucks="18"/>
+    <flow cars="416" hour="16" trucks="23"/>
+    <flow cars="498" hour="17" trucks="21"/>
+    <flow cars="396" hour="18" trucks="12"/>
+    <flow cars="353" hour="19" trucks="9"/>
+    <flow cars="320" hour="20" trucks="8"/>
+    <flow cars="216" hour="21" trucks="4"/>
+    <flow cars="159" hour="22" trucks="4"/>
+    <flow cars="157" hour="23" trucks="6"/>
+    <flow cars="77" hour="24" trucks="4"/>
+  </loop>
+ <loop direction="Lorentzweiler - Walferdange" id="401" edge="-51075294#2">
+    <flow cars="49" hour="1" trucks="4"/>
+    <flow cars="26" hour="2" trucks="2"/>
+    <flow cars="18" hour="3" trucks="3"/>
+    <flow cars="31" hour="4" trucks="3"/>
+    <flow cars="45" hour="5" trucks="7"/>
+    <flow cars="183" hour="6" trucks="11"/>
+    <flow cars="462" hour="7" trucks="18"/>
+    <flow cars="699" hour="8" trucks="34"/>
+    <flow cars="608" hour="9" trucks="35"/>
+    <flow cars="508" hour="10" trucks="39"/>
+    <flow cars="515" hour="11" trucks="36"/>
+    <flow cars="479" hour="12" trucks="39"/>
+    <flow cars="453" hour="13" trucks="34"/>
+    <flow cars="537" hour="14" trucks="37"/>
+    <flow cars="612" hour="15" trucks="35"/>
+    <flow cars="580" hour="16" trucks="37"/>
+    <flow cars="627" hour="17" trucks="30"/>
+    <flow cars="640" hour="18" trucks="28"/>
+    <flow cars="559" hour="19" trucks="18"/>
+    <flow cars="410" hour="20" trucks="14"/>
+    <flow cars="294" hour="21" trucks="11"/>
+    <flow cars="227" hour="22" trucks="10"/>
+    <flow cars="200" hour="23" trucks="6"/>
+    <flow cars="123" hour="24" trucks="3"/>
+  </loop>
+
+<loop direction="Waldhof - Dommeldange" id="403" edge="-27112598">
+    <flow cars="27" hour="1" trucks="5"/>
+    <flow cars="13" hour="2" trucks="1"/>
+    <flow cars="7" hour="3" trucks="1"/>
+    <flow cars="5" hour="4" trucks="4"/>
+    <flow cars="17" hour="5" trucks="4"/>
+    <flow cars="75" hour="6" trucks="14"/>
+    <flow cars="261" hour="7" trucks="56"/>
+    <flow cars="535" hour="8" trucks="124"/>
+    <flow cars="466" hour="9" trucks="95"/>
+    <flow cars="306" hour="10" trucks="76"/>
+    <flow cars="273" hour="11" trucks="73"/>
+    <flow cars="221" hour="12" trucks="60"/>
+    <flow cars="224" hour="13" trucks="55"/>
+    <flow cars="273" hour="14" trucks="59"/>
+    <flow cars="280" hour="15" trucks="56"/>
+    <flow cars="272" hour="16" trucks="55"/>
+    <flow cars="326" hour="17" trucks="56"/>
+    <flow cars="368" hour="18" trucks="46"/>
+    <flow cars="331" hour="19" trucks="42"/>
+    <flow cars="246" hour="20" trucks="27"/>
+    <flow cars="145" hour="21" trucks="15"/>
+    <flow cars="107" hour="22" trucks="17"/>
+    <flow cars="94" hour="23" trucks="12"/>
+    <flow cars="57" hour="24" trucks="6"/>
+  </loop>
+
+  <loop direction="Echangeur Potaschbierg - Luxembourg" id="1431" edge="30143811#0">
+    <flow cars="62" hour="1" trucks="21"/>
+    <flow cars="52" hour="2" trucks="18"/>
+    <flow cars="36" hour="3" trucks="17"/>
+    <flow cars="38" hour="4" trucks="21"/>
+    <flow cars="65" hour="5" trucks="29"/>
+    <flow cars="305" hour="6" trucks="50"/>
+    <flow cars="994" hour="7" trucks="116"/>
+    <flow cars="2735" hour="8" trucks="394"/>
+    <flow cars="2818" hour="9" trucks="507"/>
+    <flow cars="1382" hour="10" trucks="400"/>
+    <flow cars="905" hour="11" trucks="353"/>
+    <flow cars="816" hour="12" trucks="328"/>
+    <flow cars="913" hour="13" trucks="233"/>
+    <flow cars="946" hour="14" trucks="298"/>
+    <flow cars="900" hour="15" trucks="305"/>
+    <flow cars="855" hour="16" trucks="256"/>
+    <flow cars="907" hour="17" trucks="233"/>
+    <flow cars="922" hour="18" trucks="228"/>
+    <flow cars="830" hour="19" trucks="202"/>
+    <flow cars="660" hour="20" trucks="159"/>
+    <flow cars="401" hour="21" trucks="72"/>
+    <flow cars="301" hour="22" trucks="40"/>
+    <flow cars="212" hour="23" trucks="27"/>
+    <flow cars="116" hour="24" trucks="25"/>
+  </loop>
+
+ <loop direction="Hesperange - Luxembourg" id="445" edge="52474105#0">
+    <flow cars="26" hour="1" trucks="3"/>
+    <flow cars="18" hour="2" trucks="1"/>
+    <flow cars="13" hour="3" trucks="0"/>
+    <flow cars="12" hour="4" trucks="0"/>
+    <flow cars="20" hour="5" trucks="0"/>
+    <flow cars="79" hour="6" trucks="6"/>
+    <flow cars="320" hour="7" trucks="19"/>
+    <flow cars="561" hour="8" trucks="33"/>
+    <flow cars="490" hour="9" trucks="27"/>
+    <flow cars="422" hour="10" trucks="21"/>
+    <flow cars="315" hour="11" trucks="22"/>
+    <flow cars="295" hour="12" trucks="17"/>
+    <flow cars="270" hour="13" trucks="22"/>
+    <flow cars="322" hour="14" trucks="21"/>
+    <flow cars="331" hour="15" trucks="21"/>
+    <flow cars="327" hour="16" trucks="21"/>
+    <flow cars="315" hour="17" trucks="20"/>
+    <flow cars="311" hour="18" trucks="19"/>
+    <flow cars="272" hour="19" trucks="15"/>
+    <flow cars="235" hour="20" trucks="15"/>
+    <flow cars="174" hour="21" trucks="10"/>
+    <flow cars="154" hour="22" trucks="6"/>
+    <flow cars="93" hour="23" trucks="7"/>
+    <flow cars="72" hour="24" trucks="5"/>
+  </loop>
+
+ <loop direction="Croix de Bettembourg - Luxembourg" id="1410" edge="9508022" >
+    <flow cars="297" hour="1" trucks="85"/>
+    <flow cars="195" hour="2" trucks="82"/>
+    <flow cars="153" hour="3" trucks="72"/>
+    <flow cars="146" hour="4" trucks="75"/>
+    <flow cars="194" hour="5" trucks="104"/>
+    <flow cars="286" hour="6" trucks="131"/>
+    <flow cars="900" hour="7" trucks="194"/>
+    <flow cars="1514" hour="8" trucks="315"/>
+    <flow cars="3053" hour="9" trucks="367"/>
+    <flow cars="3110" hour="10" trucks="363"/>
+    <flow cars="1809" hour="11" trucks="423"/>
+    <flow cars="1312" hour="12" trucks="449"/>
+    <flow cars="1194" hour="13" trucks="419"/>
+    <flow cars="1245" hour="14" trucks="388"/>
+    <flow cars="1552" hour="15" trucks="421"/>
+    <flow cars="1352" hour="16" trucks="402"/>
+    <flow cars="1319" hour="17" trucks="395"/>
+    <flow cars="1441" hour="18" trucks="378"/>
+    <flow cars="1299" hour="19" trucks="375"/>
+    <flow cars="1181" hour="20" trucks="332"/>
+    <flow cars="988" hour="21" trucks="340"/>
+    <flow cars="696" hour="22" trucks="255"/>
+    <flow cars="681" hour="23" trucks="154"/>
+    <flow cars="438" hour="24" trucks="123"/>
+  </loop>
+
+ <loop direction="Irrgarten - Luxembourg" id="400" edge="52572699">
+    <flow cars="51" hour="1" trucks="4"/>
+    <flow cars="35" hour="2" trucks="3"/>
+    <flow cars="19" hour="3" trucks="1"/>
+    <flow cars="19" hour="4" trucks="2"/>
+    <flow cars="32" hour="5" trucks="3"/>
+    <flow cars="123" hour="6" trucks="11"/>
+    <flow cars="333" hour="7" trucks="21"/>
+    <flow cars="898" hour="8" trucks="55"/>
+    <flow cars="948" hour="9" trucks="59"/>
+    <flow cars="696" hour="10" trucks="54"/>
+    <flow cars="611" hour="11" trucks="52"/>
+    <flow cars="583" hour="12" trucks="44"/>
+    <flow cars="565" hour="13" trucks="33"/>
+    <flow cars="674" hour="14" trucks="50"/>
+    <flow cars="771" hour="15" trucks="59"/>
+    <flow cars="855" hour="16" trucks="72"/>
+    <flow cars="987" hour="17" trucks="56"/>
+    <flow cars="952" hour="18" trucks="28"/>
+    <flow cars="827" hour="19" trucks="18"/>
+    <flow cars="536" hour="20" trucks="13"/>
+    <flow cars="432" hour="21" trucks="31"/>
+    <flow cars="352" hour="22" trucks="23"/>
+    <flow cars="317" hour="23" trucks="21"/>
+    <flow cars="221" hour="24" trucks="19"/>
+  </loop>
+</loops>
