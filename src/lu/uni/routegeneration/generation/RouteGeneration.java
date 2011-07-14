@@ -10,24 +10,16 @@
  */
 package lu.uni.routegeneration.generation;
 
-import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.TreeSet;
 import java.util.Vector;
-import java.io.*;
-import java.util.Calendar;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -35,14 +27,12 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import lu.uni.routegeneration.evaluation.ApproximativeEvaluation;
 import lu.uni.routegeneration.evaluation.Detector;
 import lu.uni.routegeneration.evaluation.RealEvaluation;
 import lu.uni.routegeneration.net.RGServer;
 import lu.uni.routegeneration.ui.AreasEditor;
 
-import org.graphstream.algorithm.ConnectedComponents;
-import org.graphstream.algorithm.Dijkstra;
+import org.graphstream.algorithm.DijkstraFH;
 import org.graphstream.graph.ElementNotFoundException;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
@@ -59,12 +49,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;
-import com.sun.xml.internal.xsom.impl.scd.Iterators;
-
-import java.util.GregorianCalendar;
-import jmetal.base.*;
-import jmetal.base.variable.*;
-import jmetal.util.JMException;
 
 enum ZoneType {
 	RESIDENTIAL(0), INDUSTRIAL(0), COMMERCIAL(0);
@@ -221,13 +205,13 @@ public class RouteGeneration {
 	private HashMap<Node, String> realNodes;
 
 	private String referenceNodeId= "9647221";
-	private Dijkstra referenceDjk;
+	private DijkstraFH referenceDjk;
 
 	private ArrayList<Zone> zonesToRemove;
 	
 	public Path createRandomPath(String djk, Node source) {
 
-		Path p = Dijkstra.getShortestPath(djk, source, pickUpOneDestination());
+		Path p = getShortestPath(djk, source, pickUpOneDestination());
 		if (p.empty()) {
 			return null;
 		} else {
@@ -243,6 +227,20 @@ public class RouteGeneration {
 			 * return sb.toString();
 			 */
 		}
+	}
+
+	/**
+	 * @param djk
+	 * @param source
+	 * @param pickUpOneDestination
+	 * @return
+	 */
+	private Path getShortestPath(String djk, Node source,
+			Node target) {
+		DijkstraFH dummyDjk = new DijkstraFH(DijkstraFH.Element.EDGE,djk);
+		dummyDjk.setSource(source);
+		dummyDjk.getPath(target);
+		return null;
 	}
 
 	private Point2D.Double pointInZone(Zone zone) {
@@ -847,19 +845,19 @@ public class RouteGeneration {
 		System.out.printf("%d nodes have the \"weight\" attribute over %d%n",
 				hasIt, graph.getNodeCount());
 
-		referenceDjk = new Dijkstra(Dijkstra.Element.node, "weight",
-					referenceNodeId);
+		referenceDjk = new DijkstraFH(DijkstraFH.Element.NODE, "referenceDjk","weight");
 		referenceDjk.init(graph);
+		referenceDjk.setSource(graph.getNode(referenceNodeId));
 		referenceDjk.compute();
 		// -------------------------------------------------------------------
 		// ---------- generate shortest paths for outer zones ----------
 		System.out.println("__Flows ShortestPaths");
 		for (Loop loop : loops) {
-			Dijkstra djk = new Dijkstra(Dijkstra.Element.node, "weight",
-					loop.edge);
+			DijkstraFH djk = new DijkstraFH(DijkstraFH.Element.NODE, loop.edge,"weight");
 			djk.init(graph);
+			djk.setSource(graph.getNode(loop.edge));
 			djk.compute();
-			loop.dijkstra = djk.getParentEdgesString();
+			loop.dijkstra = loop.edge;
 		}
 
 		// -------------------------------------------------------------------
@@ -883,10 +881,10 @@ public class RouteGeneration {
 				System.out
 						.printf("Shortest path for INNER TRAFFIC (residential zones) %d over %d  %n",
 								zone_count, zones.size());
-				Path path = null;
+				//Path path = null;
 				Node n = null;
-				Dijkstra djk = null;
-
+				DijkstraFH djk = null;
+				boolean unreachable=true;
 				int limit = 0;
 				do {
 					if (limit > 5) {
@@ -897,16 +895,20 @@ public class RouteGeneration {
 					}
 					Point2D.Double point = pointInZone(z);
 					n = getClosestNode(point);
-					djk = new Dijkstra(Dijkstra.Element.node, "weight",
-							n.getId());
+					djk = new DijkstraFH(DijkstraFH.Element.NODE, n.getId(),"weight");
 					djk.init(graph);
+					djk.setSource(n);
 					djk.compute();
 					// a reference node that ensures this zone can reach the
 					// network.
-					path = djk.getShortestPath(graph.getNode(referenceNodeId));
+					if (djk.getPathLength(graph.getNode(referenceNodeId))!=Double.POSITIVE_INFINITY){
+						unreachable=false;
+					}
+					//path = getShortestPath(n.getId(),n,graph.getNode(referenceNodeId));
+					
 					limit++;
-				} while (path.empty());
-				z.shortestPath = djk.getParentEdgesString();
+				} while (unreachable);
+				z.shortestPath = n.getId();
 				z.sourceNode = n;
 				djk = null;
 
@@ -1080,38 +1082,24 @@ public class RouteGeneration {
 
 	public void fillZoneNodes(Zone z) {
 		for (int i = 0; i < 5; i++) {
-
 			int times = 0;
 			Node n = null;
 			do {
 				Point2D.Double point = pointInZone(z);
 				n = getClosestNode(point);
-
 				// test this node
-				if (referenceDjk.getShortestPath(n).empty()) {
-					//System.out
-					//		.println("FillZoneNodes: this node can't be reached:"
-					//				+ n);
+				if (referenceDjk.getPathLength(n) == Double.POSITIVE_INFINITY ) {
 					n = null;
 				}
-
 				times++;
-				if (times > 5) {
-					//System.out
-					//		.println("FillZoneNodes: giving up for node " + i);
-
-				}
 			} while (n == null && times <= 5);
 			if (n != null) {
 				z.near_nodes.add(n);
 			}
 		}
 		if(z.near_nodes.size()==0){
-			//System.out
-			//.println("FillZoneNodes: WILL REMOVE zone"+z);
 			zonesToRemove.add(z);
 		}
-
 	}
 
 	public double fitness(double[] individual) {
