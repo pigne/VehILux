@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<routes>
-<vtype accel="1.05" color="0.1,0.1,0.1" decel="4" id="truck" length="15" maxspeed="30" sigma="0"/>
-</routes>
