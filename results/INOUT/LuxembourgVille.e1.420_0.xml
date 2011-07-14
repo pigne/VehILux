@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<!-- generated on Thu Nov 11 22:22:49 2010 by SUMO sumo Version svn
+<configuration>
+
+    <input>
+        <net-file value="LuxembourgVille.net.xml"/>
+        <route-files value="LuxembourgVille_1-11_INOUT.rou.xml"/>
+        <additional-files value="LuxembourgVille.shapes.xml,LuxembourgVille.e1.xml"/>
+    </input>
+
+    <time>
+        <begin value="1"/>
+        <end value="39601"/>
+    </time>
+
+    <processing>
+        <time-to-teleport value="100"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+    <traci_server>
+        <remote-port value="1234"/>
+    </traci_server>
+
+    <gui_only>
+        <gui-settings-file value=""/>
+    </gui_only>
+
+</configuration>
+-->
+
+<detector>
+   <interval begin="1.00" end="3601.00" id="420_0" nVehContrib="6" flow="6.00" occupancy="0.07" speed="10.72" length="4.33" nVehEntered="6"/>
+   <interval begin="3601.00" end="7201.00" id="420_0" nVehContrib="4" flow="4.00" occupancy="0.05" speed="11.53" length="4.62" nVehEntered="4"/>
+   <interval begin="7201.00" end="10801.00" id="420_0" nVehContrib="4" flow="4.00" occupancy="0.05" speed="10.45" length="4.50" nVehEntered="4"/>
+   <interval begin="10801.00" end="14401.00" id="420_0" nVehContrib="8" flow="8.00" occupancy="0.09" speed="11.25" length="4.25" nVehEntered="8"/>
+   <interval begin="14401.00" end="18001.00" id="420_0" nVehContrib="12" flow="12.00" occupancy="0.12" speed="12.08" length="4.21" nVehEntered="12"/>
+   <interval begin="18001.00" end="21601.00" id="420_0" nVehContrib="19" flow="19.00" occupancy="0.20" speed="11.29" length="4.08" nVehEntered="19"/>
+   <interval begin="21601.00" end="25201.00" id="420_0" nVehContrib="39" flow="39.00" occupancy="0.43" speed="10.79" length="4.14" nVehEntered="42"/>
+   <interval begin="25201.00" end="28801.00" id="420_0" nVehContrib="67" flow="67.00" occupancy="0.77" speed="10.86" length="4.37" nVehEntered="69"/>
+   <interval begin="28801.00" end="32401.00" id="420_0" nVehContrib="72" flow="72.00" occupancy="0.86" speed="10.83" length="4.53" nVehEntered="73"/>
+   <interval begin="32401.00" end="36001.00" id="420_0" nVehContrib="54" flow="54.00" occupancy="0.58" speed="11.03" length="4.15" nVehEntered="54"/>
+   <interval begin="36001.00" end="39601.00" id="420_0" nVehContrib="44" flow="44.00" occupancy="0.55" speed="10.86" length="4.82" nVehEntered="45"/>
+</detector>

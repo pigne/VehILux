@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<!-- generated on Thu Nov 11 22:22:49 2010 by SUMO sumo Version svn
+<configuration>
+
+    <input>
+        <net-file value="LuxembourgVille.net.xml"/>
+        <route-files value="LuxembourgVille_1-11_INOUT.rou.xml"/>
+        <additional-files value="LuxembourgVille.shapes.xml,LuxembourgVille.e1.xml"/>
+    </input>
+
+    <time>
+        <begin value="1"/>
+        <end value="39601"/>
+    </time>
+
+    <processing>
+        <time-to-teleport value="100"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+    <traci_server>
+        <remote-port value="1234"/>
+    </traci_server>
+
+    <gui_only>
+        <gui-settings-file value=""/>
+    </gui_only>
+
+</configuration>
+-->
+
+<detector>
+   <interval begin="1.00" end="3601.00" id="1429_0" nVehContrib="35" flow="35.00" occupancy="0.16" speed="29.04" length="4.53" nVehEntered="35"/>
+   <interval begin="3601.00" end="7201.00" id="1429_0" nVehContrib="38" flow="38.00" occupancy="0.19" speed="29.30" length="4.83" nVehEntered="38"/>
+   <interval begin="7201.00" end="10801.00" id="1429_0" nVehContrib="27" flow="27.00" occupancy="0.12" speed="28.88" length="4.54" nVehEntered="27"/>
+   <interval begin="10801.00" end="14401.00" id="1429_0" nVehContrib="25" flow="25.00" occupancy="0.11" speed="30.62" length="4.64" nVehEntered="25"/>
+   <interval begin="14401.00" end="18001.00" id="1429_0" nVehContrib="47" flow="47.00" occupancy="0.24" speed="29.00" length="5.13" nVehEntered="47"/>
+   <interval begin="18001.00" end="21601.00" id="1429_0" nVehContrib="169" flow="169.00" occupancy="0.78" speed="29.23" length="4.64" nVehEntered="169"/>
+   <interval begin="21601.00" end="25201.00" id="1429_0" nVehContrib="440" flow="440.00" occupancy="2.26" speed="27.65" length="4.88" nVehEntered="440"/>
+   <interval begin="25201.00" end="28801.00" id="1429_0" nVehContrib="491" flow="491.00" occupancy="2.51" speed="25.43" length="4.56" nVehEntered="491"/>
+   <interval begin="28801.00" end="32401.00" id="1429_0" nVehContrib="470" flow="470.00" occupancy="2.57" speed="23.78" length="4.54" nVehEntered="470"/>
+   <interval begin="32401.00" end="36001.00" id="1429_0" nVehContrib="416" flow="416.00" occupancy="2.27" speed="24.46" length="4.69" nVehEntered="416"/>
+   <interval begin="36001.00" end="39601.00" id="1429_0" nVehContrib="335" flow="335.00" occupancy="1.78" speed="25.11" length="4.67" nVehEntered="335"/>
+</detector>

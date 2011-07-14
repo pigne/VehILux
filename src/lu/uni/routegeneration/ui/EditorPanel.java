@@ -89,6 +89,7 @@ public class EditorPanel extends JPanel {
 
 		}
 
+		/*
 		for (Area a : window.rg.areas) {
 			if (a.id != null) {
 				int x = (int) ((a.x - a.radius - window.min_x_boundary)
@@ -104,8 +105,9 @@ public class EditorPanel extends JPanel {
 				g2.drawOval(x, y, w, h);
 			}
 		}
-
-		g2.setColor(Color.gray);
+		*/
+		
+		g2.setColor(new Color(150, 150, 150, 140));
 		for (Lane e : window.rg.edges) {
 			int[] xs = new int[e.shape.size()];
 			int[] ys = new int[e.shape.size()];
@@ -118,6 +120,7 @@ public class EditorPanel extends JPanel {
 			g2.drawPolyline(xs, ys, e.shape.size());
 		}
 
+		/*
 		g2.setColor(Color.red);
 		for (Point2D.Double e : window.destinations) {
 
@@ -127,7 +130,8 @@ public class EditorPanel extends JPanel {
 							* ratioY + orig_height / 2 - usefull_height / 2)),
 					1, 1);
 		}
-
+		 */
+		
 		/*
 		g2.setColor(new Color(0, 0, 0, 10));
 
