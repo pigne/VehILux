@@ -27,6 +27,8 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import jcell.Individual;
+
 import lu.uni.routegeneration.evaluation.Detector;
 import lu.uni.routegeneration.evaluation.RealEvaluation;
 import lu.uni.routegeneration.net.RGServer;
@@ -239,8 +241,7 @@ public class RouteGeneration {
 			Node target) {
 		DijkstraFH dummyDjk = new DijkstraFH(DijkstraFH.Element.EDGE,djk);
 		dummyDjk.setSource(source);
-		dummyDjk.getPath(target);
-		return null;
+		return dummyDjk.getPath(target);
 	}
 
 	private Point2D.Double pointInZone(Zone zone) {
@@ -1178,6 +1179,83 @@ public class RouteGeneration {
 		return fitness;
 
 	}
+	
+	public double evaluate(Individual ind) {
+
+		long start = System.currentTimeMillis();
+		double fitness = 0;
+
+		ZoneType.RESIDENTIAL.probability = (Double)ind.getAllele(0);
+		ZoneType.INDUSTRIAL.probability = (Double)ind.getAllele(1);
+		ZoneType.COMMERCIAL.probability = (Double)ind.getAllele(2);
+		insideFlowRatio = (Double)ind.getAllele(3);
+		for (int i = 4; i < ind.getLength(); i++) {
+			areas.get(i - 4).probability = (Double)ind.getAllele(i);
+		}
+
+		double sum = ZoneType.RESIDENTIAL.probability
+				+ ZoneType.INDUSTRIAL.probability
+				+ ZoneType.COMMERCIAL.probability;
+		ZoneType.RESIDENTIAL.probability /= sum;
+		ZoneType.INDUSTRIAL.probability /= sum;
+		ZoneType.COMMERCIAL.probability /= sum;
+		
+		double sumRES = 1;
+		double sumCOM = 1;
+		double sumIND = 1;
+		for (Area a : areas) {
+			switch (a.type) {
+			case COMMERCIAL:
+				sumCOM += a.probability;
+				break;
+			case INDUSTRIAL:
+				sumIND += a.probability;
+				break;
+			case RESIDENTIAL:
+				sumRES += a.probability;
+				break;
+			}
+			System.out.printf("area proba %s: %f%n", a.id, a.probability);
+		}
+		for (Area a : areas) {
+			switch (a.type) {
+			case COMMERCIAL:
+				a.probability /= sumCOM;
+				break;
+			case INDUSTRIAL:
+				a.probability /= sumIND;
+				break;
+			case RESIDENTIAL:
+				a.probability /= sumRES;
+				break;
+			}
+			System.out.printf("area proba %s: %f%n", a.id, a.probability);
+		}
+
+		defaultAreaCOM.probability = 1/sumCOM;
+		defaultAreaIND.probability = 1/sumIND;
+		defaultAreaRES.probability = 1/sumRES;
+
+		// recompute probabilities !!
+
+		for (Zone z : zones.values()) {
+
+			z.probability = (z.surface / z.area.sumSurfaceZones)
+					* z.type.probability * z.area.probability;
+		}
+
+		for(Detector d : currentSolution.values()){
+			d.reset();
+		}
+		flowGeneration();
+		fitness = evaluator.compareTo(currentSolution);
+
+		
+		System.out.printf("%.1f s%n",(System.currentTimeMillis()-start)/1000.0);
+		return fitness;
+
+	}
+	
 
 	public String[] getParametersNames() {
 
