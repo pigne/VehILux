@@ -27,7 +27,7 @@ public class RouteGeneLaunch  implements GenerationListener
     static int numberOfFuncts  ;
     
     // Default maximum number of function evaluations
-    static int evaluationsLimit = 50;
+    static int evaluationsLimit = 5000;
     
     //private static boolean showDisplay = false;
    
@@ -52,7 +52,7 @@ public class RouteGeneLaunch  implements GenerationListener
     public static void main (String args[]) throws Exception
     {
     	//int numberofruns = Integer.parseInt(args[0]);
-    	int numberofruns = 1;
+    	int numberofruns = 30;
     	Vector<Vector<Double>> results = new Vector<Vector<Double>>();
     	
     	long start, end;
@@ -67,8 +67,8 @@ public class RouteGeneLaunch  implements GenerationListener
 		double[] averages = new double[numberofruns];    	
 		
     	//Population size
-    	int x = 5;
-		int y = 5;
+    	int x = 10;
+		int y = 10;
 		
     	
     	for(int i = 0; i<numberofruns; i++){
