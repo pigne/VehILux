@@ -145,10 +145,8 @@ public class RouteGeneLaunch  implements GenerationListener
     			}
     		}
     		
-    		//System.out.println(bestInd.getFitness());
     		double avg = ((Double)((Statistic)ea.getParam(EvolutionaryAlg.PARAM_STATISTIC)).getStat(ComplexStats.AVG_FIT)).doubleValue();
     		
-    		//System.out.println("Average fit: "+avg);
     		
     		//Save average of this run
     		averages[i] = avg;
