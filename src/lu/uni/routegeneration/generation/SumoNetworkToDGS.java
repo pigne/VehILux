@@ -17,9 +17,12 @@ import java.util.List;
 import org.graphstream.algorithm.ConnectedComponents;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
+import org.graphstream.graph.IdAlreadyInUseException;
 import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.stream.file.FileSink;
+import org.util.SingletonException;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -58,7 +61,7 @@ public class SumoNetworkToDGS extends DefaultHandler {
 
 	@Override
 	public void startDocument() throws SAXException {
-		g = new SingleGraph("Dual", false, true);
+		g = new MultiGraph("Dual", false, true);
 		g.addAttribute("copyright", "(c) 2010-2011 University of Luxembourg");
 		g.addAttribute("author", "Yoann Pigné");
 		g.addAttribute("information", "http://yoann.pigne.org");
@@ -120,8 +123,16 @@ public class SumoNetworkToDGS extends DefaultHandler {
 				}
 				Edge link = currentNode.getEdgeToward(otherNodeId);
 				if (link == null) {
+					
+					Edge e2 = otherNode.getEdgeToward(currentNode.getId());
+					if(e2!=null)
+					{
+						System.out.printf(" !!! opposite-direction edge already exists between %s and %s !!!%n",currentNode.getId(), otherNodeId);
+					}
+					
 					g.addEdge(currentNode.getId() + "_" + otherNode.getId(),
 							currentNode.getId(), otherNode.getId(), true);
+					
 				}
 			}
 		}
