@@ -1215,7 +1215,7 @@ public class RouteGeneration {
 				sumRES += a.probability;
 				break;
 			}
-			System.out.printf("area proba %s: %f%n", a.id, a.probability);
+			//System.out.printf("area proba %s: %f%n", a.id, a.probability);
 		}
 		for (Area a : areas) {
 			switch (a.type) {
@@ -1229,7 +1229,7 @@ public class RouteGeneration {
 				a.probability /= sumRES;
 				break;
 			}
-			System.out.printf("area proba %s: %f%n", a.id, a.probability);
+			//System.out.printf("area proba %s: %f%n", a.id, a.probability);
 		}
 
 		defaultAreaCOM.probability = 1/sumCOM;

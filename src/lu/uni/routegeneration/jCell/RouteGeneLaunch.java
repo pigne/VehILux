@@ -27,7 +27,7 @@ public class RouteGeneLaunch  implements GenerationListener
     static int numberOfFuncts  ;
     
     // Default maximum number of function evaluations
-    static int evaluationsLimit = 5000;
+    static int evaluationsLimit = 10000;
     
     //private static boolean showDisplay = false;
    
@@ -39,7 +39,7 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static String mutation;
     
-
+ 
     public RouteGeneLaunch(){
     	BestIndPerGen = new Vector<Double>();
     }
@@ -52,7 +52,7 @@ public class RouteGeneLaunch  implements GenerationListener
     public static void main (String args[]) throws Exception
     {
     	//int numberofruns = Integer.parseInt(args[0]);
-    	int numberofruns = 30;
+    	int numberofruns = 1;
     	Vector<Vector<Double>> results = new Vector<Vector<Double>>();
     	
     	long start, end;
@@ -128,7 +128,7 @@ public class RouteGeneLaunch  implements GenerationListener
     	    ea.setParam("replacement", new ReplaceIfBetter()); 
     	   
     	    
-    		// generation cycles
+    		// generation cycles 
     		ea.experiment();
     		
 
@@ -158,12 +158,12 @@ public class RouteGeneLaunch  implements GenerationListener
     		
 			// writes: best found solution, number of evaluations, elapsed time (mseconds) in the standard output
 
-			System.out.print(bestInd.getFitness() + " " );
+			//System.out.print(bestInd.getFitness() + " " );
 			
-			for (int m = 0; m< bestInd.getLength();m++){
-				System.out.print(bestInd.getAllele(m) + " ");
-			}
-			System.out.print(prob.getNEvals() + " " + "\n");
+			//for (int m = 0; m< bestInd.getLength();m++){
+			//	System.out.print(bestInd.getAllele(m) + " ");
+			//}
+			//System.out.print(prob.getNEvals() + " " + "\n");
 			
     	}
     	
