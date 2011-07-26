@@ -39,6 +39,7 @@ import org.graphstream.graph.ElementNotFoundException;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
+import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.stream.GraphParseException;
 import org.xml.sax.Attributes;
@@ -786,7 +787,7 @@ public class RouteGeneration {
 		// -------- Initialize the Graph for ShortestPath computation---------
 		System.out.println("__Graph");
 
-		graph = new SingleGraph("", false, true);
+		graph = new MultiGraph("ok", false, true);
 		graph.addAttribute("ui.stylesheet", styleSheet);
 
 		// ------ For a graphical output of the graph (very slow...)
@@ -1102,13 +1103,8 @@ public class RouteGeneration {
 			zonesToRemove.add(z);
 		}
 	}
-
-	public double fitness(double[] individual) {
-
-		System.out.println("evaluation starts with params: "+Arrays.toString(individual));
-		long start = System.currentTimeMillis();
-		double fitness = 0;
-
+	
+	public double evaluate(double[] individual) {
 		ZoneType.RESIDENTIAL.probability = individual[0];
 		ZoneType.INDUSTRIAL.probability = individual[1];
 		ZoneType.COMMERCIAL.probability = individual[2];
@@ -1117,74 +1113,12 @@ public class RouteGeneration {
 			areas.get(i - 4).probability = individual[i];
 		}
 
-		double sum = ZoneType.RESIDENTIAL.probability
-				+ ZoneType.INDUSTRIAL.probability
-				+ ZoneType.COMMERCIAL.probability;
-		ZoneType.RESIDENTIAL.probability /= sum;
-		ZoneType.INDUSTRIAL.probability /= sum;
-		ZoneType.COMMERCIAL.probability /= sum;
-
-		double sumRES = 1;
-		double sumCOM = 1;
-		double sumIND = 1;
-		for (Area a : areas) {
-			switch (a.type) {
-			case COMMERCIAL:
-				sumCOM += a.probability;
-				break;
-			case INDUSTRIAL:
-				sumIND += a.probability;
-				break;
-			case RESIDENTIAL:
-				sumRES += a.probability;
-				break;
-			}
-			//System.out.printf("area proba %s: %f%n", a.id, a.probability);
-		}
-		for (Area a : areas) {
-			switch (a.type) {
-			case COMMERCIAL:
-				a.probability /= sumCOM;
-				break;
-			case INDUSTRIAL:
-				a.probability /= sumIND;
-				break;
-			case RESIDENTIAL:
-				a.probability /= sumRES;
-				break;
-			}
-			//System.out.printf("area proba %s: %f%n", a.id, a.probability);
-		}
-
-		defaultAreaCOM.probability = 1/sumCOM;
-		defaultAreaIND.probability = 1/sumIND;
-		defaultAreaRES.probability = 1/sumRES;
-
-		// recompute probabilities !!
-
-		for (Zone z : zones.values()) {
-
-			z.probability = (z.surface / z.area.sumSurfaceZones)
-					* z.type.probability * z.area.probability;
-		}
-
-		for(Detector d : currentSolution.values()){
-			d.reset();
-		}
-		flowGeneration();
-		fitness = evaluator.compareTo(currentSolution);
-
-		
-		System.out.printf("%.1f s%n",(System.currentTimeMillis()-start)/1000.0);
-		return fitness;
-
+		return doEvaluate();
 	}
 	
 	public double evaluate(Individual ind) {
 
-		long start = System.currentTimeMillis();
-		double fitness = 0;
-
+		
 		ZoneType.RESIDENTIAL.probability = (Double)ind.getAllele(0);
 		ZoneType.INDUSTRIAL.probability = (Double)ind.getAllele(1);
 		ZoneType.COMMERCIAL.probability = (Double)ind.getAllele(2);
@@ -1192,6 +1126,12 @@ public class RouteGeneration {
 		for (int i = 4; i < ind.getLength(); i++) {
 			areas.get(i - 4).probability = (Double)ind.getAllele(i);
 		}
+		return doEvaluate();
+	}
+	
+	private double doEvaluate(){
+		long start = System.currentTimeMillis();
+		double fitness = 0;
 
 		double sum = ZoneType.RESIDENTIAL.probability
 				+ ZoneType.INDUSTRIAL.probability
@@ -1313,7 +1253,18 @@ public class RouteGeneration {
 
 
 	public static void main(String[] args) {
-		new RouteGeneration();
+		RouteGeneration rg = new RouteGeneration();
+		rg.doEvaluate();
+		double []  res = rg.evaluator.eachDetectorCompareTo(rg.currentSolution);
+		int i=0;
+		for(String key : rg.currentSolution.keySet()){
+			System.out.printf("%s ",key);
+		}
+		System.out.println();
+		for(double d : res){
+			System.out.printf("%.0f ",d);
+		}
+		System.out.println();
 		//new ApproximativeEvaluation(args);
 	}
 }

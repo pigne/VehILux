@@ -186,6 +186,32 @@ public class RealEvaluation {
 	 	return ssum;
 	}
 
+	
+	public double[] eachDetectorCompareTo(HashMap<String, Detector> solution){
+		
+		double[] detectors = new double[solution.size()];
+		int di=0;
+		for(String id : solution.keySet()){
+			double sum =0;
+			Detector sd = solution.get(id);
+ 			Detector cd = controls.get(id);
+ 			if(cd == null){
+ 				System.err.println("Detector Error. Does not exist.");
+ 			}
+ 			if(sd.vehicles.length != cd.vehicles.length){
+ 				System.err.println("Detector Error. Solution and control length differ");
+ 			}
+ 			for(int i = 0 ; i<sd.vehicles.length; i++){
+ 				sum+=Math.abs((sd.vehicles[i]-cd.vehicles[i]));
+ 			}
+ 			detectors[di++]=sum;
+		}
+		
+	 	return detectors;
+	}
+
+	
+	
 	/**
 	 * @param args
 	 */
