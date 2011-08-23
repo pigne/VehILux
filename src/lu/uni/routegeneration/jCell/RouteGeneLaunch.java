@@ -35,11 +35,18 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private Vector<Double> BestIndPerGen = null;
      
+    private static String selection1;
+    
+    private static String selection2;
+    
+    private static String replacement;
+    
     private static String crossover;
     
     private static String mutation;
     
- 
+    
+    
     public RouteGeneLaunch(){
     	BestIndPerGen = new Vector<Double>();
     }
@@ -89,7 +96,7 @@ public class RouteGeneLaunch  implements GenerationListener
     		
     		// Create the population
     		Population pop = new PopGrid(x,y);
-    		Individual ind = new RealIndividual(longitCrom);
+    		Individual ind = new IntegerIndividual(longitCrom);
     		
     		ind.setMinMaxAlleleValue(true, prob.getMinAllowedValues());
     		ind.setMinMaxAlleleValue(false, prob.getMaxAllowedValues());
@@ -102,7 +109,7 @@ public class RouteGeneLaunch  implements GenerationListener
   
     		Double cross = 1.0; // crossover probability
 			Double mutac = 1.0; // probability of individual mutation
-			Double alleleMutationProb = 1.0 /prob.numberOfVariables(); // allele mutation probability;
+			Double alleleMutationProb = 0.05; // allele mutation probability;
 
     		//Double cross = Double.parseDouble(args[2]);
     		//Double mutac = Double.parseDouble(args[3]);
@@ -117,16 +124,20 @@ public class RouteGeneLaunch  implements GenerationListener
     	    ea.setParam(CellularGA.PARAM_CROSSOVER_PROB, cross);
     	    ea.setParam(CellularGA.PARAM_EVALUATION_LIMIT, new Integer(evaluationsLimit));
     	    ea.setParam(CellularGA.PARAM_TARGET_FITNESS, (Double) new Double(prob.getMaxFitness())); 
-    	    ea.setParam(CellularGA.PARAM_NEIGHBOURHOOD, new Linear5()); 
+    	    ea.setParam(CellularGA.PARAM_NEIGHBOURHOOD, new Compact9()); 	//Neighborhood 
     	    
     		ea.setParam("selection1", new TournamentSelection(r)); // selection of first parent
+    		selection1="Tournament Selection";
     	    ea.setParam("selection2", new TournamentSelection(r)); // selection of second parent
-    	    ea.setParam("crossover", new Spx(r));
-    	    crossover = "Single Point Crossover";
-    	    ea.setParam("mutation", new FloatUniformMutation(r,ea)); 
-    	    mutation = "Float Uniform Mutation";
-    	    ea.setParam("replacement", new ReplaceIfBetter()); 
-    	   
+    	    selection2="Tournament Selection";
+    	    
+    	    ea.setParam("crossover", new Spx(r)); //Crossover Operator
+    	    crossover = "Single Point Crossover"; 
+    	    ea.setParam("mutation", new IntegerMutation(r,ea)); //Mutation Operator
+    	    mutation = "Integer Mutation";
+    	    
+    	    ea.setParam("replacement", new ReplaceIfNonWorse()); //Replacement Strategy
+    	    replacement = "If non-worse";
     	    
     		// generation cycles 
     		ea.experiment();
@@ -195,12 +206,16 @@ public class RouteGeneLaunch  implements GenerationListener
     	out.write("# \tPopulation: "+x+"x"+y+"\n");
     	out.write("# \tPARAM_POP_ADAPTATION: " +ea.getParam(CellularGA.PARAM_POP_ADAPTATION)+"\n");
     	out.write("# \tPARAM_NEIGHBOURHOOD: " +ea.getParam(CellularGA.PARAM_NEIGHBOURHOOD)+"\n");
-    	out.write("# Crossover Operator:" + crossover + "\n");
+    	out.write("# \tSELECTION1: " + selection1 +"\n");
+    	out.write("# \tSELECTION2: " + selection2 +"\n");
+    	out.write("# \tREPLACEMENT_STRATEGY_: " + replacement +"\n");
+    	out.write("# Crossover Operator: " + crossover + "\n");
     	out.write("# \tCROSSOVER_PROB: "+ea.getParam(CellularGA.PARAM_CROSSOVER_PROB)+"\n");
     	out.write("# Mutation Operator:" + mutation + "\n");
     	out.write("# \tPARAM_MUTATION_PROB: "+ea.getParam(CellularGA.PARAM_MUTATION_PROB)+"\n");	
     	out.write("# \tPARAM_SYNCHR_UPDATE: "+ea.getParam(CellularGA.PARAM_SYNCHR_UPDATE)+"\n");
     	out.write("# \tPARAM_CELL_UPDATE: "+ea.getParam(CellularGA.PARAM_CELL_UPDATE)+"\n");
+    	    	
     	//out.write("# \tCrossover: WHX C13 Mutation:Uniform Sel1:TS Sel2:TS\n");
     	
     	double mean = rgl.getMean(averages);
