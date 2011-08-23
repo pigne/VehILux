@@ -1119,12 +1119,12 @@ public class RouteGeneration {
 	public double evaluate(Individual ind) {
 
 		
-		ZoneType.RESIDENTIAL.probability = (Double)ind.getAllele(0);
-		ZoneType.INDUSTRIAL.probability = (Double)ind.getAllele(1);
-		ZoneType.COMMERCIAL.probability = (Double)ind.getAllele(2);
-		insideFlowRatio = (Double)ind.getAllele(3);
+		ZoneType.RESIDENTIAL.probability = ((Integer)ind.getAllele(0)).doubleValue();
+		ZoneType.INDUSTRIAL.probability = ((Integer)ind.getAllele(1)).doubleValue();
+		ZoneType.COMMERCIAL.probability = ((Integer)ind.getAllele(2)).doubleValue();
+		insideFlowRatio = ((Integer)ind.getAllele(3)).doubleValue()/100;
 		for (int i = 4; i < ind.getLength(); i++) {
-			areas.get(i - 4).probability = (Double)ind.getAllele(i);
+			areas.get(i - 4).probability = ((Integer)ind.getAllele(i)).doubleValue()/10;
 		}
 		return doEvaluate();
 	}
@@ -1139,6 +1139,9 @@ public class RouteGeneration {
 		ZoneType.RESIDENTIAL.probability /= sum;
 		ZoneType.INDUSTRIAL.probability /= sum;
 		ZoneType.COMMERCIAL.probability /= sum;
+		
+		System.out.printf("Residential: " + ZoneType.RESIDENTIAL.probability + "Industrial: " + ZoneType.INDUSTRIAL.probability
+				+ "Commercial: " + ZoneType.COMMERCIAL.probability);
 		
 		double sumRES = 1;
 		double sumCOM = 1;
@@ -1184,6 +1187,8 @@ public class RouteGeneration {
 					* z.type.probability * z.area.probability;
 		}
 
+		
+		
 		for(Detector d : currentSolution.values()){
 			d.reset();
 		}
