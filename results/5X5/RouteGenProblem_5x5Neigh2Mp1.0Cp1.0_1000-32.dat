@@ -1,0 +1,77 @@
+# Mobility Model optimization using jCell
+#
+# Cellular Genetic Algorithm  Time&Date: 29-07-11 11:38:00
+# Parameters: 
+# 	Population: 5x5
+# 	PARAM_POP_ADAPTATION: null
+# 	PARAM_NEIGHBOURHOOD: jcell.neighborhoods.Linear5@65e60601
+# Crossover Operator:Single Point Crossover
+# 	CROSSOVER_PROB: 1.0
+# Mutation Operator:Integer Mutation
+# 	PARAM_MUTATION_PROB: 1.0
+# 	PARAM_SYNCHR_UPDATE: true
+# 	PARAM_CELL_UPDATE: jcell.LineSweep@60945fea
+#
+#
+# Average: 23112.88
+#
+# Standard deviation: 0.0 #
+#
+#
+# Solution: Best Time (ms)
+#
+# 22939.0 4434493
+#
+# Alleles of best individual:
+# 83
+# 92
+# 82
+# 50
+# 43
+# 60
+# 26
+# 8
+# 62
+#
+#
+# Best Indiviudal average per generation: Generation BestIndividual
+0	23653.0
+1	23593.0
+2	23494.0
+3	23494.0
+4	23251.0
+5	23251.0
+6	23208.0
+7	23208.0
+8	23063.0
+9	23018.0
+10	23018.0
+11	23018.0
+12	23018.0
+13	23018.0
+14	23018.0
+15	23018.0
+16	23018.0
+17	23018.0
+18	23018.0
+19	23018.0
+20	23018.0
+21	23018.0
+22	23018.0
+23	22987.0
+24	22987.0
+25	22987.0
+26	22987.0
+27	22987.0
+28	22987.0
+29	22987.0
+30	22987.0
+31	22987.0
+32	22939.0
+33	22939.0
+34	22939.0
+35	22939.0
+36	22939.0
+37	22939.0
+38	22939.0
+39	22939.0
