@@ -103,15 +103,10 @@ public class Flow   implements Comparable<Flow> {
 		}
 
 		if (loop.dijkstra == null) {
-<<<<<<< HEAD
-			System.out.println("Computing dijkstra for edge "+loop.edge);
-			Dijkstra djk  = new Dijkstra(Dijkstra.Element.node, "weight",
-					loop.edge);
-=======
+
 			
 			System.out.println("!!!!!!!!!!!!!!!!!! -> Computing dijkstra for edge "+loop.edge);
 			DijkstraFH djk = new DijkstraFH(DijkstraFH.Element.NODE, loop.edge,"weight");
->>>>>>> update
 			djk.init(rg.graph);
 			djk.setSource(rg.graph.getNode(loop.edge));
 			djk.compute();
