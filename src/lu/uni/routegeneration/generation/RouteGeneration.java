@@ -929,7 +929,7 @@ public class RouteGeneration {
 		// This process is VERY slow and should be changed for optimization
 		// purposed. One possibility : store the shortest path in the DGS file.
 		//
-		System.out.println("__Residential Zones ShortestPaths... (pretty long)");
+		System.out.println("__Residential Zones ShortestPaths... (be patient)");
 
 		int zone_count = 0;
 		zonesToRemove = new ArrayList<Zone>();
@@ -979,7 +979,7 @@ public class RouteGeneration {
 		}
 		zonesToRemove.clear();
 
-		System.out.printf("  _checking accessibility of Residential zones. This takes a moment... %n"); 
+		System.out.printf("  _checking accessibility of Residential zones. This takes a while... %n"); 
 		for (Zone z : zones.values()) {
 			fillZoneNodes(z);
 		}
@@ -1409,10 +1409,10 @@ public class RouteGeneration {
 	public static String pathToString(Path path){
 		StringBuilder sb = new StringBuilder();
 		List<Node> l = path.getNodePath();
-		for (int i = l.size() - 1; i >= 0; i--) {
+		for (int i = 0; i < l.size() ; i++) {
 			l.get(i).addAttribute("ui.class", "path");
 			sb.append(l.get(i).getId());
-			if (i > 0)
+			if (i < l.size()-1)
 				sb.append(" ");
 		}
 
