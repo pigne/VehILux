@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="lib/jmapprojlib.jar"/>
+	<classpathentry kind="lib" path="lib/xercesImpl.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/gs-deps.jar"/>
+	<classpathentry kind="lib" path="lib/jCell.jar"/>
+	<classpathentry kind="lib" path="lib/gs-algo.jar"/>
+	<classpathentry kind="lib" path="lib/gs-core.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
