@@ -10,13 +10,14 @@
  */
 package lu.uni.routegeneration.generation;
 
-import org.graphstream.algorithm.Dijkstra;
+import org.graphstream.algorithm.DijkstraFH;
+import org.graphstream.graph.Path;
 import org.xml.sax.SAXException;
 
 /**
  * 
  */
-public class Flow implements Comparable<Flow> {
+public class Flow   implements Comparable<Flow> {
 	private static final int CAR = 0;
 	private static final int TRUCK = 1;
 	int hour;
@@ -33,13 +34,14 @@ public class Flow implements Comparable<Flow> {
 
 	public Flow(RouteGeneration rg) {
 		this.rg = rg;
-
 	}
 
 	@Override
 	public String toString() {
-		return String.format("hour: %d, car: %d, truck: %d", hour, car, truck);
+		return String.format("hour: %d, car: %d, truck: %d, carT: %.2f, truckT: %.2f, next: %.2f", hour, car, truck, carT,truckT,next);
 	}
+
+       
 
 	boolean next() {
 
@@ -75,11 +77,9 @@ public class Flow implements Comparable<Flow> {
 		// System.out.println("Next on flow "+loop.id+"_"+hour+".  next="+next);
 
 		if (next > ((hour) * 3600) || next > rg.stopTime) {
-			System.out
-					.println("Done with flow " + loop.id + "(" + loop.edge
-							+ ")_" + hour + ". Removing. " + next + ". \n-" + C
-							+ " cars over " + car + "\n-" + T + " trucks over "
-							+ truck);
+			//System.out
+			//		.println("__done with flow " + loop.id + " (" + loop.edge
+			//				+ ") h:" + hour );
 			loop.flows.remove(this);
 			// nextFlow = null;
 			return false;
@@ -103,12 +103,20 @@ public class Flow implements Comparable<Flow> {
 		}
 
 		if (loop.dijkstra == null) {
+<<<<<<< HEAD
 			System.out.println("Computing dijkstra for edge "+loop.edge);
 			Dijkstra djk  = new Dijkstra(Dijkstra.Element.node, "weight",
 					loop.edge);
+=======
+			
+			System.out.println("!!!!!!!!!!!!!!!!!! -> Computing dijkstra for edge "+loop.edge);
+			DijkstraFH djk = new DijkstraFH(DijkstraFH.Element.NODE, loop.edge,"weight");
+>>>>>>> update
 			djk.init(rg.graph);
+			djk.setSource(rg.graph.getNode(loop.edge));
 			djk.compute();
-			loop.dijkstra = djk.getParentEdgesString();
+			loop.dijkstra = loop.edge;
+		
 		}
 		// System.out.println("Go on flow "+loop.id+"_"+hour+".  next="+next);
 		try {
@@ -126,11 +134,12 @@ public class Flow implements Comparable<Flow> {
 
 				rg.ai.clear();
 
-				String p=null;
+				Path p=null;
 				do{
 					p=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
 				}while(p==null);
-				rg.ai.addAttribute("", "", "edges", "CDATA", p);
+				
+				rg.ai.addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
 				rg.tfh.startElement("", "", "route", rg.ai);
 				rg.tfh.endElement("", "", "route");
 
@@ -149,11 +158,11 @@ public class Flow implements Comparable<Flow> {
 				rg.tfh.startElement("", "", "vehicle", rg.ai);
 				rg.ai.clear();
 
-				String p=null;
+				Path p=null;
 				do{
 					p=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
 				}while(p==null);
-				rg.ai.addAttribute("", "", "edges", "CDATA", p);
+				rg.ai.addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
 				rg.tfh.startElement("", "", "route", rg.ai);
 				rg.tfh.endElement("", "", "route");
 
@@ -180,5 +189,7 @@ public class Flow implements Comparable<Flow> {
 		// else
 		// return 0;
 	}
-
+		
+       
+	
 }

@@ -12,12 +12,10 @@ package lu.uni.routegeneration.generation;
 
 import java.util.TreeSet;
 
-import org.graphstream.algorithm.Dijkstra;
-
 /**
  * 
  */
-public class Loop implements Comparable<Loop> {
+public class Loop  implements Comparable<Loop>  {
 	public int nextTime;
 	String id;
 	String edge;

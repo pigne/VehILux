@@ -30,7 +30,8 @@ public class Zone {
 	public double max_x_boundary;
 	public double max_y_boundary;
 	public ArrayList<Point2D.Double> points;
-	public double surface;
+	public ArrayList<Node> near_nodes;
+        public double surface;
 	public double probability;
 	public Area area = null;
 	public String shortestPath;
@@ -38,6 +39,7 @@ public class Zone {
 
 	public Zone() {
 		points = new ArrayList<Point2D.Double>();
+                near_nodes = new ArrayList<Node>();
 	}
 
 	public String toString() {
