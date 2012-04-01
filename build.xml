@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project VehILux">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <target name="create_run_jar">
+        <jar destfile="vehilux.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="lu.uni.routegeneration.generation.RouteGeneration"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="lib/jmapprojlib.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="lib/xercesImpl.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="lib/gs-deps.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="lib/jCell.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="lib/gs-algo.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="lib/gs-core.jar"/>
+        </jar>
+    </target>
+</project>
