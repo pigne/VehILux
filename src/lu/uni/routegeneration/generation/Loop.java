@@ -10,19 +10,16 @@
  */
 package lu.uni.routegeneration.generation;
 
-import java.util.HashSet;
 import java.util.TreeSet;
-
-import org.graphstream.algorithm.Dijkstra;
 
 /**
  * 
  */
-public class Loop  {
+public class Loop  implements Comparable<Loop>  {
 	public int nextTime;
 	String id;
 	String edge;
-	HashSet<Flow> flows = new HashSet<Flow>();
+	TreeSet<Flow> flows = new TreeSet<Flow>();
 
 	String dijkstra = null;
 
@@ -35,5 +32,15 @@ public class Loop  {
 		return String.format("Loop %s on edge %s,  flows:%n%s", id, edge, fl);
 	}
 
-	
+	public int compareTo(Loop l) {
+		if (l == this)
+			return 0;
+		else if (this.flows.first().next < l.flows.first().next)
+			return -1;
+		else
+			// if (this.flows.first().next > l.flows.first().next)
+			return 1;
+		// else
+		// return 0;
+	}
 }

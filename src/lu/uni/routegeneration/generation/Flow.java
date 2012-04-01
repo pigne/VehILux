@@ -10,13 +10,14 @@
  */
 package lu.uni.routegeneration.generation;
 
-import org.graphstream.algorithm.Dijkstra;
+import org.graphstream.algorithm.DijkstraFH;
+import org.graphstream.graph.Path;
 import org.xml.sax.SAXException;
 
 /**
  * 
  */
-public class Flow   {
+public class Flow   implements Comparable<Flow> {
 	private static final int CAR = 0;
 	private static final int TRUCK = 1;
 	int hour;
@@ -33,16 +34,155 @@ public class Flow   {
 
 	public Flow(RouteGeneration rg) {
 		this.rg = rg;
-
 	}
 
 	@Override
 	public String toString() {
-		return String.format("hour: %d, car: %d, truck: %d", hour, car, truck);
+		return String.format("hour: %d, car: %d, truck: %d, carT: %.2f, truckT: %.2f, next: %.2f", hour, car, truck, carT,truckT,next);
 	}
 
        
-	
+
+	boolean next() {
+
+		if (next == -1) {
+			// System.out.print("-");
+
+			truckT = carT = next = (hour - 1) * 3600;
+			if (1.0 / (double) car < 1.0 / (double) truck) {
+				next += (1.0 / (double) car * 3600);
+				nextVehicle = Flow.CAR;
+				carT = next;
+			} else {
+				next += (1.0 / (double) truck * 3600);
+				nextVehicle = Flow.TRUCK;
+				truckT = next;
+			}
+		}
+
+		else {
+
+			if (truckT + (1.0 / (double) truck * 3600.0) > carT
+					+ (1.0 / (double) car * 3600.0)) {
+				carT += 1.0 / (double) car * 3600.0;
+				next = carT;
+				nextVehicle = CAR;
+			} else {
+				truckT += (1.0 / (double) truck) * 3600.0;
+				next = truckT;
+				nextVehicle = TRUCK;
+			}
+
+		}
+		// System.out.println("Next on flow "+loop.id+"_"+hour+".  next="+next);
+
+		if (next > ((hour) * 3600) || next > rg.stopTime) {
+			//System.out
+			//		.println("__done with flow " + loop.id + " (" + loop.edge
+			//				+ ") h:" + hour );
+			loop.flows.remove(this);
+			// nextFlow = null;
+			return false;
+			/*
+			 * if (loop.flows.size()<0) {
+			 * System.out.println("Done with loop "+loop.id+". Removing.");
+			 * loops.remove(loop);
+			 * 
+			 * }
+			 */
+		}
+
+		return true;
+
+	}
+
+	boolean go() {
+
+		if (next > rg.stopTime) {
+			return false;
+		}
+
+		if (loop.dijkstra == null) {
+			
+			System.out.println("!!!!!!!!!!!!!!!!!! -> Computing dijkstra for edge "+loop.edge);
+			DijkstraFH djk = new DijkstraFH(DijkstraFH.Element.NODE, loop.edge,"weight");
+			djk.init(rg.graph);
+			djk.setSource(rg.graph.getNode(loop.edge));
+			djk.compute();
+			loop.dijkstra = loop.edge;
+		
+		}
+		// System.out.println("Go on flow "+loop.id+"_"+hour+".  next="+next);
+		try {
+			if (nextVehicle == CAR) {
+				rg.val++;
+				rg.ai.clear();
+				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h"
+						+ hour + "_c" + C);
+				rg.ai.addAttribute("", "", "type", "CDATA",
+						rg.vtypes.get((int) (org.util.Random.next() * rg.vtypes
+								.size())).id);
+				rg.ai.addAttribute("", "", "depart", "CDATA", "" + (int) next);
+
+				rg.tfh.startElement("", "", "vehicle", rg.ai);
+
+				rg.ai.clear();
+
+				Path p=null;
+				do{
+					p=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
+				}while(p==null);
+				
+				rg.ai.addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
+				rg.tfh.startElement("", "", "route", rg.ai);
+				rg.tfh.endElement("", "", "route");
+
+				rg.tfh.endElement("", "", "vehicle");
+				C++;
+			}
+
+			else {
+				rg.val++;
+				rg.ai.clear();
+				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h"
+						+ hour + "_t" + T);
+				rg.ai.addAttribute("", "", "type", "CDATA", "truck");
+				rg.ai.addAttribute("", "", "depart", "CDATA", Integer
+						.toString((int) next));
+				rg.tfh.startElement("", "", "vehicle", rg.ai);
+				rg.ai.clear();
+
+				Path p=null;
+				do{
+					p=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
+				}while(p==null);
+				rg.ai.addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
+				rg.tfh.startElement("", "", "route", rg.ai);
+				rg.tfh.endElement("", "", "route");
+
+				rg.tfh.endElement("", "", "vehicle");
+				T++;
+			}
+
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return next();
+	}
+
+	public int compareTo(Flow f) {
+		if (this == f)
+			return 0;
+
+		else if (this.next < f.next)
+			return -1;
+		else
+			// if (this.next > f.next)
+			return 1;
+		// else
+		// return 0;
+	}
 		
        
 	
