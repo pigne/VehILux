@@ -13,11 +13,15 @@ import java.util.Random;
 import java.util.Date;
 import java.util.Vector;
 
+import lu.uni.routegeneration.generation.RouteGeneration;
+
 
 import operators.mutation.*;
 import operators.recombination.*;
 import operators.selection.*;
 import operators.replacement.*;
+import ssEA.*;
+import genEA.*;
 
 
 public class RouteGeneLaunch  implements GenerationListener
@@ -27,6 +31,7 @@ public class RouteGeneLaunch  implements GenerationListener
     static int numberOfFuncts  ;
     
     // Default maximum number of function evaluations
+    //static int evaluationsLimit = 10000;
     static int evaluationsLimit = 10000;
     
     //private static boolean showDisplay = false;
@@ -34,24 +39,95 @@ public class RouteGeneLaunch  implements GenerationListener
     private boolean verbose = true;
     
     private Vector<Double> BestIndPerGen = null;
-     
+    private Vector[] bestIslandIndPerGen = null;
+
+    private static String selection1;
+
+    private static String selection2;
+
+    private static String replacement;
     private static String crossover;
     
     private static String mutation;
     
- 
+    private static EvolutionaryAlg ea = null;
+    
+    private static boolean coevolutionary = true;
+    private static boolean discrete = true;    
+    private static boolean synchronised = true;
+    private static int islandcount = 4;
+    private static boolean parallelProblemInit = false;
+    
     public RouteGeneLaunch(){
     	BestIndPerGen = new Vector<Double>();
+    	bestIslandIndPerGen = new Vector[islandcount];
+        for(int island = 0; island< islandcount; island++)
+    	{
+        	bestIslandIndPerGen[island] = new Vector<Double>();        	
+    	}
     }
     
     public Vector<Double> getBestIndPerGen(){
     	return BestIndPerGen;
     }
     
+    public Vector<Double>[] getBestIslandIndPerGen(){
+    	return bestIslandIndPerGen;
+    }
+
+    private static Population CreatePopulation(String algorithm, Problem prob, Random r, int x, int y)
+    {
+    	Population pop;
+    	if(algorithm.equalsIgnoreCase("cGA"))
+		{
+    		// Create the population
+    		pop = new PopGrid(x,y);	
+		}
+		else
+		{
+			pop = new Population(100);
+		}
+    	
+    	//Individual ind = new VehILuxIndividual();
+    	//VehILuxRealIndividual ind = new VehILuxRealIndividual();
+    	// need to initialize each individual to normalise
+    	for (int i=0; i<pop.getPopSize(); i++)
+        {	
+			RealIndividual ind = new RealIndividual();
+			
+			ind.setMinMaxAlleleValue(true, prob.getMinAllowedValues());
+			ind.setMinMaxAlleleValue(false, prob.getMaxAllowedValues());
+			ind.setLength(prob.numberOfVariables());
+			ind.setNumberOfFuncts(prob.numberOfObjectives());
+			ind.setRandomValues(r);
+			
+			RouteGenerationProblem.NormaliseIndividual(ind);
+			
+			if (discrete)
+			{
+				RouteGenerationProblem.DiscretiseIndividual(ind);
+			}
+			
+			pop.setIndividual(i, ind);
+        }
+        //pop.setRandomPop(r, ind);
+        
+        return pop;
+    }
+    
+    private static Problem CreateProblem()
+    {
+    	//Problem problem = new RouteGenerationProblem();    	
+    	Problem problem = new RouteGenerationProblemTest();
+    	
+    	return problem;
+    }
+    static int index;
     
     public static void main (String args[]) throws Exception
     {
-    	//int numberofruns = Integer.parseInt(args[0]);
+    	String algorithm = args[0];
+    	
     	int numberofruns = 1;
     	Vector<Vector<Double>> results = new Vector<Vector<Double>>();
     	
@@ -61,15 +137,12 @@ public class RouteGeneLaunch  implements GenerationListener
     	Individual bestIndiv = null;
     	
     	RouteGeneLaunch rgl = null;
-		
-		EvolutionaryAlg ea = null;
-		
+				
 		double[] averages = new double[numberofruns];    	
 		
-    	//Population size
-    	int x = 10;
-		int y = 10;
-		
+		//Population size
+		int x = 10;
+		int y = 10;		
     	
     	for(int i = 0; i<numberofruns; i++){
     		
@@ -78,58 +151,184 @@ public class RouteGeneLaunch  implements GenerationListener
         	Random r = new Random(); // seed for the random number generator
         	
     		rgl = new RouteGeneLaunch();
-    		
-    		ea = new CellularGA(r);
-        	
-    		Problem prob = new RouteGenerationProblem();
-    		ea.setParam(CellularGA.PARAM_PROBLEM, prob);
-    		longitCrom = prob.numberOfVariables();
-    		numberOfFuncts = prob.numberOfObjectives();    		
-    		//evaluationsLimit = Integer.parseInt(args[1]);
-    		
-    		// Create the population
-    		Population pop = new PopGrid(x,y);
-    		Individual ind = new RealIndividual(longitCrom);
-    		
-    		ind.setMinMaxAlleleValue(true, prob.getMinAllowedValues());
-    		ind.setMinMaxAlleleValue(false, prob.getMaxAllowedValues());
-    		ind.setLength(prob.numberOfVariables());
-    		ind.setNumberOfFuncts(prob.numberOfObjectives());
-    		ind.setRandomValues(r);
-    		
-    		pop.setRandomPop(r, ind);
-    		
+            if (coevolutionary)
+            {
+            	//int[] islandMask = {0,0,0,1,1,2,2,2,3,3,1,3};
+            	int[] islandMask = {0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 2, 3}; 
+            	
+            	ea = new CoevEA(r, islandcount, islandMask, synchronised);
+            	for(int island = 0; island< islandcount; island++)
+            	{
+	            	if(algorithm.equalsIgnoreCase("cGA")){
+	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new CellularGA(r));
+	            	} else if (algorithm.equalsIgnoreCase("genGA")){           
+	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new GenGA(r));		            	
+		            } else if(algorithm.equalsIgnoreCase("ssGA")){  
+		            	((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new SSGA(r));
+		            }
+            	}
+            }
+            else
+            {
+	            if(algorithm.equalsIgnoreCase("cGA")){
+	            	ea = new CellularGA(r);
+	            	System.out.println("cGA");
+	            } else if (algorithm.equalsIgnoreCase("genGA")){           
+	            	ea = new GenGA(r);
+	            	System.out.println("genGA");
+	            } else if(algorithm.equalsIgnoreCase("ssGA")){  
+	            	ea = new SSGA(r);
+	            	System.out.println("ssGA");
+	            }
+            }        
   
     		Double cross = 1.0; // crossover probability
 			Double mutac = 1.0; // probability of individual mutation
-			Double alleleMutationProb = 1.0 /prob.numberOfVariables(); // allele mutation probability;
+			Double alleleMutationProb; // = 1.0 /prob.numberOfVariables(); // allele mutation probability;
 
     		//Double cross = Double.parseDouble(args[2]);
     		//Double mutac = Double.parseDouble(args[3]);
-    		
-    		
-    		// Set parameters of CGA
-    	    ea.setParam(CellularGA.PARAM_POPULATION, pop);
-    	    ea.setParam(CellularGA.PARAM_STATISTIC, new ComplexStats());
-    	    ea.setParam(CellularGA.PARAM_LISTENER,rgl);
-    	    ea.setParam(CellularGA.PARAM_MUTATION_PROB, mutac);
-    	    ea.setParam(CellularGA.PARAM_ALLELE_MUTATION_PROB, alleleMutationProb);
-    	    ea.setParam(CellularGA.PARAM_CROSSOVER_PROB, cross);
-    	    ea.setParam(CellularGA.PARAM_EVALUATION_LIMIT, new Integer(evaluationsLimit));
-    	    ea.setParam(CellularGA.PARAM_TARGET_FITNESS, (Double) new Double(prob.getMaxFitness())); 
-    	    ea.setParam(CellularGA.PARAM_NEIGHBOURHOOD, new Linear5()); 
-    	    
-    		ea.setParam("selection1", new TournamentSelection(r)); // selection of first parent
+            if (coevolutionary)
+            {
+            	//alleleMutationProb = alleleMutationProb * islandcount;
+            	((CoevEA)ea).setParam(EvolutionaryAlg.PARAM_LISTENER,rgl);
+            	
+            	if (parallelProblemInit)
+            	{
+	            	Thread[] t = new Thread[islandcount];            	
+	            	for (int island = 0; island < islandcount; island++)
+	            	{
+	            		index = island;
+	            		t[island] = new Thread( new Runnable()
+	    					{
+		    	                int island=new Integer(index);
+		    	
+		    	                public void run ()
+		    	                {                    
+		    	                	Problem prob = CreateProblem();
+		    	            		((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_PROBLEM, prob);
+		    	                } 
+	    	            	}
+	            		);
+	            	}
+	            	
+	            	// start all island threads initialising problems in parallel
+	            	for (int island = 0; island < islandcount; island++)
+	        		{            		
+	        			t[island].start();
+	        			Thread.sleep(2000);
+	        		}
+	        		
+	        		// wait for all to finish
+	            	for (int island = 0; island < islandcount; island++)
+	        		{
+	        			try {
+	        				t[island].join();
+	        			
+	        			} catch (InterruptedException e) {
+	        				// TODO Auto-generated catch block
+	        				e.printStackTrace();
+	        			}
+	        		}
+            	}
+            	
+        		for (int island = 0; island < islandcount; island++)
+            	{	
+        			Problem prob = null;
+        			
+        			if (parallelProblemInit)
+                	{
+        				prob = (Problem)((CoevEA)ea).getParam(island, EvolutionaryAlg.PARAM_PROBLEM);
+                	}
+        			else
+        			{
+        				System.out.println("Started problem " + island);
+        				prob = CreateProblem();
+	            		((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_PROBLEM, prob);
+        			}
+        			alleleMutationProb = 1.0 / prob.numberOfVariables(); // allele mutation probability;
+        			
+	            	Population pop = CreatePopulation(algorithm, prob, r, x, y);
+	            	// common parameter objects
+	            	((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_POPULATION, pop);
+	            	((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_STATISTIC, new ComplexStats());
+	            	ea.setParam(EvolutionaryAlg.PARAM_TARGET_FITNESS, (Double) new Double(prob.getMaxFitness()));
+	            	ea.setParam(EvolutionaryAlg.PARAM_TARGET_FITNESS, -1.0); // to avoid islands quitting
+	        	    
+	        	    // specific parameter objects
+		            if(algorithm.equalsIgnoreCase("cGA")){
+		            	// Set parameters of CGA	        	    
+		            	((CoevEA)ea).setParam(island, CellularGA.PARAM_NEIGHBOURHOOD, new Compact9()); 	//Neighborhood
+		            	((CoevEA)ea).setParam(island, CellularGA.PARAM_CELL_UPDATE, new LineSweep((PopGrid)pop));
+		            	((CoevEA)ea).setParam(island, "replacement", new ReplaceIfNonWorse()); //Replacement Strategy
+		        	    replacement = "If Non Worse";
+		        	    
+		            } else if (algorithm.equalsIgnoreCase("genGA")){
+		            	// no special parameters needed	        	    
+		            } else if(algorithm.equalsIgnoreCase("ssGA")){
+		            	((CoevEA)ea).setParam(island, "replacement", new ReplaceIfBetter()); //Replacement Strategy
+		        	    replacement = "If better";
+		            }
+		            ((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_ALLELE_MUTATION_PROB, alleleMutationProb);
+            	}
+            	ea.setParam(EvolutionaryAlg.PARAM_EVALUATION_LIMIT, new Integer(evaluationsLimit / islandcount));            	
+            }
+            else
+            {
+            	Problem prob = CreateProblem();
+            	alleleMutationProb = 1.0 / prob.numberOfVariables(); // allele mutation probability;
+                ea.setParam(EvolutionaryAlg.PARAM_PROBLEM, prob);
+                
+                Population pop = CreatePopulation(algorithm, prob, r, x, y);
+            	
+            	// common parameter objects
+            	ea.setParam(EvolutionaryAlg.PARAM_POPULATION, pop);
+        	    ea.setParam(EvolutionaryAlg.PARAM_STATISTIC, new ComplexStats());
+        	    ea.setParam(EvolutionaryAlg.PARAM_LISTENER,rgl);
+        	    ea.setParam(EvolutionaryAlg.PARAM_TARGET_FITNESS, (Double) new Double(prob.getMaxFitness()));
+        	    
+        	    // specific parameter objects
+	            if(algorithm.equalsIgnoreCase("cGA")){
+	            	// Set parameters of CGA	        	    
+	        	    ea.setParam(CellularGA.PARAM_NEIGHBOURHOOD, new Compact9()); 	//Neighborhood
+	        	    ea.setParam(CellularGA.PARAM_CELL_UPDATE, new LineSweep((PopGrid)pop));
+	        	    ea.setParam("replacement", new ReplaceIfNonWorse()); //Replacement Strategy
+	        	    replacement = "If Non Worse";
+	        	    
+	            } else if (algorithm.equalsIgnoreCase("genGA")){
+	            	// no special parameters needed	        	    
+	            } else if(algorithm.equalsIgnoreCase("ssGA")){
+	        	    ea.setParam("replacement", new ReplaceIfBetter()); //Replacement Strategy
+	        	    replacement = "If better";
+	            }
+	            ea.setParam(EvolutionaryAlg.PARAM_EVALUATION_LIMIT, new Integer(evaluationsLimit));
+	            ea.setParam(EvolutionaryAlg.PARAM_ALLELE_MUTATION_PROB, alleleMutationProb);
+            }
+            
+            // common parameter values
+            ea.setParam(EvolutionaryAlg.PARAM_MUTATION_PROB, mutac);    	    
+    	    ea.setParam(EvolutionaryAlg.PARAM_CROSSOVER_PROB, cross);
+    	       	    
+            
+            ea.setParam("selection1", new TournamentSelection(r)); // selection of first parent
+            //ea.setParam("selection1", new CenterSelection(r)); // selection of first parent
+            selection1="Center Selection";
     	    ea.setParam("selection2", new TournamentSelection(r)); // selection of second parent
-    	    ea.setParam("crossover", new Spx(r));
-    	    crossover = "Single Point Crossover";
-    	    ea.setParam("mutation", new FloatUniformMutation(r,ea)); 
-    	    mutation = "Float Uniform Mutation";
-    	    ea.setParam("replacement", new ReplaceIfBetter()); 
-    	   
+    	    selection2="Tournament Selection";
+
+//    	    ea.setParam("crossover", new VehILuxCrossover(r)); //Crossover Operator
+//    	    crossover = "VehILux Crossover";
+//    	    ea.setParam("mutation", new VehILuxMutation(r, ea)); //Mutation Operator
+//    	    mutation = "VehILux Mutation";
     	    
-    		// generation cycles 
-    		ea.experiment();
+    	    //ea.setParam("crossover", new VehILuxNormOperator(new PBX(r))); //Crossover Operator
+    	    //ea.setParam("crossover", new VehILuxNormOperator(new Spx(r))); //Crossover Operator
+    	    ea.setParam("crossover", new VehILuxNormOperator(new Dpx(r), discrete)); //Crossover Operator
+	    	ea.setParam("mutation", new VehILuxNormOperator(new GaussianMutation(r, ea), discrete)); //Mutation Operator
+    	    //ea.setParam("mutation", new VehILuxNormOperator(new FloatUniformMutation(r, ea), discrete)); //Mutation Operator
+
+            // generation cycles
+            ea.experiment();
     		
 
     		
@@ -144,7 +343,7 @@ public class RouteGeneLaunch  implements GenerationListener
     				bestIndiv = (Individual) bestInd.clone();
     			}
     		}
-    		
+    		    		    		
     		double avg = ((Double)((Statistic)ea.getParam(EvolutionaryAlg.PARAM_STATISTIC)).getStat(ComplexStats.AVG_FIT)).doubleValue();
     		
     		
@@ -152,19 +351,20 @@ public class RouteGeneLaunch  implements GenerationListener
     		averages[i] = avg;
     		
      		
-    		//Save the best individuals per generation of this run
-    		results.add(rgl.getBestIndPerGen());
-    		
-    		
-			// writes: best found solution, number of evaluations, elapsed time (mseconds) in the standard output
-
-			//System.out.print(bestInd.getFitness() + " " );
-			
-			//for (int m = 0; m< bestInd.getLength();m++){
-			//	System.out.print(bestInd.getAllele(m) + " ");
-			//}
-			//System.out.print(prob.getNEvals() + " " + "\n");
-			
+            //Save the best individuals per generation of this run
+            if (coevolutionary)
+            {
+            	Vector<Double>[] best = rgl.getBestIslandIndPerGen();
+            	
+            	for (int island = 0; island < islandcount; island++)
+            	{
+            		results.add(best[i]);
+            	}
+            }
+            else
+            {
+            	results.add(rgl.getBestIndPerGen());
+            }
     	}
     	
     	end = (new Date()).getTime();
@@ -211,14 +411,16 @@ public class RouteGeneLaunch  implements GenerationListener
     	out.write("#\n#\n# Solution: Best Time (ms)\n#\n");
     	out.write("# " + best + " " +(end-start) + "\n#\n");
     	out.write("# Alleles of best individual:\n");
-		
+    	System.out.println("# Alleles of best individual:\n");
 		
 		for (int i = 0; i< bestIndiv.getLength();i++){
 			out.write("# "+ bestIndiv.getAllele(i) +"\n");
-		}
+        	System.out.println("# "+ bestIndiv.getAllele(i));
+        }
 		
 		
 		out.write("#\n#\n# Best Indiviudal average per generation: Generation BestIndividual\n");
+      	System.out.println("#\n#\n# Best Indiviudal average per generation: Generation BestIndividual\n");
 		
 		
 		// Calculation of average of best individual per generation
@@ -244,6 +446,7 @@ public class RouteGeneLaunch  implements GenerationListener
 		for (int i = 0; i < numberEval; i++){
 			average[i] /= results.size();
 			out.write(i + "\t" + average[i] +"\n");
+                        System.out.println(i + "\t" + average[i]);
 		}
 		
 		out.close();
@@ -264,18 +467,28 @@ public class RouteGeneLaunch  implements GenerationListener
     }
     
     
-    public void generation(EvolutionaryAlg ea)
-    {   
+    public void generation(EvolutionaryAlg alg)
+    {
     	//CellularGA cea = (CellularGA) ea;
     	verbose = ((Boolean) ea.getParam(CellularGA.PARAM_VERBOSE)).booleanValue();
 
-    	if ((!ea.getParam(EvolutionaryAlg.PARAM_POPULATION).getClass().getName().equalsIgnoreCase("distributedGA")) &&
+    	if (coevolutionary)
+    	{	
+    		int island = ((CoevEA)ea).IslandIndex(alg);
+    		
+    		int pos = ((Integer)((Statistic)alg.getParam(EvolutionaryAlg.PARAM_STATISTIC)).getStat(SimpleStats.MIN_FIT_POS)).intValue();
+			Individual bestInd = ((Population)alg.getParam(EvolutionaryAlg.PARAM_POPULATION)).getIndividual(pos);
+    		
+    		bestIslandIndPerGen[island].add(((Double)bestInd.getFitness()).doubleValue());
+    		
+    	}
+    	else if ((!ea.getParam(EvolutionaryAlg.PARAM_POPULATION).getClass().getName().equalsIgnoreCase("distributedGA")) &&
     			(((Population)ea.getParam(EvolutionaryAlg.PARAM_POPULATION)).getPopSize() != 1))
     	{
 			// Get the best Individual
 			int pos = ((Integer)((Statistic)ea.getParam(EvolutionaryAlg.PARAM_STATISTIC)).getStat(SimpleStats.MIN_FIT_POS)).intValue();
 			Individual bestInd = ((Population) ea.getParam(EvolutionaryAlg.PARAM_POPULATION)).getIndividual(pos);
-			
+
 			BestIndPerGen.add(((Double)bestInd.getFitness()).doubleValue());
 			//System.out.println("\t Best individual of generation " + (++NumGen) +" : " + bestInd.getFitness());
     	}

@@ -1,13 +1,17 @@
 package lu.uni.routegeneration.jCell;
 
+import java.util.Arrays;
 import java.util.Vector;
 
 import jcell.Individual;
 import jcell.Problem;
+import jcell.RealIndividual;
 import jcell.Target;
 import lu.uni.routegeneration.generation.RouteGeneration;
 
 public class RouteGenerationProblem extends Problem{
+
+	public static int[] GeneGroupLengths = {3,4,2,2,1,1}; 
 
 	RouteGeneration routeGen;
 	
@@ -22,11 +26,11 @@ public class RouteGenerationProblem extends Problem{
 		//Set the maximum and minimum values for each of the solution variables 
 		//Structure  Tr/Ti/Tc/Zc1/Zc2/Zc3/Zcd/Zi1/Zid/Zr1/Zrd/IR/SR
 		
-		double minValues[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 20};
-		double maxValues[] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 70, 80};
+		Double minValues[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 30.0, 20.0};
+		Double maxValues[] = {100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 70.0, 80.0};
 
-		minAllowedValues = array2vector(minValues);
-		maxAllowedValues = array2vector(maxValues);
+		minAllowedValues = new Vector<Double>(Arrays.asList(minValues));
+        maxAllowedValues = new Vector<Double>(Arrays.asList(maxValues));
 	    
 		routeGen = new RouteGeneration();
 	}
@@ -40,15 +44,75 @@ public class RouteGenerationProblem extends Problem{
 		
 		return routeGen.evaluate(ind);
 	}
+		
+	/**
+	 * Discretises alleles of individual to integer values maintaining the group sums of 100
+	 * @param individual
+	 */
+	public static void DiscretiseIndividual(RealIndividual individual)
+    {
+    	int locus = 0;
+    	
+    	for(int alleleGroup = 0; alleleGroup < RouteGenerationProblem.GeneGroupLengths.length; alleleGroup++)
+    	{
+    		int groupLength = RouteGenerationProblem.GeneGroupLengths[alleleGroup];
+    		
+    		double remainder = 0, value = 0;
+    		for (int i = locus; i < locus + groupLength; i++)
+    		{	    			
+    			if (i != locus + groupLength - 1)
+    			{
+    				value = Math.round((double)individual.getAllele(i));
+    				// accumulate decimals
+    				remainder += (double)individual.getAllele(i) - value;    				
+    			}
+    			else
+    			{
+    				// add accumulated remaining decimals to last value in group (to maintain group sum of 100), round to eliminate numeric precision errors
+    				value =  Math.round((double)individual.getAllele(i) + remainder);
+    			}
+    			
+    			individual.setAllele(i, value);
+    		}
+    		
+    		locus += groupLength;
+    	}
+    }
+	
+	/**
+	 * Normalises the groups of the individual to sum up to 100
+	 * @param individual
+	 */
+	public static void NormaliseIndividual(RealIndividual individual)
+    {
+    	int locus = 0;
+    	
+    	for(int alleleGroup = 0; alleleGroup < RouteGenerationProblem.GeneGroupLengths.length; alleleGroup++)
+    	{
+    		int groupLength = RouteGenerationProblem.GeneGroupLengths[alleleGroup];
+    	
+    		// compute the actual sum of the group
+    		double sum = 0;
+    		for (int i = locus; i < locus + groupLength; i++)
+    		{
+    			sum += (double)individual.getAllele(i);
+    		}
 
-	//This function is to copy an array into a vector
+    		// if the group sum is different from 100 and group is composed of 2 alleles or more
+    		if ((sum > 100.001 || sum < 99.999) && groupLength >= 2)
+    		{	
+    			// normalise alleles
+				for (int i = locus; i < locus + groupLength; i++)
+	        	{
+	    			double targetValue = 100 * (double)individual.getAllele(i) / sum;
 
-	public static Vector<Double> array2vector(double source[]){
-	    Vector<Double> dest = new Vector<Double>();
+	    			individual.setAllele(i, targetValue);
+        		}
+    		}
+    		
+    		locus += groupLength;
+    	}
 
-	    for (int i=0; i<source.length; ++i){
-	        dest.add(source[i]);
-	    }
-	    return dest;
-	 }
+    }
+
 }
