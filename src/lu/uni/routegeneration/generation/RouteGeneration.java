@@ -16,10 +16,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.TreeSet;
 import java.util.Vector;
 
@@ -42,7 +42,6 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
 import org.graphstream.graph.implementations.MultiGraph;
-import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.stream.GraphParseException;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -93,6 +92,11 @@ public class RouteGeneration {
 	int stopHour = 11;
 
 
+	/**
+	 * Random seed for the random ecvents
+	 */
+	long randomSeed = 123456L;
+	
 	HashMap<String, Detector> currentSolution;
 
 	int stopTime = stopHour * 3600;
@@ -104,7 +108,7 @@ public class RouteGeneration {
 	Projection proj;
 	public ArrayList<Lane> edges;
 	HashMap<String, Point2D.Double> nodes;
-
+	Random random;
 	Vector<Point2D.Double> destinations;
 
 	int val = 0;
@@ -253,10 +257,10 @@ public class RouteGeneration {
 	private Point2D.Double pointInZone(Zone zone) {
 		Point2D.Double point = new Point2D.Double();
 		do {
-			point.x = Math.random()
+			point.x = random.nextDouble()
 					* (zone.max_x_boundary - zone.min_x_boundary)
 					+ zone.min_x_boundary;
-			point.y = Math.random()
+			point.y = random.nextDouble()
 					* (zone.max_y_boundary - zone.min_y_boundary)
 					+ zone.min_y_boundary;
 		} while (!isIn(point, zone));
@@ -272,7 +276,7 @@ public class RouteGeneration {
 		// select a zone based on its proba
 		Zone zone = null;
 		while (zone == null) {
-			double draw = Math.random();
+			double draw = random.nextDouble();
 			double sum = 0.0;
 			for (Zone z : zones.values()) {
 				sum += z.probability;
@@ -283,7 +287,7 @@ public class RouteGeneration {
 			}
 		}
 
-		int randNode = (int) (Math.random() * zone.near_nodes.size());
+		int randNode = (int) (random.nextDouble() * zone.near_nodes.size());
 		return zone.near_nodes.get(randNode);
 
 	}
@@ -340,6 +344,8 @@ public class RouteGeneration {
 	}
 
 	public RouteGeneration() {
+		
+		random = new Random(randomSeed);
 		
 		evaluator = new RealEvaluation();
 		currentSolution = new HashMap<String, Detector>();
@@ -972,7 +978,7 @@ public class RouteGeneration {
 		}
 
 		if(zonesToRemove.size()>0){
-			System.out.printf("  _removed %d zones for having no route to the reste of the map.%n",zonesToRemove.size());
+			System.out.printf("  _removed %d zones for having no route to the rest of the map.%n",zonesToRemove.size());
 		}
 		for (Zone z : zonesToRemove) {
 			zones.remove(z.id);
@@ -1048,7 +1054,7 @@ public class RouteGeneration {
 					flowGenerationUp(flow, path);
 
 					// inside flow
-					if (Math.random() < insideFlowRatio) {
+					if (random.nextDouble() < insideFlowRatio) {
 						do{
 							//System.out.print(">");
 							path = goInsideFlow();
@@ -1086,7 +1092,7 @@ public class RouteGeneration {
 		Zone zone = null;
 		String path = null;
 
-		double rand = Math.random();
+		double rand = random.nextDouble();
 		zone = null;
 		double sum = 0.0;
 		for (Zone z : zones.values()) {
@@ -1343,7 +1349,7 @@ public class RouteGeneration {
 			while (!loops.isEmpty()) {
 
 				// inside flow OR outside flow?
-				if (Math.random() < insideFlowRatio) {
+				if (random.nextDouble() < insideFlowRatio) {
 					// System.out.println("going for inside flow");
 					// inside flow
 					Path p = goInsideFlow();
