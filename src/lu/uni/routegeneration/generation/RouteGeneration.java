@@ -122,7 +122,8 @@ public class RouteGeneration {
 	AttributesImpl ai;
 	AreasEditor ae;
 	Loop nextLoop;
-	double insideFlowRatio = 0.5;
+	double insideFlowRatio;
+	double shiftingRatio;
 	
 	/**
 	 * @return the stopHour
@@ -183,6 +184,24 @@ public class RouteGeneration {
 	public void setInsideFlowRatio(double insideFlowRatio) {
 		this.insideFlowRatio = insideFlowRatio;
 	}
+	
+	
+	/**
+	 * @return the shiftingRatio
+	 */
+	public double getShiftingRatio() {
+		return shiftingRatio;
+	}
+	
+	/**
+	 * @param shiftingRatio
+	 *            the shiftingRatio to set
+	 */
+	public void setShiftingRatio(double shiftingRatio) {
+		this.shiftingRatio = shiftingRatio;
+	}
+
+
 
 	double outsideFlow[];
 	int currentHour = 0;
@@ -344,7 +363,10 @@ public class RouteGeneration {
 		evaluator = new RealEvaluation();
 		currentSolution = new HashMap<String, Detector>();
 		for(String id : evaluator.controls.keySet()){
-			currentSolution.put(id, new Detector(stopHour));
+			System.out.println("Detector id: " + id);
+			Detector det = new Detector(stopHour);
+			det.id = id;
+			currentSolution.put(id, det);
 		}
 		File folder = new File(baseFolder);
 
@@ -608,6 +630,10 @@ public class RouteGeneration {
 							sumCOM += a.probability;
 						}
 						areas.add(a);
+					}
+					for(int i =0; i<areas.size(); i++)
+					{
+						System.out.println(areas.get(i).type);
 					}
 				}
 
@@ -1168,67 +1194,60 @@ public class RouteGeneration {
 	}
 	
 	public double evaluate(Individual ind) {
+		
+		//Prints the individual 
+		 System.out.println("Individual: ");
+         for(int i=0; i<ind.getLength();i++) {
+         	System.out.print(" " + ind.getAllele(i));
+         }
+         System.out.println("");
 
 		
-		ZoneType.RESIDENTIAL.probability = (Double)ind.getAllele(0);
-		ZoneType.INDUSTRIAL.probability = (Double)ind.getAllele(1);
-		ZoneType.COMMERCIAL.probability = (Double)ind.getAllele(2);
-		insideFlowRatio = (Double)ind.getAllele(3);
-		for (int i = 4; i < ind.getLength(); i++) {
-			areas.get(i - 4).probability = (Double)ind.getAllele(i);
+		ZoneType.RESIDENTIAL.probability = (Double)ind.getAllele(0)/100;
+		ZoneType.INDUSTRIAL.probability = (Double)ind.getAllele(1)/100;
+		ZoneType.COMMERCIAL.probability = (Double)ind.getAllele(2)/100;
+			
+		//Fills in the different Commercial areas probabilities
+		// Zc1/Zc2/Zc3/
+		for (int i = 3; i < 6; i++) {
+			areas.get(i - 3).probability = (Double)ind.getAllele(i)/100;
 		}
+		
+		//Fills in the default Commercial area probability
+		//Zcd/
+		defaultAreaCOM.probability = (Double)ind.getAllele(6)/100;
+		
+		//Fills in the Industrial area probability
+		//Zi1
+		areas.get(3).probability = (Double)ind.getAllele(7)/100;
+		
+		//Fills in the default Industrial area probability
+		//Zid
+		defaultAreaIND.probability = (Double)ind.getAllele(8)/100;
+		
+		//Fills in the Residentia area probability
+		//Zr1
+		areas.get(4).probability = (Double)ind.getAllele(9)/100;
+		
+		//Fills in the default Residential area probability
+		//Zrd
+		defaultAreaRES.probability = (Double)ind.getAllele(10)/100;
+		
+		//Fills in the insideFlowRatio and ShiftingRatio
+		//IR/SR
+		insideFlowRatio = (Double)ind.getAllele(11)/100;
+		shiftingRatio = (Double)ind.getAllele(12)/100;
+		
+		
 		return doEvaluate();
 	}
 	
+	
 	private double doEvaluate(){
 		long start = System.currentTimeMillis();
-		double fitness = 0;
-
-		double sum = ZoneType.RESIDENTIAL.probability
-				+ ZoneType.INDUSTRIAL.probability
-				+ ZoneType.COMMERCIAL.probability;
-		ZoneType.RESIDENTIAL.probability /= sum;
-		ZoneType.INDUSTRIAL.probability /= sum;
-		ZoneType.COMMERCIAL.probability /= sum;
-		
-		double sumRES = 1;
-		double sumCOM = 1;
-		double sumIND = 1;
-		for (Area a : areas) {
-			switch (a.type) {
-			case COMMERCIAL:
-				sumCOM += a.probability;
-				break;
-			case INDUSTRIAL:
-				sumIND += a.probability;
-				break;
-			case RESIDENTIAL:
-				sumRES += a.probability;
-				break;
-			}
-			//System.out.printf("area proba %s: %f%n", a.id, a.probability);
-		}
-		for (Area a : areas) {
-			switch (a.type) {
-			case COMMERCIAL:
-				a.probability /= sumCOM;
-				break;
-			case INDUSTRIAL:
-				a.probability /= sumIND;
-				break;
-			case RESIDENTIAL:
-				a.probability /= sumRES;
-				break;
-			}
-			//System.out.printf("area proba %s: %f%n", a.id, a.probability);
-		}
-
-		defaultAreaCOM.probability = 1/sumCOM;
-		defaultAreaIND.probability = 1/sumIND;
-		defaultAreaRES.probability = 1/sumRES;
+		double fitness = 0;		
 
 		// recompute probabilities !!
-
 		for (Zone z : zones.values()) {
 
 			z.probability = (z.surface / z.area.sumSurfaceZones)
@@ -1237,8 +1256,25 @@ public class RouteGeneration {
 
 		for(Detector d : currentSolution.values()){
 			d.reset();
+			
+			//Sets the shiftingRatio for each Detector loop
+			d.setShiftingRatio(shiftingRatio);
 		}
 		flowGeneration();
+		
+		//Applies shiftingRatio for each control point
+		for(Detector d : currentSolution.values()){
+			
+			//Prints counted traffic in control point BEFORE shift
+			System.out.println(" Before Shift: " + d);
+			
+			//Applies Shifting Ratio
+			d.shift();
+			
+			//Prints counted traffic in control point AFTER shift
+			System.out.println(" After Shift: " + d);
+		}
+		
 		fitness = evaluator.compareTo(currentSolution);
 
 		
