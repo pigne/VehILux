@@ -32,7 +32,7 @@ public class RouteGeneLaunch  implements GenerationListener
     
     // Default maximum number of function evaluations
     //static int evaluationsLimit = 10000;
-    static int evaluationsLimit = 10000;
+    static int evaluationsLimit = 2000;
     
     //private static boolean showDisplay = false;
    
@@ -40,6 +40,7 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private Vector<Double> BestIndPerGen = null;
     private Vector[] bestIslandIndPerGen = null;
+    private Vector<String> bestDetectorPerGen = null;
 
     private static String selection1;
 
@@ -52,11 +53,11 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static EvolutionaryAlg ea = null;
     
-    private static boolean coevolutionary = true;
+    private static boolean coevolutionary = false;
     private static boolean discrete = true;    
     private static boolean synchronised = true;
     private static int islandcount = 4;
-    private static boolean parallelProblemInit = false;
+    private static boolean parallelProblemInit = true;
     
     public RouteGeneLaunch(){
     	BestIndPerGen = new Vector<Double>();
@@ -65,6 +66,7 @@ public class RouteGeneLaunch  implements GenerationListener
     	{
         	bestIslandIndPerGen[island] = new Vector<Double>();        	
     	}
+        bestDetectorPerGen = new Vector<String>();
     }
     
     public Vector<Double> getBestIndPerGen(){
@@ -85,7 +87,7 @@ public class RouteGeneLaunch  implements GenerationListener
 		}
 		else
 		{
-			pop = new Population(100);
+			pop = new Population(x * y);
 		}
     	
     	//Individual ind = new VehILuxIndividual();
@@ -117,8 +119,8 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static Problem CreateProblem()
     {
-    	//Problem problem = new RouteGenerationProblem();    	
-    	Problem problem = new RouteGenerationProblemTest();
+    	Problem problem = new RouteGenerationProblem();    	
+    	//Problem problem = new RouteGenerationProblemTest();
     	
     	return problem;
     }
@@ -248,7 +250,7 @@ public class RouteGeneLaunch  implements GenerationListener
         			}
         			alleleMutationProb = 1.0 / prob.numberOfVariables(); // allele mutation probability;
         			
-	            	Population pop = CreatePopulation(algorithm, prob, r, x, y);
+	            	Population pop = CreatePopulation(algorithm, prob, r, x / (islandcount / 2), y / (islandcount / 2));
 	            	// common parameter objects
 	            	((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_POPULATION, pop);
 	            	((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_STATISTIC, new ComplexStats());
@@ -308,29 +310,21 @@ public class RouteGeneLaunch  implements GenerationListener
             // common parameter values
             ea.setParam(EvolutionaryAlg.PARAM_MUTATION_PROB, mutac);    	    
     	    ea.setParam(EvolutionaryAlg.PARAM_CROSSOVER_PROB, cross);
-    	       	    
             
             ea.setParam("selection1", new TournamentSelection(r)); // selection of first parent
             //ea.setParam("selection1", new CenterSelection(r)); // selection of first parent
             selection1="Center Selection";
     	    ea.setParam("selection2", new TournamentSelection(r)); // selection of second parent
     	    selection2="Tournament Selection";
-
-//    	    ea.setParam("crossover", new VehILuxCrossover(r)); //Crossover Operator
-//    	    crossover = "VehILux Crossover";
-//    	    ea.setParam("mutation", new VehILuxMutation(r, ea)); //Mutation Operator
-//    	    mutation = "VehILux Mutation";
     	    
     	    //ea.setParam("crossover", new VehILuxNormOperator(new PBX(r))); //Crossover Operator
-    	    //ea.setParam("crossover", new VehILuxNormOperator(new Spx(r))); //Crossover Operator
+    	    //ea.setParam("crossover", new VehILuxNormOperator(new Spx(r), discrete)); //Crossover Operator
     	    ea.setParam("crossover", new VehILuxNormOperator(new Dpx(r), discrete)); //Crossover Operator
-	    	ea.setParam("mutation", new VehILuxNormOperator(new GaussianMutation(r, ea), discrete)); //Mutation Operator
-    	    //ea.setParam("mutation", new VehILuxNormOperator(new FloatUniformMutation(r, ea), discrete)); //Mutation Operator
+	    	//ea.setParam("mutation", new VehILuxNormOperator(new GaussianMutation(r, ea), discrete)); //Mutation Operator
+    	    ea.setParam("mutation", new VehILuxNormOperator(new FloatUniformMutation(r, ea), discrete)); //Mutation Operator
 
             // generation cycles
             ea.experiment();
-    		
-
     		
     		// Get the best Individual
     		int pos = ((Integer)((Statistic)ea.getParam(EvolutionaryAlg.PARAM_STATISTIC)).getStat(SimpleStats.MIN_FIT_POS)).intValue();
@@ -345,20 +339,25 @@ public class RouteGeneLaunch  implements GenerationListener
     		}
     		    		    		
     		double avg = ((Double)((Statistic)ea.getParam(EvolutionaryAlg.PARAM_STATISTIC)).getStat(ComplexStats.AVG_FIT)).doubleValue();
-    		
-    		
+    		    		
     		//Save average of this run
     		averages[i] = avg;
-    		
-     		
+    		     		
             //Save the best individuals per generation of this run
             if (coevolutionary)
             {
-            	Vector<Double>[] best = rgl.getBestIslandIndPerGen();
-            	
-            	for (int island = 0; island < islandcount; island++)
+            	if (synchronised)
             	{
-            		results.add(best[i]);
+            		results.add(rgl.getBestIndPerGen());
+            	}
+            	else
+            	{
+	            	Vector<Double>[] best = rgl.getBestIslandIndPerGen();
+	            	
+	            	for (int island = 0; island < islandcount; island++)
+	            	{
+	            		results.add(best[i]);
+	            	}
             	}
             }
             else
@@ -449,6 +448,16 @@ public class RouteGeneLaunch  implements GenerationListener
                         System.out.println(i + "\t" + average[i]);
 		}
 		
+		out.write("#\n#\n# Best Indiviudals detectors per generation\n");
+      	System.out.println("#\n#\n# Best Indiviudals detectors per generation\n");
+		
+      	for (int i = 0; i < rgl.bestDetectorPerGen.size(); i++)
+      	{
+			
+			out.write(i + "\t" + rgl.bestDetectorPerGen.elementAt(i) +"\n");
+                        System.out.println(i + "\t" + rgl.bestDetectorPerGen.elementAt(i));
+		}
+      	
 		out.close();
     }
     
@@ -474,13 +483,33 @@ public class RouteGeneLaunch  implements GenerationListener
 
     	if (coevolutionary)
     	{	
-    		int island = ((CoevEA)ea).IslandIndex(alg);
-    		
-    		int pos = ((Integer)((Statistic)alg.getParam(EvolutionaryAlg.PARAM_STATISTIC)).getStat(SimpleStats.MIN_FIT_POS)).intValue();
-			Individual bestInd = ((Population)alg.getParam(EvolutionaryAlg.PARAM_POPULATION)).getIndividual(pos);
-    		
-    		bestIslandIndPerGen[island].add(((Double)bestInd.getFitness()).doubleValue());
-    		
+    		if (synchronised)
+    		{
+	    		if (alg instanceof CoevEA)
+	    		{
+	    			Problem p = (Problem)alg.getParam(CoevEA.PARAM_PROBLEM);
+	    			Individual individual = (Individual)alg.getParam(CoevEA.PARAM_BEST_IDV);
+	    			individual.setFitness(p.eval(individual)); // use eval not to count evaluations!
+	    			
+	    			BestIndPerGen.add(((Double)individual.getFitness()).doubleValue());
+	    			
+	    			if (p instanceof RouteGenerationProblem)
+	    			{
+	    				RouteGenerationProblem rgp = (RouteGenerationProblem)p;
+		    			
+		    			bestDetectorPerGen.add(rgp.getCurrentDectectors());		    			
+	    			}
+	    		}
+    		}
+    		else
+    		{
+        		int island = ((CoevEA)ea).IslandIndex(alg);
+        		
+        		int pos = ((Integer)((Statistic)alg.getParam(EvolutionaryAlg.PARAM_STATISTIC)).getStat(SimpleStats.MIN_FIT_POS)).intValue();
+    			Individual bestInd = ((Population)alg.getParam(EvolutionaryAlg.PARAM_POPULATION)).getIndividual(pos);
+        		
+        		bestIslandIndPerGen[island].add(((Double)bestInd.getFitness()).doubleValue());
+    		}
     	}
     	else if ((!ea.getParam(EvolutionaryAlg.PARAM_POPULATION).getClass().getName().equalsIgnoreCase("distributedGA")) &&
     			(((Population)ea.getParam(EvolutionaryAlg.PARAM_POPULATION)).getPopSize() != 1))

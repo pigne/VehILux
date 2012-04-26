@@ -1,12 +1,14 @@
 package lu.uni.routegeneration.jCell;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Vector;
 
 import jcell.Individual;
 import jcell.Problem;
 import jcell.RealIndividual;
 import jcell.Target;
+import lu.uni.routegeneration.evaluation.Detector;
 import lu.uni.routegeneration.generation.RouteGeneration;
 
 public class RouteGenerationProblem extends Problem{
@@ -43,6 +45,18 @@ public class RouteGenerationProblem extends Problem{
 			//System.out.printf("Ind("+i +"):" + ind.getAllele(i));
 		
 		return routeGen.evaluate(ind);
+	}
+	
+	public String getCurrentDectectors()
+	{
+		String result = "";
+		HashMap<String, Detector> currentSolution = routeGen.getCurrentSolution();
+		for(Detector d : currentSolution.values())
+		{
+			result += d + " ";
+		}
+		
+		return result;
 	}
 		
 	/**

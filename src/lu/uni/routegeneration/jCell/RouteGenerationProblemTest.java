@@ -34,6 +34,11 @@ public class RouteGenerationProblemTest extends Problem {
         delay = 1;
 	}
 	
+	public String getCurrentDectectors()
+	{
+		return "1 2 3 4 5";
+	}
+	
 	@Override
 	public Object eval(Individual ind) {
 		// the fitness is 0.0 when all values are either 25, 33, 34 or 50 

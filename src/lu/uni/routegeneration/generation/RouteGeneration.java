@@ -205,7 +205,14 @@ public class RouteGeneration {
 		this.shiftingRatio = shiftingRatio;
 	}
 
-
+	
+	/**
+	 * @return the current solution
+	 */
+	public HashMap<String, Detector> getCurrentSolution()
+	{
+		return currentSolution;
+	}
 
 	double outsideFlow[];
 	int currentHour = 0;
@@ -1202,11 +1209,11 @@ public class RouteGeneration {
 	public double evaluate(Individual ind) {
 		
 		//Prints the individual 
-		 System.out.println("Individual: ");
+		String individual = "Individual:";
          for(int i=0; i<ind.getLength();i++) {
-         	System.out.print(" " + ind.getAllele(i));
+        	 individual += " " + ind.getAllele(i);
          }
-         System.out.println("");
+         System.out.println(individual);
 
 		
 		ZoneType.RESIDENTIAL.probability = (Double)ind.getAllele(0)/100;
@@ -1272,13 +1279,13 @@ public class RouteGeneration {
 		for(Detector d : currentSolution.values()){
 			
 			//Prints counted traffic in control point BEFORE shift
-			System.out.println(" Before Shift: " + d);
+			//System.out.println(" Before Shift: " + d);
 			
 			//Applies Shifting Ratio
 			d.shift();
 			
 			//Prints counted traffic in control point AFTER shift
-			System.out.println(" After Shift: " + d);
+			//System.out.println(" After Shift: " + d);
 		}
 		
 		fitness = evaluator.compareTo(currentSolution);

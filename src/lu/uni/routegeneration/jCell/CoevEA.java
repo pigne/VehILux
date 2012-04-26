@@ -25,6 +25,7 @@ import jcell.Statistic;
 public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg implements GenerationListener {
 
 	public static final int PARAM_ALG			= 2000;
+	public static final int PARAM_BEST_IDV		= 2001;
 	
 	// island threads
 	private Thread[] t;
@@ -138,8 +139,20 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 	@Override
 	public Object getParam(int keyValue)
 	{
-		// TODO for most parameters, this is ok
-		return this.algorithms[0].getParam(keyValue);
+		if (keyValue == EvolutionaryAlg.PARAM_LISTENER)
+		{
+			// this should stay the global coevolutionary algorithms listener
+			return this.listener;
+		}
+		else if (keyValue == CoevEA.PARAM_BEST_IDV)
+		{
+			return this.bestIndividual;
+		}
+		else
+		{
+			// TODO for most parameters, this is ok		
+			return this.algorithms[0].getParam(keyValue);
+		}
 	}
 	
 	@Override
@@ -218,8 +231,8 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 	                {                    
 	                	// run experiment for island
 	            		algorithms[island].experiment();
-	            		// make sure the last best result is reported to others
-	            		listener.generation(algorithms[island]);
+	            		// make sure the last best result is reported to others if algorithm quits prematurely
+	            		// listener.generation(algorithms[island]);
 	                } 
 	            }
 	        );
@@ -365,6 +378,13 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 		}
 		
 		listener.generation(EA);
+		
+		if(synchronised && island == 0)
+		{
+			// this is to signal to the listener that the parent co-evolutionary algorithm has completed a generation (when all islands have finished their generation)  
+			listener.generation(this);
+		}
+		
 	}
 	
 	/** determines the island index of the algorithm 
