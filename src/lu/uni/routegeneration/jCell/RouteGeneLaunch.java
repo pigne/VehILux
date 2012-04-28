@@ -32,7 +32,7 @@ public class RouteGeneLaunch  implements GenerationListener
     
     // Default maximum number of function evaluations
     //static int evaluationsLimit = 10000;
-    static int evaluationsLimit = 2000;
+    static int evaluationsLimit = 10000;
     
     //private static boolean showDisplay = false;
    
@@ -53,11 +53,10 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static EvolutionaryAlg ea = null;
     
-    private static boolean coevolutionary = false;
-    private static boolean discrete = true;    
+    private static boolean coevolutionary = true;        
     private static boolean synchronised = true;
     private static int islandcount = 4;
-    private static boolean parallelProblemInit = true;
+    private static boolean parallelProblemInit = false;
     
     public RouteGeneLaunch(){
     	BestIndPerGen = new Vector<Double>();
@@ -105,7 +104,7 @@ public class RouteGeneLaunch  implements GenerationListener
 			
 			RouteGenerationProblem.NormaliseIndividual(ind);
 			
-			if (discrete)
+			if (RouteGenerationProblem.discrete)
 			{
 				RouteGenerationProblem.DiscretiseIndividual(ind);
 			}
@@ -119,8 +118,8 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static Problem CreateProblem()
     {
-    	Problem problem = new RouteGenerationProblem();    	
-    	//Problem problem = new RouteGenerationProblemTest();
+    	//Problem problem = new RouteGenerationProblem();    	
+    	Problem problem = new RouteGenerationProblemTest();
     	
     	return problem;
     }
@@ -157,6 +156,7 @@ public class RouteGeneLaunch  implements GenerationListener
             {
             	//int[] islandMask = {0,0,0,1,1,2,2,2,3,3,1,3};
             	int[] islandMask = {0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 2, 3}; 
+            	//int[] islandMask = {0, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 3, 3};
             	
             	ea = new CoevEA(r, islandcount, islandMask, synchronised);
             	for(int island = 0; island< islandcount; island++)
@@ -184,8 +184,8 @@ public class RouteGeneLaunch  implements GenerationListener
 	            }
             }        
   
-    		Double cross = 1.0; // crossover probability
-			Double mutac = 1.0; // probability of individual mutation
+    		Double cross = 0.8; // crossover probability
+			Double mutac = 0.8; // probability of individual mutation
 			Double alleleMutationProb; // = 1.0 /prob.numberOfVariables(); // allele mutation probability;
 
     		//Double cross = Double.parseDouble(args[2]);
@@ -317,12 +317,15 @@ public class RouteGeneLaunch  implements GenerationListener
     	    ea.setParam("selection2", new TournamentSelection(r)); // selection of second parent
     	    selection2="Tournament Selection";
     	    
-    	    //ea.setParam("crossover", new VehILuxNormOperator(new PBX(r))); //Crossover Operator
-    	    //ea.setParam("crossover", new VehILuxNormOperator(new Spx(r), discrete)); //Crossover Operator
-    	    ea.setParam("crossover", new VehILuxNormOperator(new Dpx(r), discrete)); //Crossover Operator
-	    	//ea.setParam("mutation", new VehILuxNormOperator(new GaussianMutation(r, ea), discrete)); //Mutation Operator
-    	    ea.setParam("mutation", new VehILuxNormOperator(new FloatUniformMutation(r, ea), discrete)); //Mutation Operator
-
+//    	    //ea.setParam("crossover", new VehILuxNormOperator(new PBX(r))); //Crossover Operator
+//    	    //ea.setParam("crossover", new VehILuxNormOperator(new Spx(r), discrete)); //Crossover Operator
+//    	    ea.setParam("crossover", new VehILuxNormOperator(new Dpx(r), discrete)); //Crossover Operator
+//	    	//ea.setParam("mutation", new VehILuxNormOperator(new GaussianMutation(r, ea), discrete)); //Mutation Operator
+//    	    ea.setParam("mutation", new VehILuxNormOperator(new FloatUniformMutation(r, ea), discrete)); //Mutation Operator
+    	    
+    	    ea.setParam("crossover", new Spx(r)); //Crossover Operator	    	//
+    	    ea.setParam("mutation", new FloatUniformMutation(r, ea)); //Mutation Operator
+    	    
             // generation cycles
             ea.experiment();
     		
@@ -368,6 +371,8 @@ public class RouteGeneLaunch  implements GenerationListener
     	
     	end = (new Date()).getTime();
     	
+    	crossover = ea.getParam("crossover").toString();
+	    mutation = ea.getParam("mutation").toString();
     	
     	Double best = (Double) bestIndiv.getFitness();
     	
@@ -392,8 +397,20 @@ public class RouteGeneLaunch  implements GenerationListener
     	out.write("# Cellular Genetic Algorithm  Time&Date: "+ date_format.format(cal.getTime()) + "\n");
     	out.write("# Parameters: \n");
     	out.write("# \tPopulation: "+x+"x"+y+"\n");
+    	out.write("# \tEvaluationsLimit: " + evaluationsLimit +"\n");    	
     	out.write("# \tPARAM_POP_ADAPTATION: " +ea.getParam(CellularGA.PARAM_POP_ADAPTATION)+"\n");
     	out.write("# \tPARAM_NEIGHBOURHOOD: " +ea.getParam(CellularGA.PARAM_NEIGHBOURHOOD)+"\n");
+    	
+    	if (coevolutionary)
+    	{
+	    	out.write("# \tCo-evolution: " + (synchronised?"synchronised":"asynchronised") +", " + islandcount + " islands\n");	    	
+    	}
+    	else
+    	{
+    		out.write("# \tCo-evolution: none \n");
+    	}
+    	out.write("# \tDiscretised values: " + RouteGenerationProblem.discrete +"\n");   
+    	        
     	out.write("# Crossover Operator:" + crossover + "\n");
     	out.write("# \tCROSSOVER_PROB: "+ea.getParam(CellularGA.PARAM_CROSSOVER_PROB)+"\n");
     	out.write("# Mutation Operator:" + mutation + "\n");

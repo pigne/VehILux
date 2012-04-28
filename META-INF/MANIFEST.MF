@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: lu.uni.routegeneration.jCell.RouteGeneLaunch
+Class-Path: classes/jCell.jar classes/gs-core.jar classes/jmapprojlib.jar classes/gs-algo.jar classes/gs-deps.jar classes/xercesImpl.jar
+

@@ -25,6 +25,13 @@ public class VehILuxNormOperator implements Operator {
 	}
 	
 	@Override
+	public String toString()
+	{
+		return "Normalised: " + this.operator.toString();
+	}
+	
+	
+	@Override
 	public Object execute(Object o)
 	{
 		//return operator.execute(o);

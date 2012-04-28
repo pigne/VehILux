@@ -14,6 +14,7 @@ import lu.uni.routegeneration.generation.RouteGeneration;
 public class RouteGenerationProblem extends Problem{
 
 	public static int[] GeneGroupLengths = {3,4,2,2,1,1}; 
+	public static boolean discrete = true;
 
 	RouteGeneration routeGen;
 	
@@ -63,7 +64,7 @@ public class RouteGenerationProblem extends Problem{
 	 * Discretises alleles of individual to integer values maintaining the group sums of 100
 	 * @param individual
 	 */
-	public static void DiscretiseIndividual(RealIndividual individual)
+	public static void DiscretiseIndividual(Individual individual)
     {
     	int locus = 0;
     	
@@ -97,7 +98,7 @@ public class RouteGenerationProblem extends Problem{
 	 * Normalises the groups of the individual to sum up to 100
 	 * @param individual
 	 */
-	public static void NormaliseIndividual(RealIndividual individual)
+	public static void NormaliseIndividual(Individual individual)
     {
     	int locus = 0;
     	

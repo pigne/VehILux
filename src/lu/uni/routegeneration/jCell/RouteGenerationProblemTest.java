@@ -43,6 +43,13 @@ public class RouteGenerationProblemTest extends Problem {
 	public Object eval(Individual ind) {
 		// the fitness is 0.0 when all values are either 25, 33, 34 or 50 
 		
+		RouteGenerationProblem.NormaliseIndividual(ind);
+		
+		if(RouteGenerationProblem.discrete)
+		{
+			RouteGenerationProblem.DiscretiseIndividual(ind);
+		}
+		
 		double fitness = 0;
 		for(int i = 0; i < minAllowedValues.size(); i++)
 		{
