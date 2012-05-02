@@ -15,6 +15,9 @@ public class RouteGenerationProblem extends Problem{
 
 	public static int[] GeneGroupLengths = {3,4,2,2,1,1}; 
 	public static boolean discrete = true;
+	public static String bestDetectors = "";
+	public static Individual bestIndividual = null;
+	private static double bestFitness = 1.7976931348623157E308; //new Double(0).MAX_VALUE;
 
 	RouteGeneration routeGen;
 	
@@ -45,14 +48,37 @@ public class RouteGenerationProblem extends Problem{
 		//for(int i = 0; i < ind.getLength(); i++)
 			//System.out.printf("Ind("+i +"):" + ind.getAllele(i));
 		
-		return routeGen.evaluate(ind);
+		RouteGenerationProblem.NormaliseIndividual(ind);
+		
+		if(RouteGenerationProblem.discrete)
+		{
+			RouteGenerationProblem.DiscretiseIndividual(ind);
+		}
+		
+		double value = routeGen.evaluate(ind);
+		
+		if (value < bestFitness)
+		{
+			bestFitness = value; 
+			bestDetectors = getCurrentDectectors();
+			bestIndividual = (Individual)ind.clone();
+		}
+				
+		return value;
 	}
 	
 	public String getCurrentDectectors()
 	{
-		String result = "";
+		String result = "Detectors:\r\n";
 		HashMap<String, Detector> currentSolution = routeGen.getCurrentSolution();
 		for(Detector d : currentSolution.values())
+		{
+			result += d + " ";
+		}
+		
+		result += "\r\nControls:\r\n";				
+		HashMap<String, Detector> controls = routeGen.getControls();
+		for(Detector d : controls.values())
 		{
 			result += d + " ";
 		}

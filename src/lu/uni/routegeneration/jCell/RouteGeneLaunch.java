@@ -32,7 +32,7 @@ public class RouteGeneLaunch  implements GenerationListener
     
     // Default maximum number of function evaluations
     //static int evaluationsLimit = 10000;
-    static int evaluationsLimit = 10000;
+    static int evaluationsLimit = 5000;
     
     //private static boolean showDisplay = false;
    
@@ -53,8 +53,9 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static EvolutionaryAlg ea = null;
     
-    private static boolean coevolutionary = true;        
+    private static boolean coevolutionary = false;        
     private static boolean synchronised = true;
+    private static boolean coevElitism = true;    
     private static int islandcount = 4;
     private static boolean parallelProblemInit = false;
     
@@ -118,8 +119,8 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static Problem CreateProblem()
     {
-    	//Problem problem = new RouteGenerationProblem();    	
-    	Problem problem = new RouteGenerationProblemTest();
+    	Problem problem = new RouteGenerationProblem();    	
+    	//Problem problem = new RouteGenerationProblemTest();
     	
     	return problem;
     }
@@ -158,7 +159,7 @@ public class RouteGeneLaunch  implements GenerationListener
             	int[] islandMask = {0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 2, 3}; 
             	//int[] islandMask = {0, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 3, 3};
             	
-            	ea = new CoevEA(r, islandcount, islandMask, synchronised);
+            	ea = new CoevEA(r, islandcount, islandMask, synchronised, coevElitism);
             	for(int island = 0; island< islandcount; island++)
             	{
 	            	if(algorithm.equalsIgnoreCase("cGA")){
@@ -184,8 +185,8 @@ public class RouteGeneLaunch  implements GenerationListener
 	            }
             }        
   
-    		Double cross = 0.8; // crossover probability
-			Double mutac = 0.8; // probability of individual mutation
+    		Double cross = 1.0; // crossover probability
+			Double mutac = 1.0; // probability of individual mutation
 			Double alleleMutationProb; // = 1.0 /prob.numberOfVariables(); // allele mutation probability;
 
     		//Double cross = Double.parseDouble(args[2]);
@@ -325,6 +326,7 @@ public class RouteGeneLaunch  implements GenerationListener
     	    
     	    ea.setParam("crossover", new Spx(r)); //Crossover Operator	    	//
     	    ea.setParam("mutation", new FloatUniformMutation(r, ea)); //Mutation Operator
+    	    //ea.setParam("mutation", new GaussianMutation(r, ea)); //Mutation Operator
     	    
             // generation cycles
             ea.experiment();
@@ -332,6 +334,11 @@ public class RouteGeneLaunch  implements GenerationListener
     		// Get the best Individual
     		int pos = ((Integer)((Statistic)ea.getParam(EvolutionaryAlg.PARAM_STATISTIC)).getStat(SimpleStats.MIN_FIT_POS)).intValue();
     		Individual bestInd = ((Population) ea.getParam(EvolutionaryAlg.PARAM_POPULATION)).getIndividual(pos);
+    		
+    		if (RouteGenerationProblem.bestIndividual != null)
+    		{
+    			bestIndiv = RouteGenerationProblem.bestIndividual;
+    		}    	
     		
     		if (bestIndiv == null){
     			bestIndiv = bestInd;
@@ -403,7 +410,7 @@ public class RouteGeneLaunch  implements GenerationListener
     	
     	if (coevolutionary)
     	{
-	    	out.write("# \tCo-evolution: " + (synchronised?"synchronised":"asynchronised") +", " + islandcount + " islands\n");	    	
+	    	out.write("# \tCo-evolution: " + (synchronised?"synchronised":"asynchronised") + ", " + (coevElitism?"elitism":"no elitism") + ", " + islandcount + " islands\n");	    	
     	}
     	else
     	{
@@ -465,15 +472,11 @@ public class RouteGeneLaunch  implements GenerationListener
                         System.out.println(i + "\t" + average[i]);
 		}
 		
-		out.write("#\n#\n# Best Indiviudals detectors per generation\n");
-      	System.out.println("#\n#\n# Best Indiviudals detectors per generation\n");
-		
-      	for (int i = 0; i < rgl.bestDetectorPerGen.size(); i++)
-      	{
-			
-			out.write(i + "\t" + rgl.bestDetectorPerGen.elementAt(i) +"\n");
-                        System.out.println(i + "\t" + rgl.bestDetectorPerGen.elementAt(i));
-		}
+		out.write("#\n#\n# Best Indiviudals detectors\n");
+      	System.out.println("#\n#\n# Best Indiviudals detectors\n");
+      	
+      	out.write(RouteGenerationProblem.bestDetectors +"\n");
+      	System.out.println(RouteGenerationProblem.bestDetectors);
       	
 		out.close();
     }

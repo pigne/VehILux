@@ -213,6 +213,14 @@ public class RouteGeneration {
 	{
 		return currentSolution;
 	}
+	
+	/**
+	 * @return the control values
+	 */
+	public HashMap<String, Detector> getControls()
+	{
+		return this.evaluator.controls;
+	}
 
 	double outsideFlow[];
 	int currentHour = 0;
