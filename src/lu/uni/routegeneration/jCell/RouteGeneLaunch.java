@@ -32,7 +32,8 @@ public class RouteGeneLaunch  implements GenerationListener
     
     // Default maximum number of function evaluations
     //static int evaluationsLimit = 10000;
-    static int evaluationsLimit = 5000;
+    static int evaluationsLimit = 8000;
+    static int generationLimit = 80;
     
     //private static boolean showDisplay = false;
    
@@ -53,11 +54,14 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static EvolutionaryAlg ea = null;
     
-    private static boolean coevolutionary = false;        
+    private static boolean coevolutionary = true;        
     private static boolean synchronised = true;
-    private static boolean coevElitism = true;    
+    private static boolean coevElitism = false;
+    private static boolean coevSequential = false;
     private static int islandcount = 4;
     private static boolean parallelProblemInit = false;
+    
+    private Problem evalProblem; // problem dedicated to evaluating combined solution
     
     public RouteGeneLaunch(){
     	BestIndPerGen = new Vector<Double>();
@@ -67,6 +71,7 @@ public class RouteGeneLaunch  implements GenerationListener
         	bestIslandIndPerGen[island] = new Vector<Double>();        	
     	}
         bestDetectorPerGen = new Vector<String>();
+        evalProblem = CreateProblem();
     }
     
     public Vector<Double> getBestIndPerGen(){
@@ -145,6 +150,8 @@ public class RouteGeneLaunch  implements GenerationListener
 		//Population size
 		int x = 10;
 		int y = 10;		
+//		int x = 3;
+//		int y = 3;
     	
     	for(int i = 0; i<numberofruns; i++){
     		
@@ -159,7 +166,7 @@ public class RouteGeneLaunch  implements GenerationListener
             	int[] islandMask = {0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 2, 3}; 
             	//int[] islandMask = {0, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 3, 3};
             	
-            	ea = new CoevEA(r, islandcount, islandMask, synchronised, coevElitism);
+            	ea = new CoevEA(r, islandcount, islandMask, synchronised, coevElitism, coevSequential);
             	for(int island = 0; island< islandcount; island++)
             	{
 	            	if(algorithm.equalsIgnoreCase("cGA")){
@@ -274,7 +281,8 @@ public class RouteGeneLaunch  implements GenerationListener
 		            }
 		            ((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_ALLELE_MUTATION_PROB, alleleMutationProb);
             	}
-            	ea.setParam(EvolutionaryAlg.PARAM_EVALUATION_LIMIT, new Integer(evaluationsLimit / islandcount));            	
+            	ea.setParam(EvolutionaryAlg.PARAM_EVALUATION_LIMIT, new Integer(evaluationsLimit / islandcount));
+            	ea.setParam(EvolutionaryAlg.PARAM_GENERATION_LIMIT, generationLimit);
             }
             else
             {
@@ -305,6 +313,7 @@ public class RouteGeneLaunch  implements GenerationListener
 	        	    replacement = "If better";
 	            }
 	            ea.setParam(EvolutionaryAlg.PARAM_EVALUATION_LIMIT, new Integer(evaluationsLimit));
+	            ea.setParam(EvolutionaryAlg.PARAM_GENERATION_LIMIT, generationLimit);
 	            ea.setParam(EvolutionaryAlg.PARAM_ALLELE_MUTATION_PROB, alleleMutationProb);
             }
             
@@ -356,7 +365,7 @@ public class RouteGeneLaunch  implements GenerationListener
             //Save the best individuals per generation of this run
             if (coevolutionary)
             {
-            	if (synchronised)
+            	if (synchronised || coevSequential)
             	{
             		results.add(rgl.getBestIndPerGen());
             	}
@@ -384,16 +393,18 @@ public class RouteGeneLaunch  implements GenerationListener
     	Double best = (Double) bestIndiv.getFitness();
     	
     	//Saving to file
-		String filename = "RouteGenProblem_" + x + "x" +y + "Neigh" + CellularGA.PARAM_NEIGHBOURHOOD + "Mp" + ea.getParam(CellularGA.PARAM_MUTATION_PROB) + "Cp" + ea.getParam(CellularGA.PARAM_CROSSOVER_PROB) +"_" + evaluationsLimit + ".dat" ;
-		
+		//String filename = "RouteGenProblem_" + x + "x" +y + "Neigh" + CellularGA.PARAM_NEIGHBOURHOOD + "Mp" + ea.getParam(CellularGA.PARAM_MUTATION_PROB) + "Cp" + ea.getParam(CellularGA.PARAM_CROSSOVER_PROB) +"_" + evaluationsLimit + ".dat" ;
+    	String baseName = "RouteGenProblem_" + (x * y) + "_" + (coevolutionary?("coev_" + (synchronised?"sync_":"async_") + (coevSequential?"seq_":"par_")):"noncoev_") + bestIndiv.getFitness() + "_" + generationLimit + "(" + evaluationsLimit + ")";
+    	String filename = baseName + ".dat"; 
+    	
 		File save_file = new File(filename);
 		
 		int ID_File=1;
 		while (save_file.exists()){
-			filename = "RouteGenProblem_" + x + "x" +y + "Neigh" + CellularGA.PARAM_NEIGHBOURHOOD + "Mp" + ea.getParam(CellularGA.PARAM_MUTATION_PROB) + "Cp" + ea.getParam(CellularGA.PARAM_CROSSOVER_PROB) +"_" + evaluationsLimit + "-"+(++ID_File)+".dat" ;
+			//filename = "RouteGenProblem_" + x + "x" +y + "Neigh" + CellularGA.PARAM_NEIGHBOURHOOD + "Mp" + ea.getParam(CellularGA.PARAM_MUTATION_PROB) + "Cp" + ea.getParam(CellularGA.PARAM_CROSSOVER_PROB) +"_" + evaluationsLimit + "-"+(++ID_File)+".dat" ;
+			filename = baseName + "-" + (++ID_File) + ".dat";
 			save_file = new File(filename);
 		}
-    	
 		
     	BufferedWriter out = new BufferedWriter(new FileWriter(save_file));
     	
@@ -410,7 +421,7 @@ public class RouteGeneLaunch  implements GenerationListener
     	
     	if (coevolutionary)
     	{
-	    	out.write("# \tCo-evolution: " + (synchronised?"synchronised":"asynchronised") + ", " + (coevElitism?"elitism":"no elitism") + ", " + islandcount + " islands\n");	    	
+	    	out.write("# \tCo-evolution: " + (synchronised?"synchronised":"asynchronised") + ", " + (coevSequential?"sequential":"parallel") + ", " + (coevElitism?"elitism":"no elitism") + ", " + islandcount + " islands\n");	    	
     	}
     	else
     	{
@@ -441,7 +452,12 @@ public class RouteGeneLaunch  implements GenerationListener
         	System.out.println("# "+ bestIndiv.getAllele(i));
         }
 		
-		
+		out.write("#\n#\n# Best Indiviudals detectors\n");
+      	System.out.println("#\n#\n# Best Indiviudals detectors\n");
+      	
+      	out.write(RouteGenerationProblem.bestDetectors +"\n");
+      	System.out.println(RouteGenerationProblem.bestDetectors);
+      			
 		out.write("#\n#\n# Best Indiviudal average per generation: Generation BestIndividual\n");
       	System.out.println("#\n#\n# Best Indiviudal average per generation: Generation BestIndividual\n");
 		
@@ -472,11 +488,7 @@ public class RouteGeneLaunch  implements GenerationListener
                         System.out.println(i + "\t" + average[i]);
 		}
 		
-		out.write("#\n#\n# Best Indiviudals detectors\n");
-      	System.out.println("#\n#\n# Best Indiviudals detectors\n");
-      	
-      	out.write(RouteGenerationProblem.bestDetectors +"\n");
-      	System.out.println(RouteGenerationProblem.bestDetectors);
+		
       	
 		out.close();
     }
@@ -503,19 +515,24 @@ public class RouteGeneLaunch  implements GenerationListener
 
     	if (coevolutionary)
     	{	
-    		if (synchronised)
+    		if (synchronised || coevSequential)
     		{
 	    		if (alg instanceof CoevEA)
 	    		{
-	    			Problem p = (Problem)alg.getParam(CoevEA.PARAM_PROBLEM);
+	    			//Problem p = (Problem)alg.getParam(CoevEA.PARAM_PROBLEM);
 	    			Individual individual = (Individual)alg.getParam(CoevEA.PARAM_BEST_IDV);
-	    			individual.setFitness(p.eval(individual)); // use eval not to count evaluations!
+	    				  
+	    			synchronized(evalProblem)
+	    			{
+	    				individual.setFitness(evalProblem.eval(individual));
+	    			}
+	    			System.out.println("> " + individual.toString());
 	    			
 	    			BestIndPerGen.add(((Double)individual.getFitness()).doubleValue());
-	    			
-	    			if (p instanceof RouteGenerationProblem)
+	    				    			
+	    			if (evalProblem instanceof RouteGenerationProblem)
 	    			{
-	    				RouteGenerationProblem rgp = (RouteGenerationProblem)p;
+	    				RouteGenerationProblem rgp = (RouteGenerationProblem)evalProblem;
 		    			
 		    			bestDetectorPerGen.add(rgp.getCurrentDectectors());		    			
 	    			}

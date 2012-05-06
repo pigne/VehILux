@@ -14,7 +14,7 @@ import lu.uni.routegeneration.generation.RouteGeneration;
 public class RouteGenerationProblem extends Problem{
 
 	public static int[] GeneGroupLengths = {3,4,2,2,1,1}; 
-	public static boolean discrete = true;
+	public static boolean discrete = false;
 	public static String bestDetectors = "";
 	public static Individual bestIndividual = null;
 	private static double bestFitness = 1.7976931348623157E308; //new Double(0).MAX_VALUE;

@@ -1216,6 +1216,8 @@ public class RouteGeneration {
 	
 	public double evaluate(Individual ind) {
 		
+		random = new Random(randomSeed); // reset seed!
+		
 		//Prints the individual 
 		String individual = "Individual:";
          for(int i=0; i<ind.getLength();i++) {
