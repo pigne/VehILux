@@ -1,0 +1,11 @@
+<!ELEMENT vTypes (vType)*>
+<!ELEMENT vType EMPTY>
+<!ATTLIST area 
+   id       ID       #IMPLIED
+   accel    CDATA    #REQUIRED
+   decel    CDATA    #REQUIRED
+   signma   CDATA    #REQUIRED
+   length   CDATA    #REQUIRED
+   maxSpeed CDATA    #REQUIRED
+   color    CDATA    #REQUIRED
+>
