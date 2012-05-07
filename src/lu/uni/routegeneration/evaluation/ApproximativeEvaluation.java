@@ -39,13 +39,13 @@ public class ApproximativeEvaluation {
 
 	
 	
-	String baseFolder = "./test/";
-	String baseName = "LuxembourgVille";
+	String baseFolder = "./test//Luxembourg/";
+	String baseName = "Luxembourg";
 	int stopHour = 11;
 	int currentHour=0;
 	
-	ArrayList<HashMap<String, Integer>> h_e1s;
-	HashMap<String, Integer> e1s;
+	ArrayList<HashMap<String, Integer>> h_inductionLoops;
+	HashMap<String, Integer> inductionLoops;
 	ArrayList<String> detectors;
 	ArrayList<String> edges;
 
@@ -57,11 +57,11 @@ public class ApproximativeEvaluation {
 		org.util.Environment.getGlobalEnvironment().readCommandLine(args);
 		org.util.Environment.getGlobalEnvironment().initializeFieldsOf(this);
 		
-		h_e1s = new ArrayList<HashMap<String, Integer>>();
+		h_inductionLoops = new ArrayList<HashMap<String, Integer>>();
 		detectors = new ArrayList<String>();
 		edges = new ArrayList<String>();
 		for( int i =0; i <stopHour; i++){
-			h_e1s.add(new HashMap<String, Integer>());
+			h_inductionLoops.add(new HashMap<String, Integer>());
 		}
 		
 		
@@ -69,7 +69,7 @@ public class ApproximativeEvaluation {
 			@Override
 			public void startElement(String uri, String localName,
 					String qName, Attributes attributes) throws SAXException {
-				if(qName.equals("e1-detector")){
+				if(qName.equals("inductionLoop")){
 					String lane = attributes.getValue("lane");
 					lane = lane.split("_")[0];
 					String id = attributes.getValue("id");
@@ -85,7 +85,7 @@ public class ApproximativeEvaluation {
 		try {
 			XMLReader parser = XMLReaderFactory.createXMLReader();
 			parser.setContentHandler(h);
-			parser.parse(new InputSource(baseFolder+baseName+".e1.xml"));
+			parser.parse(new InputSource(baseFolder+baseName+".add.xml"));
 		} catch (Exception ex) {
 			ex.printStackTrace(System.err);
 		}
@@ -94,8 +94,7 @@ public class ApproximativeEvaluation {
 		
 		h = new DefaultHandler(){
 			@Override
-			public void startElement(String uri, String localName,
-					String qName, Attributes attributes) throws SAXException {
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 				if(qName.equals("vehicle")){
 					int depart = (int)Double.parseDouble(attributes.getValue("depart")) / 3600 ;
 					if (currentHour != depart){
@@ -106,13 +105,14 @@ public class ApproximativeEvaluation {
 					String route = attributes.getValue("edges");
 					for(String edge : route.split(" ")){
 						if(edges.contains(edge)){
-							HashMap<String, Integer> h = h_e1s.get(currentHour);
-							
-							Integer I = h.get(edge); 
-							if(I==null){
-								h.put(edge, 1);
-							} else {
-								h.put(edge,I+1);
+							if (currentHour < h_inductionLoops.size()) {
+								HashMap<String, Integer> h = h_inductionLoops.get(currentHour);
+								Integer I = h.get(edge); 
+								if(I==null){
+									h.put(edge, 1);
+								} else {
+									h.put(edge,I+1);
+								}
 							}
 						}
 					}
@@ -144,7 +144,7 @@ public class ApproximativeEvaluation {
 		for(int i =0; i< stopHour; i++){
 			out.printf("%d ",i+1);
 			for(String s  : edges){
-				Integer I = h_e1s.get(i).get(s);
+				Integer I = h_inductionLoops.get(i).get(s);
 				if(I==null)
 					out.print("0 ");
 				else

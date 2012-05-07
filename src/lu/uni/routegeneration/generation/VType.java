@@ -19,6 +19,7 @@ public class VType {
 	String decel;
 	String sigma;
 	String length;
-	String maxspeed;
+	String minGap;
+	String maxSpeed;
 	String color;
 }

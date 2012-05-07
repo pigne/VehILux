@@ -6,6 +6,7 @@
    decel    CDATA    #REQUIRED
    signma   CDATA    #REQUIRED
    length   CDATA    #REQUIRED
+   minGap   CDATA    #REQUIRED
    maxSpeed CDATA    #REQUIRED
    color    CDATA    #REQUIRED
 >

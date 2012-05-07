@@ -10,7 +10,7 @@
  */
 package lu.uni.routegeneration.generation;
 
-import org.graphstream.algorithm.DijkstraFH;
+import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.graph.Path;
 import org.xml.sax.SAXException;
 
@@ -97,47 +97,38 @@ public class Flow   implements Comparable<Flow> {
 	}
 
 	boolean go() {
-
 		if (next > rg.stopTime) {
 			return false;
 		}
 
 		if (loop.dijkstra == null) {
-
-			
 			System.out.println("!!!!!!!!!!!!!!!!!! -> Computing dijkstra for edge "+loop.edge);
-			DijkstraFH djk = new DijkstraFH(DijkstraFH.Element.NODE, loop.edge,"weight");
+			Dijkstra djk = new Dijkstra(Dijkstra.Element.NODE, loop.edge,"weight");
 			djk.init(rg.graph);
 			djk.setSource(rg.graph.getNode(loop.edge));
 			djk.compute();
 			loop.dijkstra = loop.edge;
-		
 		}
+		
 		// System.out.println("Go on flow "+loop.id+"_"+hour+".  next="+next);
 		try {
 			if (nextVehicle == CAR) {
 				rg.val++;
 				rg.ai.clear();
-				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h"
-						+ hour + "_c" + C);
-				rg.ai.addAttribute("", "", "type", "CDATA",
-						rg.vtypes.get((int) (org.util.Random.next() * rg.vtypes
-								.size())).id);
+				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h" + hour + "_c" + C);
+				rg.ai.addAttribute("", "", "type", "CDATA", rg.vtypes.get((int)(org.util.Random.next() * rg.vtypes.size())).id);
 				rg.ai.addAttribute("", "", "depart", "CDATA", "" + (int) next);
-
 				rg.tfh.startElement("", "", "vehicle", rg.ai);
-
 				rg.ai.clear();
-
-				Path p=null;
+				Path p = null;
 				do{
 					p=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
-				}while(p==null);
+				} while(p==null);
 				
 				rg.ai.addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
 				rg.tfh.startElement("", "", "route", rg.ai);
 				rg.tfh.endElement("", "", "route");
-
+				
 				rg.tfh.endElement("", "", "vehicle");
 				C++;
 			}
@@ -145,18 +136,16 @@ public class Flow   implements Comparable<Flow> {
 			else {
 				rg.val++;
 				rg.ai.clear();
-				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h"
-						+ hour + "_t" + T);
+				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h" + hour + "_t" + T);
 				rg.ai.addAttribute("", "", "type", "CDATA", "truck");
-				rg.ai.addAttribute("", "", "depart", "CDATA", Integer
-						.toString((int) next));
+				rg.ai.addAttribute("", "", "depart", "CDATA", Integer.toString((int) next));
 				rg.tfh.startElement("", "", "vehicle", rg.ai);
 				rg.ai.clear();
 
 				Path p=null;
-				do{
+				do {
 					p=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
-				}while(p==null);
+				} while(p==null);
 				rg.ai.addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
 				rg.tfh.startElement("", "", "route", rg.ai);
 				rg.tfh.endElement("", "", "route");
@@ -166,7 +155,6 @@ public class Flow   implements Comparable<Flow> {
 			}
 
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return next();
@@ -185,6 +173,32 @@ public class Flow   implements Comparable<Flow> {
 		// return 0;
 	}
 		
-       
+	private Path path;
+	
+	public Path GetPath() {
+		return this.path;
+	}
+	
+	boolean goAndSetPath() {
+		if (next > rg.stopTime) {
+			return false;
+		}
+		try {
+			rg.val++;
+			do{
+				this.path=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
+			}
+			while(this.path==null);
+			if (nextVehicle == CAR) {
+				C++;
+			}
+			else {
+				T++;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return next();
+	}   
 	
 }

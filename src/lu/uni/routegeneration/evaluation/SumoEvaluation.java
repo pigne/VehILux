@@ -30,7 +30,18 @@ public class SumoEvaluation {
 
 	// ----------- PARAMETERS ----------
 	// --- base name
-	String baseName = "LuxembourgVille";
+	String baseName = "Luxembourg";
+
+	// --- folder name
+	String baseFolder = "./test/Luxembourg/";
+
+	int stopHour = 11;
+
+	Detector currentDetector = null;
+	File currentFile = null;
+	String currentDetectorName;
+	HashMap<String, Detector> detectors;
+	HashMap<String, Detector> controls;
 
 	/**
 	 * @return the baseName
@@ -77,17 +88,7 @@ public class SumoEvaluation {
 		this.stopHour = stopHour;
 	}
 
-	// --- folder name
-	String baseFolder = "./test/";
-
-	int stopHour = 11;
-
-	Detector currentDetector = null;
-	File currentFile = null;
-	String currentDetectorName;
-	HashMap<String, Detector> detectors;
-	HashMap<String, Detector> controls;
-
+	
 	class Detector {
 		String id;
 		int[] vehicles;
@@ -106,9 +107,7 @@ public class SumoEvaluation {
 			super.startElement(uri, localName, qName, attributes);
 
 			if (qName.equals("interval")) {
-				currentDetector.vehicles[(int) (Double.parseDouble(attributes
-						.getValue("begin")) / 3600.0)] += (int) (Double
-						.parseDouble(attributes.getValue("nVehContrib")));
+				currentDetector.vehicles[(int) (Double.parseDouble(attributes.getValue("begin")) / 3600.0)] += (int) (Double.parseDouble(attributes.getValue("nVehContrib")));
 			}
 		}
 	};

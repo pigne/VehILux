@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 
-<!-- generated on Sun May  6 11:47:16 2012 by SUMO sumo Version 0.15.0
+<!-- generated on Mon 07 May 2012 05:40:10 PM CEST by SUMO gui Version 0.15.0
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/sumoConfiguration.xsd">
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/sumo-gui.exeConfiguration.xsd">
 
     <input>
-        <net-file value="./test/Luxembourg/Luxembourg.net.xml"/>
-        <route-files value="./test/Luxembourg/Luxembourg.rou.xml"/>
-        <additional-files value="./test/Luxembourg/Luxembourg.e1.xml"/>
+        <net-file value="/home/agata/git/VehILux/test/Luxembourg/Luxembourg.net.xml"/>
+        <route-files value="/home/agata/git/VehILux/test/Luxembourg/Luxembourg.rou.xml"/>
+        <additional-files value="/home/agata/git/VehILux/test/Luxembourg/Luxembourg.add.xml"/>
     </input>
 
     <time>
-        <begin value="1"/>
-        <end value="39601"/>
+        <begin value="0"/>
+        <end value="39600"/>
     </time>
 
     <processing>
@@ -24,17 +24,4 @@
         <verbose value="true"/>
     </report>
 
-    <traci_server>
-        <remote-port value="60684"/>
-    </traci_server>
-
-    <random_number>
-        <seed value="12346"/>
-    </random_number>
-
 </configuration>
--->
-
-<detector>
-   <interval begin="1.00" end="102.00" id="407_0" nVehContrib="0" flow="0.00" occupancy="0.00" speed="-1.00" length="-1.00" nVehEntered="0"/>
-</detector>

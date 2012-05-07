@@ -6,7 +6,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/gs-deps.jar"/>
 	<classpathentry kind="lib" path="lib/jCell.jar"/>
-	<classpathentry kind="lib" path="lib/gs-algo.jar"/>
-	<classpathentry kind="lib" path="lib/gs-core.jar"/>
+	<classpathentry kind="lib" path="lib/gs-algo-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/gs-core-1.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/log4j.jar"/>
+	<classpathentry kind="lib" path="lib/traci4j.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

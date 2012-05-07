@@ -30,8 +30,18 @@ public class RealEvaluation {
 
 	// ----------- PARAMETERS ----------
 	// --- base name
-	String baseName = "LuxembourgVille";
+	String baseName = "Luxembourg";
+	
+	// --- folder name
+	String baseFolder = "./test//Luxembourg/";
 
+	int stopHour = 11;
+
+	Detector currentDetector = null;
+	File currentFile = null;
+	String currentDetectorName;
+	public HashMap<String, Detector> controls;
+	
 	/**
 	 * @return the baseName
 	 */
@@ -40,8 +50,7 @@ public class RealEvaluation {
 	}
 
 	/**
-	 * @param baseName
-	 *            the baseName to set
+	 * @param baseName the baseName to set
 	 */
 	public void setBaseName(String baseName) {
 		this.baseName = baseName;
@@ -55,8 +64,7 @@ public class RealEvaluation {
 	}
 
 	/**
-	 * @param baseFolder
-	 *            the baseFolder to set
+	 * @param baseFolder the baseFolder to set
 	 */
 	public void setBaseFolder(String folderName) {
 		this.baseFolder = folderName;
@@ -77,17 +85,6 @@ public class RealEvaluation {
 		this.stopHour = stopHour;
 	}
 
-	// --- folder name
-	String baseFolder = "./test/";
-
-	int stopHour = 11;
-
-	Detector currentDetector = null;
-	File currentFile = null;
-	String currentDetectorName;
-	public HashMap<String, Detector> controls;
-
-	
 
 	class CLoopHandler extends DefaultHandler {
 
