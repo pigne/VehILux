@@ -240,6 +240,14 @@ public class RouteGeneration {
 	{
 		return currentSolution;
 	}
+	
+	/**
+	 * @return the control values
+	 */
+	public HashMap<String, Detector> getControls()
+	{
+		return this.evaluator.controls;
+	}
 
 
 	public RouteGeneration() {
@@ -1106,6 +1114,9 @@ public class RouteGeneration {
 	}
 	
 	public double evaluate(Individual ind) {
+
+		random = new Random(randomSeed); // reset seed!
+
 		//Prints the individual 
 		String individual = "Individual:";
 		for(int i=0; i<ind.getLength();i++) {
