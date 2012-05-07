@@ -42,7 +42,6 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 	
 	private Boolean synchronised = false;
 	private Boolean elitism = false;
-	//private Boolean elitism2 = false;
 	private Boolean sequential = false;
 	
 	private int[] islandMask;
@@ -361,28 +360,9 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
         Population population = (Population)EA.getParam(EvolutionaryAlg.PARAM_POPULATION);
         Statistic stats = (Statistic)EA.getParam(EvolutionaryAlg.PARAM_STATISTIC);
         int bestPos = (Integer)stats.getStat(SimpleStats.MIN_FIT_POS);
-        //Individual bestIslandIndividual = population.getIndividual(bestPos);
-        
-//        if (elitism2)
-//        {
-//        	String out = "";
-//        	if (this.bestIslandIndividual[island] == null || (double)population.getIndividual(bestPos).getFitness() <= (double)this.bestIslandIndividual[island].getFitness())
-//        	{
-//        		out = "bc:";
-//        		this.bestIslandIndividual[island] = population.getIndividual(bestPos);
-//        	}
-//        	else
-//        	{
-//        		out = "dbc:";
-//        	}
-//        	out += island;
-//        	System.out.println(out);
-//        }
-//        else
-//        {
-        	this.bestIslandIndividual[island] = population.getIndividual(bestPos);
-//        }       
-		
+
+    	this.bestIslandIndividual[island] = population.getIndividual(bestPos);
+
 		if (elitism) //works only if synchronous
 		{				
 			waitForOthers(island);				
@@ -419,20 +399,6 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 				}
 			}
 		}
-//		else if (elitism2)
-//		{
-//			waitForOthers(island);
-//			synchronized(lockObj)
-//			{
-//				// update the current best individual of best island only, or if this is just after the first generation 
-//				if (island == bestIslandIndex || operationCount[island] <= 2)
-//				{
-//		            updateBest(bestIslandIndividual[island], islandMask);
-//				
-//		            System.out.println("updated " + island); //for debug only!!
-//				}
-//			}
-//		}	
 		else
 		{
 			synchronized(lockObj)
@@ -462,7 +428,6 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 					out += " " + generation + "  ";
 				}
 			}
-			//out += bestIslandIndividual[island].toString()
 			int offest = out.length();
 			
 			out += "[";
