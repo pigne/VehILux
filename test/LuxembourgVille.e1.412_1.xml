@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+
+<!-- generated on Mon 07 May 2012 10:01:53 AM CEST by SUMO gui Version 0.12.2
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/sumo-gui.exeConfiguration.xsd">
+
+    <input>
+        <net-file value="/home/agata/git/VehILux/test/LuxembourgVille.net.xml"/>
+        <route-files value="/home/agata/git/VehILux/test/LuxembourgVille.rou.xml"/>
+        <additional-files value="/home/agata/git/VehILux/test/LuxembourgVille.e1.xml"/>
+    </input>
+
+    <time>
+        <begin value="1"/>
+        <end value="39601"/>
+    </time>
+
+    <processing>
+        <time-to-teleport value="100"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+    <gui_only>
+        <gui-settings-file value=""/>
+    </gui_only>
+
+</configuration>

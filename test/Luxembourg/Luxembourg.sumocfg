@@ -1,0 +1,19 @@
+<configuration>
+    <input>
+        <net-file value="Luxembourg.net.xml"/>
+        <route-files value="Luxembourg.rou.xml"/>
+         <additional-files value="Luxembourg.add.xml"/>
+    </input>
+   <time>
+      <begin>0</begin>
+      <end>39600</end>
+   </time>
+   <time-to-teleport>100</time-to-teleport>
+   <report>
+      <verbose>true</verbose>
+   </report>
+    <gui_only>
+        <gui-settings-file value=""/>
+    </gui_only>
+
+</configuration>
