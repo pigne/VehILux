@@ -63,7 +63,7 @@ public class AreasEditor implements ActionListener, MBoxListener {
 	 */
 	public void run() {
 
-		for (Zone z : rg.zones.values()) {
+		for (Zone z : rg.getZones().values()) {
 			if (z.min_x_boundary < min_x_boundary)
 				min_x_boundary = z.min_x_boundary;
 			if (z.max_x_boundary > max_x_boundary)

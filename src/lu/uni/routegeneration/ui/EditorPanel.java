@@ -71,7 +71,7 @@ public class EditorPanel extends JPanel {
 				/ (window.max_y_boundary - window.min_y_boundary);
 		// System.out.println("ratioY="+window.max_y_boundary);
 
-		for (Zone z : window.rg.zones.values()) {
+		for (Zone z : window.rg.getZones().values()) {
 			int[] xs = new int[z.points.size()];
 			int[] ys = new int[z.points.size()];
 			for (int i = 0; i < z.points.size(); i++) {
@@ -108,7 +108,7 @@ public class EditorPanel extends JPanel {
 		*/
 		
 		g2.setColor(new Color(150, 150, 150, 140));
-		for (Lane e : window.rg.edges) {
+		for (Lane e : window.rg.getEdges()) {
 			int[] xs = new int[e.shape.size()];
 			int[] ys = new int[e.shape.size()];
 			for (int i = 0; i < e.shape.size(); i++) {
@@ -135,7 +135,7 @@ public class EditorPanel extends JPanel {
 		/*
 		g2.setColor(new Color(0, 0, 0, 10));
 
-		for (Zone z : window.rg.zones.values()) {
+		for (Zone z : window.rg.getZones().values()) {
 			int x;
 			int y;
 			x = (int) ((z.points.get(0).x - window.min_x_boundary) * ratioX

@@ -76,7 +76,7 @@ public class Flow   implements Comparable<Flow> {
 		}
 		// System.out.println("Next on flow "+loop.id+"_"+hour+".  next="+next);
 
-		if (next > ((hour) * 3600) || next > rg.stopTime) {
+		if (next > ((hour) * 3600) || next > rg.getStopTime()) {
 			//System.out
 			//		.println("__done with flow " + loop.id + " (" + loop.edge
 			//				+ ") h:" + hour );
@@ -97,15 +97,15 @@ public class Flow   implements Comparable<Flow> {
 	}
 
 	boolean go() {
-		if (next > rg.stopTime) {
+		if (next > rg.getStopTime()) {
 			return false;
 		}
 
 		if (loop.dijkstra == null) {
 			System.out.println("!!!!!!!!!!!!!!!!!! -> Computing dijkstra for edge "+loop.edge);
 			Dijkstra djk = new Dijkstra(Dijkstra.Element.NODE, loop.edge,"weight");
-			djk.init(rg.graph);
-			djk.setSource(rg.graph.getNode(loop.edge));
+			djk.init(rg.getGraph());
+			djk.setSource(rg.getGraph().getNode(loop.edge));
 			djk.compute();
 			loop.dijkstra = loop.edge;
 		}
@@ -113,44 +113,44 @@ public class Flow   implements Comparable<Flow> {
 		// System.out.println("Go on flow "+loop.id+"_"+hour+".  next="+next);
 		try {
 			if (nextVehicle == CAR) {
-				rg.val++;
-				rg.ai.clear();
-				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h" + hour + "_c" + C);
-				rg.ai.addAttribute("", "", "type", "CDATA", rg.vtypes.get((int)(org.util.Random.next() * rg.vtypes.size())).id);
-				rg.ai.addAttribute("", "", "depart", "CDATA", "" + (int) next);
-				rg.tfh.startElement("", "", "vehicle", rg.ai);
-				rg.ai.clear();
+				rg.incrementVehicleCounter();
+				rg.getAttributeImp().clear();
+				rg.getAttributeImp().addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h" + hour + "_c" + C);
+				rg.getAttributeImp().addAttribute("", "", "type", "CDATA", rg.getVTypes().get((int)(org.util.Random.next() * rg.getVTypes().size())).id);
+				rg.getAttributeImp().addAttribute("", "", "depart", "CDATA", "" + (int) next);
+				rg.getTransformerHandler().startElement("", "", "vehicle", rg.getAttributeImp());
+				rg.getAttributeImp().clear();
 				Path p = null;
 				do{
-					p=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
+					p=rg.createRandomPath(loop.dijkstra,rg.getGraph().getNode(loop.edge));
 				} while(p==null);
 				
-				rg.ai.addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
-				rg.tfh.startElement("", "", "route", rg.ai);
-				rg.tfh.endElement("", "", "route");
+				rg.getAttributeImp().addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
+				rg.getTransformerHandler().startElement("", "", "route", rg.getAttributeImp());
+				rg.getTransformerHandler().endElement("", "", "route");
 				
-				rg.tfh.endElement("", "", "vehicle");
+				rg.getTransformerHandler().endElement("", "", "vehicle");
 				C++;
 			}
 
 			else {
-				rg.val++;
-				rg.ai.clear();
-				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h" + hour + "_t" + T);
-				rg.ai.addAttribute("", "", "type", "CDATA", "truck");
-				rg.ai.addAttribute("", "", "depart", "CDATA", Integer.toString((int) next));
-				rg.tfh.startElement("", "", "vehicle", rg.ai);
-				rg.ai.clear();
+				rg.incrementVehicleCounter();
+				rg.getAttributeImp().clear();
+				rg.getAttributeImp().addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h" + hour + "_t" + T);
+				rg.getAttributeImp().addAttribute("", "", "type", "CDATA", "truck");
+				rg.getAttributeImp().addAttribute("", "", "depart", "CDATA", Integer.toString((int) next));
+				rg.getTransformerHandler().startElement("", "", "vehicle", rg.getAttributeImp());
+				rg.getAttributeImp().clear();
 
 				Path p=null;
 				do {
-					p=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
+					p=rg.createRandomPath(loop.dijkstra,rg.getGraph().getNode(loop.edge));
 				} while(p==null);
-				rg.ai.addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
-				rg.tfh.startElement("", "", "route", rg.ai);
-				rg.tfh.endElement("", "", "route");
+				rg.getAttributeImp().addAttribute("", "", "edges", "CDATA", RouteGeneration.pathToString(p));
+				rg.getTransformerHandler().startElement("", "", "route", rg.getAttributeImp());
+				rg.getTransformerHandler().endElement("", "", "route");
 
-				rg.tfh.endElement("", "", "vehicle");
+				rg.getTransformerHandler().endElement("", "", "vehicle");
 				T++;
 			}
 
@@ -180,13 +180,13 @@ public class Flow   implements Comparable<Flow> {
 	}
 	
 	boolean goAndSetPath() {
-		if (next > rg.stopTime) {
+		if (next > rg.getStopTime()) {
 			return false;
 		}
 		try {
-			rg.val++;
+			rg.incrementVehicleCounter();
 			do{
-				this.path=rg.createRandomPath(loop.dijkstra,rg.graph.getNode(loop.edge));
+				this.path=rg.createRandomPath(loop.dijkstra,rg.getGraph().getNode(loop.edge));
 			}
 			while(this.path==null);
 			if (nextVehicle == CAR) {
