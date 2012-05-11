@@ -1411,7 +1411,7 @@ public class RouteGeneration {
 					ai.addAttribute("", "", "id", "CDATA", "resdidentialXXX" /*+ zone.id */+ "_h"
 							+ currentHour + "_c" + val);
 					ai.addAttribute("", "", "type", "CDATA", vtypes
-							.get((int) (org.util.Random.next() * vtypes.size())).id);
+							.get((int) (random.nextDouble() * vtypes.size())).id);
 					ai.addAttribute("", "", "depart", "CDATA", "" + (int) currentTime);
 
 					try {

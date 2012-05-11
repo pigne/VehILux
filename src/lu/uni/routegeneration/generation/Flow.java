@@ -121,7 +121,7 @@ public class Flow   implements Comparable<Flow> {
 				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h"
 						+ hour + "_c" + C);
 				rg.ai.addAttribute("", "", "type", "CDATA",
-						rg.vtypes.get((int) (org.util.Random.next() * rg.vtypes
+						rg.vtypes.get((int) (rg.random.nextDouble() * rg.vtypes
 								.size())).id);
 				rg.ai.addAttribute("", "", "depart", "CDATA", "" + (int) next);
 
