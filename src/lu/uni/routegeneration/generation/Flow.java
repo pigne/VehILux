@@ -117,6 +117,9 @@ public class Flow   implements Comparable<Flow> {
 		try {
 			if (nextVehicle == CAR) {
 				rg.val++;
+				
+				if( next >= (rg.startHour-1)*3600 ){
+				
 				rg.ai.clear();
 				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h"
 						+ hour + "_c" + C);
@@ -139,11 +142,17 @@ public class Flow   implements Comparable<Flow> {
 				rg.tfh.endElement("", "", "route");
 
 				rg.tfh.endElement("", "", "vehicle");
+				
+				}
+				
 				C++;
 			}
 
 			else {
 				rg.val++;
+				
+				if( next >= (rg.startHour-1)*3600 ){
+					
 				rg.ai.clear();
 				rg.ai.addAttribute("", "", "id", "CDATA", "l" + loop.id + "_h"
 						+ hour + "_t" + T);
@@ -162,6 +171,9 @@ public class Flow   implements Comparable<Flow> {
 				rg.tfh.endElement("", "", "route");
 
 				rg.tfh.endElement("", "", "vehicle");
+				
+				}
+				
 				T++;
 			}
 

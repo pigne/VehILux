@@ -85,6 +85,13 @@ public class RouteGeneration {
 	 */
 	String baseFolder = "./test/";
 
+	/**
+	 * Time of the day at which the traffic starts to be generated. 
+	 * 
+	 * Everything will be computed starting from 0 but the evaluation and the
+	 * output files will only consider the traffic from this date.
+	 */
+	int startHour = 9;
 	
 	/**
 	 * 
@@ -129,6 +136,21 @@ public class RouteGeneration {
 	double insideFlowRatio;
 	double shiftingRatio;
 	
+	/**
+	 * @return the startHour
+	 */
+	public int getStartHour() {
+		return startHour;
+	}
+
+	/**
+	 * @param startHour
+	 *            the startHour to set
+	 */
+	public void setStartHour(int startHour) {
+		this.startHour = startHour;
+	}
+
 	/**
 	 * @return the stopHour
 	 */
@@ -381,7 +403,7 @@ public class RouteGeneration {
 		
 		random = new Random(randomSeed);
 		
-		evaluator = new RealEvaluation();
+		evaluator = new RealEvaluation(this);
 		currentSolution = new HashMap<String, Detector>();
 		for(String id : evaluator.controls.keySet()){
 			System.out.println("Detector id: " + id);
@@ -1082,7 +1104,7 @@ public class RouteGeneration {
 		for (Loop loop : loops) {
 
 			for (Flow flow : loop.flows) {
-				if (flow.hour > stopHour)
+				if (flow.hour > stopHour  || flow.hour+1 < startHour)
 					continue;
 				Path path;
 				for (int cars = 0; cars < flow.car; cars++) {
@@ -1403,6 +1425,7 @@ public class RouteGeneration {
 
 				// inside flow OR outside flow?
 				if (random.nextDouble() < insideFlowRatio) {
+					if(currentHour>=startHour){
 					// System.out.println("going for inside flow");
 					// inside flow
 					Path p = goInsideFlow();
@@ -1428,7 +1451,7 @@ public class RouteGeneration {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-
+					}
 
 				} else {
 					// outside flow

@@ -16,6 +16,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.HashMap;
 
+import lu.uni.routegeneration.generation.RouteGeneration;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -28,59 +30,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  */
 public class RealEvaluation {
 
-	// ----------- PARAMETERS ----------
-	// --- base name
-	String baseName = "LuxembourgVille";
-
-	/**
-	 * @return the baseName
-	 */
-	public String getBaseName() {
-		return baseName;
-	}
-
-	/**
-	 * @param baseName
-	 *            the baseName to set
-	 */
-	public void setBaseName(String baseName) {
-		this.baseName = baseName;
-	}
-
-	/**
-	 * @return the baseFolder
-	 */
-	public String getBaseFolder() {
-		return baseFolder;
-	}
-
-	/**
-	 * @param baseFolder
-	 *            the baseFolder to set
-	 */
-	public void setBaseFolder(String folderName) {
-		this.baseFolder = folderName;
-	}
-
-	/**
-	 * @return the stopHour
-	 */
-	public int getStopHour() {
-		return stopHour;
-	}
-
-	/**
-	 * @param stopHour
-	 *            the stopHour to set
-	 */
-	public void setStopHour(int stopHour) {
-		this.stopHour = stopHour;
-	}
-
-	// --- folder name
-	String baseFolder = "./test/";
-
-	int stopHour = 11;
+	RouteGeneration rg;
 
 	Detector currentDetector = null;
 	File currentFile = null;
@@ -98,13 +48,13 @@ public class RealEvaluation {
 
 			if (qName.equals("loop")) {
 				currentDetectorName = attributes.getValue("id");
-				currentDetector = new Detector(stopHour);
+				currentDetector = new Detector(rg.getStopHour());
 				currentDetector.id = currentDetectorName;
 				currentDetector.edge = attributes.getValue("edge");
 				controls.put(currentDetectorName, currentDetector);
 			} else if (qName.equals("flow")) {
 				int h = (int) (Double.parseDouble(attributes.getValue("hour")));
-				if (h <= stopHour) {
+				if (h <= rg.getStopHour()) {
 
 					currentDetector.vehicles[h - 1] = (int) Double
 							.parseDouble(attributes.getValue("cars"))
@@ -117,16 +67,18 @@ public class RealEvaluation {
 
 	};
 
-	public RealEvaluation() {
+	public RealEvaluation(RouteGeneration rg) {
 		//org.util.Environment.getGlobalEnvironment().readCommandLine(args);
 		//org.util.Environment.getGlobalEnvironment().initializeFieldsOf(this);
+		this.rg =rg;
+		
 		DefaultHandler h;
 
 		controls = new HashMap<String, Detector>();
 
 		PrintStream out = null;
 
-		File f = new File(baseFolder + baseName + ".control.xml");
+		File f = new File(rg.getBaseFolder() + rg.getBaseName() + ".control.xml");
 		h = new CLoopHandler();
 		try {
 			XMLReader parser = XMLReaderFactory.createXMLReader();
@@ -136,7 +88,7 @@ public class RealEvaluation {
 			ex.printStackTrace(System.err);
 		}
 
-		f = new File(baseFolder + baseName + ".real_eval.log");
+		f = new File(rg.getBaseFolder() + rg.getBaseName() + ".real_eval.log");
 
 		out = null;
 		try {
@@ -149,7 +101,7 @@ public class RealEvaluation {
 			out.printf("%s ", d.id);
 		}
 		out.println();
-		for (int i = 0; i < stopHour; i++) {
+		for (int i = rg.getStartHour()-1; i < rg.getStopHour(); i++) {
 			out.printf("%d ", i + 1);
 			for (Detector d : controls.values()) {
 				out.printf("%d ", d.vehicles[i]);
@@ -164,7 +116,7 @@ public class RealEvaluation {
 	
 	public double compareTo(HashMap<String, Detector> solution){
 		
-		double[] sum =new double[stopHour];
+		double[] sum =new double[rg.getStopHour()];
 		
 		for(String id : solution.keySet()){
 			Detector sd = solution.get(id);
@@ -175,7 +127,7 @@ public class RealEvaluation {
  			if(sd.vehicles.length != cd.vehicles.length){
  				System.err.println("Detector Error. Solution and control length differ");
  			}
- 			for(int i = 0 ; i<sd.vehicles.length; i++){
+ 			for(int i = rg.getStartHour()-1 ; i<sd.vehicles.length; i++){
  				sum[i]+=Math.abs((sd.vehicles[i]-cd.vehicles[i]));
  			}
 		}
@@ -201,7 +153,7 @@ public class RealEvaluation {
  			if(sd.vehicles.length != cd.vehicles.length){
  				System.err.println("Detector Error. Solution and control length differ");
  			}
- 			for(int i = 0 ; i<sd.vehicles.length; i++){
+ 			for(int i = rg.getStartHour()-1 ; i<sd.vehicles.length; i++){
  				sum+=Math.abs((sd.vehicles[i]-cd.vehicles[i]));
  			}
  			detectors[di++]=sum;
@@ -209,16 +161,4 @@ public class RealEvaluation {
 		
 	 	return detectors;
 	}
-
-	
-	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		new RealEvaluation();
-		System.out.println("Done.");
-
-	}
-
 }
