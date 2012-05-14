@@ -31,6 +31,7 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 
 	public static final int PARAM_ALG			= 2000;
 	public static final int PARAM_BEST_IDV		= 2001;
+	public static final int PARAM_BEST_ISL_IDV	= 2002;
 	
 	// island threads
 	private Thread[] t;
@@ -46,7 +47,7 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 	
 	private int[] islandMask;
 	private Individual bestIndividual;
-		
+			
 	private Individual[] bestIslandIndividual;
 	private int bestIslandIndex;
 	
@@ -173,6 +174,21 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 		else if (keyValue == CoevEA.PARAM_BEST_IDV)
 		{
 			return this.bestIndividual;
+		}
+		else if (keyValue == CoevEA.PARAM_BEST_ISL_IDV)
+		{
+			int bestIndex = 0;
+			double bestFitness = (double)this.bestIslandIndividual[0].getFitness();
+			for(int i = 1; i < this.islandCount; i++)
+			{			
+				if ((double)this.bestIslandIndividual[i].getFitness() < bestFitness)
+				{
+					bestIndex = i;
+					bestFitness = (double)this.bestIslandIndividual[i].getFitness();
+				}
+			}
+			System.out.println("Best:" + bestIndex);
+			return this.bestIslandIndividual[bestIndex];
 		}
 		else
 		{
