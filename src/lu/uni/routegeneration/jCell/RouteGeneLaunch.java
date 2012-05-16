@@ -183,7 +183,8 @@ public class RouteGeneLaunch  implements GenerationListener
 	            	if(algorithm.equalsIgnoreCase("cGA")){
 	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new CellularGA(r));
 	            	} else if (algorithm.equalsIgnoreCase("genGA")){           
-	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new GenGA(r));		            	
+	            		//((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new GenGA(r));		            	
+	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new CoevGenGA(r));
 		            } else if(algorithm.equalsIgnoreCase("ssGA")){  
 		            	((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new SSGA(r));
 		            }
@@ -407,7 +408,7 @@ public class RouteGeneLaunch  implements GenerationListener
     	
     	//Saving to file
 		//String filename = "RouteGenProblem_" + x + "x" +y + "Neigh" + CellularGA.PARAM_NEIGHBOURHOOD + "Mp" + ea.getParam(CellularGA.PARAM_MUTATION_PROB) + "Cp" + ea.getParam(CellularGA.PARAM_CROSSOVER_PROB) +"_" + evaluationsLimit + ".dat" ;
-    	String baseName = "RouteGenProblem_" + algorithm + "_" + (x * y) + "_" + (coevolutionary?("coev_" + (synchronised?"sync_":"async_") + (coevSequential?"seq_":"par_")):"noncoev_") + bestIndiv.getFitness() + "_" + generationLimit + "(" + evaluationsLimit + ")";
+    	String baseName = "RouteGenProblem_CC" + algorithm + "_" + (x * y) + "_" + (coevolutionary?("coev_" + (synchronised?"sync_":"async_") + (coevSequential?"seq_":"par_")):"noncoev_") + bestIndiv.getFitness() + "_" + generationLimit + "(" + evaluationsLimit + ")";
     	String filename = baseName + ".dat"; 
     	
 		File save_file = new File(filename);

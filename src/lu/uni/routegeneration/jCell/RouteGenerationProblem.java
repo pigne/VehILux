@@ -57,11 +57,14 @@ public class RouteGenerationProblem extends Problem{
 		
 		double value = routeGen.evaluate(ind);
 		
-		if (value < bestFitness)
+		synchronized (bestIndividual)
 		{
-			bestFitness = value; 
-			bestDetectors = getCurrentDectectors();
-			bestIndividual = (Individual)ind.clone();
+			if (value < bestFitness)
+			{
+				bestFitness = value; 
+				bestDetectors = getCurrentDectectors();
+				bestIndividual = (Individual)ind.clone();
+			}
 		}
 				
 		return value;
