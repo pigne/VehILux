@@ -19,6 +19,9 @@ public class RouteGenerationProblem extends Problem{
 	public static Individual bestIndividual = new RealIndividual();
 	private static double bestFitness = 1.7976931348623157E308; //new Double(0).MAX_VALUE;
 
+	public static long skipCount = 0;
+	public static HashMap<HashIndividual, Double> evaluatedIndividuals = new HashMap<HashIndividual, Double>();
+	
 	RouteGeneration routeGen;
 	
 	public RouteGenerationProblem(){
@@ -55,19 +58,47 @@ public class RouteGenerationProblem extends Problem{
 			RouteGenerationProblem.DiscretiseIndividual(ind);
 		}
 		
-		double value = routeGen.evaluate(ind);
+		double fitness = 0;
+		Boolean skipEvaluation = false;
 		
 		synchronized (bestIndividual)
 		{
-			if (value < bestFitness)
+			if (evaluatedIndividuals.containsKey(new HashIndividual(ind)))
 			{
-				bestFitness = value; 
+				fitness = evaluatedIndividuals.get(new HashIndividual(ind));
+				skipEvaluation = true;
+				skipCount++;
+			}
+		}
+		
+		if (skipEvaluation)
+		{
+			System.out.println("skip: " + ind.toString());			
+		}
+		else
+		{	
+			fitness = routeGen.evaluate(ind);
+			
+			synchronized (bestIndividual)
+			{
+				if (!evaluatedIndividuals.containsKey(new HashIndividual(ind)))
+				{
+					evaluatedIndividuals.put(new HashIndividual(ind), fitness);
+				}
+			}
+		}
+
+		synchronized (bestIndividual)
+		{
+			if (fitness < bestFitness)
+			{
+				bestFitness = fitness; 
 				bestDetectors = getCurrentDectectors();
 				bestIndividual = (Individual)ind.clone();
 			}
 		}
 				
-		return value;
+		return fitness;
 	}
 	
 	public String getCurrentDectectors()

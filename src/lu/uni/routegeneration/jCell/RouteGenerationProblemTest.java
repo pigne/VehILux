@@ -4,8 +4,9 @@ import java.util.*;
 
 import jcell.Individual;
 import jcell.Problem;
+import jcell.RealIndividual;
 import jcell.Target;
-
+import java.util.Set;
 
 /**
  * @author Sune
@@ -17,6 +18,9 @@ public class RouteGenerationProblemTest extends Problem {
 	private int delay = 1;
 	private Random r = new Random();
 	
+	public static Individual bestIndividual = new RealIndividual();
+	private static double bestFitness = 1.7976931348623157E308; //new Double(0).MAX_VALUE;
+		
 	public RouteGenerationProblemTest()
 	{
         super();
@@ -49,21 +53,58 @@ public class RouteGenerationProblemTest extends Problem {
 		{
 			RouteGenerationProblem.DiscretiseIndividual(ind);
 		}
-		
+				
 		double fitness = 0;
-		for(int i = 0; i < minAllowedValues.size(); i++)
+		Boolean skipEvaluation = false;
+		
+		synchronized (bestIndividual)
 		{
-			double delta = (25.0d - (double)ind.getAllele(i)) * (33.0d - (double)ind.getAllele(i)) * (34.0d - (double)ind.getAllele(i)) * (50.0d - (double)ind.getAllele(i));
-			fitness += Math.abs(delta); 
+			if (RouteGenerationProblem.evaluatedIndividuals.containsKey(new HashIndividual(ind)))
+			{
+				fitness = RouteGenerationProblem.evaluatedIndividuals.get(new HashIndividual(ind));
+				skipEvaluation = true;
+				RouteGenerationProblem.skipCount++;
+			}
 		}
 		
-		try {
-			// delay = 1 + r.nextInt(5);
-			Thread.sleep(delay);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (skipEvaluation)
+		{
+			System.out.println("skip: " + ind.toString());			
 		}
+		else
+		{	
+			for(int i = 0; i < minAllowedValues.size(); i++)
+			{
+				double delta = (25.0d - (double)ind.getAllele(i)) * (33.0d - (double)ind.getAllele(i)) * (34.0d - (double)ind.getAllele(i)) * (50.0d - (double)ind.getAllele(i));
+				fitness += Math.abs(delta); 
+			}
+			
+			try {
+				// delay = 1 + r.nextInt(5);
+				Thread.sleep(delay);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			synchronized (bestIndividual)
+			{
+				if (!RouteGenerationProblem.evaluatedIndividuals.containsKey(new HashIndividual(ind)))
+				{
+					RouteGenerationProblem.evaluatedIndividuals.put(new HashIndividual(ind), fitness);
+				}
+			}
+		}
+		
+		synchronized (bestIndividual)
+		{
+			if (fitness < bestFitness)
+			{
+				bestFitness = fitness;				
+				bestIndividual = (Individual)ind.clone();
+			}
+		}
+		
 		return fitness;
 	}
 

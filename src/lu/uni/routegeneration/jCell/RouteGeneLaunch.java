@@ -451,6 +451,9 @@ public class RouteGeneLaunch  implements GenerationListener
     	out.write("# \tPARAM_CELL_UPDATE: "+ea.getParam(CellularGA.PARAM_CELL_UPDATE)+"\n");
     	//out.write("# \tCrossover: WHX C13 Mutation:Uniform Sel1:TS Sel2:TS\n");
     	
+    	out.write("# Skipped evaluations:" + RouteGenerationProblem.skipCount + "\n");
+    	System.out.println("# Skipped evaluations:" + RouteGenerationProblem.skipCount);
+    	
     	double mean = rgl.getMean(averages);
     	out.write("#\n#\n# Average: "+ mean +"\n");
     	out.write("#\n# Standard deviation: "+rgl.getStandardDeviation(mean, averages) +" #\n");
