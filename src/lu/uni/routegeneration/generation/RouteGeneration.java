@@ -14,9 +14,15 @@ import it.polito.appeal.traci.SumoTraciConnection;
 
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,8 +30,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Vector;
-
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.sax.SAXTransformerFactory;
@@ -36,11 +40,9 @@ import jcell.Individual;
 
 import lu.uni.routegeneration.evaluation.Detector;
 import lu.uni.routegeneration.evaluation.RealEvaluation;
-import lu.uni.routegeneration.net.RGServer;
 import lu.uni.routegeneration.ui.AreasEditor;
 
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import org.graphstream.algorithm.Dijkstra;
@@ -91,9 +93,27 @@ public class RouteGeneration {
 	    //logger.setLevel(Level.WARN);
 	    
 		RouteGeneration rg = new RouteGeneration();
-		//rg.computeDijkstraAndFindIzolatedZones();
-		//rg.generateSumoRoutes();
-		//rg.generateSumoTrips();
+		
+//		ArrayList<String> isolatedZones = new ArrayList<String>();
+//		String isolatedZonesFilePath = "./test/Luxembourg/isolatedZones.txt";
+//		File f = new File(isolatedZonesFilePath);
+//		if(!f.exists()) {
+//			isolatedZones = rg.computeDijkstraAndFindIsolatedZones();
+//			writeStringList(isolatedZones, isolatedZonesFilePath);
+//		}
+//		else {
+//			isolatedZones = readStringList(isolatedZonesFilePath);
+//		}
+//		logger.info("removing " + isolatedZones.size() + "isolated zones... ");
+//		rg.removeZones(isolatedZones);		
+//		logger.info("updating probabilities...");
+//		rg.updateProbabilities();
+		
+//		rg.generateSumoRoutes();
+		
+		rg.generateSumoFlows();
+		rg.writeRoutesFromFlows();
+		
 		//ReadTravelTime();
 		
 		/*
@@ -103,11 +123,11 @@ public class RouteGeneration {
 		for(String key : rg.currentSolution.keySet()){
 			System.out.printf("%s ",key);
 		}
-		System.out.println();
+		logger.info();
 		for(double d : res){
 			System.out.printf("%.0f ",d);
 		}
-		System.out.println();
+		logger.info();
 		//new ApproximativeEvaluation(args);
 		*/
 	}
@@ -124,78 +144,73 @@ public class RouteGeneration {
 	 */
 	private String baseFolder = "./test/Luxembourg/";
 	
+	private String projParameter = "+proj=utm + zone=31 +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
+	
+	private  int port=0;
+	
 	/**
 	 * Time of the running simulation (hours)
 	 */
-	private int stopHour = 11;
+	private int stopHour = 1;
 
 	/**
 	 * Random seed for the random events
 	 */
 	private long randomSeed = 123456L;
 	
-	private HashMap<String, Detector> currentSolution;
+	private Random random;
 
 	private int stopTime = stopHour * 3600;
+	private int currentHour = 0;
+	private double currentTime = 0;
+	
+	private Point2D.Double netOffset;	
+	private Projection proj;
 
-	private String projParameter = "+proj=utm + zone=31 +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
-	private Point2D.Double netOffset;
+	private HashMap<String, Point2D.Double> nodes;
 	private HashMap<String, Zone> zones;
 	private ArrayList<Area> areas;
-	private Projection proj;
-	private ArrayList<Lane> edges;
-	private HashMap<String, Point2D.Double> nodes;
-	private Random random;
-	private Vector<Point2D.Double> destinations;
-
-	private int vehicleCounter = 0;
-
 	private ArrayList<VType> vtypes;
 	private TreeSet<Loop> loops;
 	
-	private Graph graph;
-
-	// Xml writing
-	private BufferedReader br;
-	private StreamResult sr;
-	private TransformerHandler tfh;
-	private AttributesImpl ai;
-	private AreasEditor ae;
-	
-	private Loop nextLoop;
-	private double insideFlowRatio;
-	private double shiftingRatio;
-	
-	private double outsideFlow[];
-	private int currentHour = 0;
-
 	private double sumResidentialSurface = 0.0;
+	private int vehicleCounter = 0;
 
+	private Loop nextLoop;
+	private double insideFlowRatio = 0.4;
+	private double outsideFlow[];
 	private Flow nextFlow;
+	private Graph graph;
 	
-	private  int port=0;
-
+	// Dijkstra
+	private String referenceNodeId= "77813703#1";
+	private Dijkstra referenceDjk;
+	
+	// for editor panel
+	private ArrayList<Lane> edges;
 	private String styleSheet = "graph { padding: 60px; fill-color:#eeeeee;}"
 			+ "node { z-index:3; size: 1px; fill-color: #777777; }"
 			+ "node.internal{ fill-color: #BB4444; }"
 			+ "edge  { fill-color: #404040; size: 1px;}"
 			+ "sprite {text-style:bold; text-color: #555555;  fill-color:#eeeeee; }"
 			+ "edge.path {fill-color: #ff4040;}";
-	
-	private double currentTime = 0;
+
+	// evaluation
+	private HashMap<String, Detector> currentSolution;
+	private double shiftingRatio;
 
 	private Area defaultAreaIND;
 	private Area defaultAreaCOM;
 	private Area defaultAreaRES;
-
 	private RealEvaluation evaluator;
-
 	private HashMap<Node, String> realNodes;
 
-	private String referenceNodeId= "77813703#1";
-	private Dijkstra referenceDjk;
-
-	private ArrayList<Zone> zonesToRemove;
+	// Xml
+	private BufferedReader br;
+	private StreamResult sr;
+	private TransformerHandler tfh;
+	private AttributesImpl ai;
+	private AreasEditor ae;
 	
 	// ----------- Getters & Setters ----------
 	
@@ -279,7 +294,8 @@ public class RouteGeneration {
 	// ----------- Cunstructor  ----------
 	public RouteGeneration() {
 		
-		random = new Random(randomSeed);
+//		random = new Random(randomSeed);
+		random = new Random(System.currentTimeMillis());
 		
 		edges = new ArrayList<Lane>();
 		zones = new HashMap<String, Zone>();
@@ -288,10 +304,10 @@ public class RouteGeneration {
 		vtypes = new ArrayList<VType>();
 		loops = new TreeSet<Loop>(); 
 		
-		destinations = new Vector<Point2D.Double>();
+//		destinations = new Vector<Point2D.Double>();
 		outsideFlow = new double[stopHour];
 
-		readNet(); // doesn't read edges for now (it's only used by editor panel)
+		readNet(); 
 		readZones();
 		readAreas();
 		assignZonesToAreas();
@@ -300,7 +316,7 @@ public class RouteGeneration {
 		
 		initializeGraph();
 
-		// TODO ?? SUNE?? what's this?
+//		// XXX : evaluation
 //		evaluator = new RealEvaluation();
 //		currentSolution = new HashMap<String, Detector>();
 //		for(String id : evaluator.controls.keySet()){
@@ -308,7 +324,6 @@ public class RouteGeneration {
 //			det.id = id;
 //			currentSolution.put(id, det);
 //		}
-//		// XXX : evaluation
 //		realNodes = new HashMap<Node, String>();
 //		for (Detector d : evaluator.controls.values()) {
 //			realNodes.put(graph.getNode(d.edge), d.id);
@@ -316,6 +331,10 @@ public class RouteGeneration {
 		
 	}
 	
+	/**
+	 * Reads information about network from .net.xml file
+	 * set projection and netOffset
+	 */
 	private void readNet() {
 		DefaultHandler h = new DefaultHandler() {
 			@Override
@@ -330,6 +349,7 @@ public class RouteGeneration {
 					netOffset.x = Double.parseDouble(toffset[0]);
 					netOffset.y = Double.parseDouble(toffset[1]);
 				}
+				// NOTE: doesn't read edges for now (it's only used by editor panel)! should be moved to editor panel class
 //				if (qName.equals("lane")) {
 //					Lane e = new Lane();
 //					String shape = attributes.getValue("shape");
@@ -356,15 +376,10 @@ public class RouteGeneration {
 		}
 	}
 	
-	// - Read the file for zones.
-	// - create zones (Commercial, Residential, Industrial) with 'Zone'
-	// objects.
-	// - Store zones in the 'zones' map.
-	//
-	// - Q : is it possible to store one Dijkstra on one node of each
-	// residential zone?
-	// - pros: speed up computation
-	// - cons: larger files stored, strengthen dependency to DGS file
+	/**
+	 * Reads zones from .osm.xml files
+	 * - creates zones map (Commercial, Residential, Industrial) with 'Zone' objects.
+	 */
 	private void readZones() {
 		class OSMHandler extends DefaultHandler {
 			Zone zone = null;
@@ -466,14 +481,10 @@ public class RouteGeneration {
 		}
 		logger.info("read " + zones.size() + " zones, nodes: " + nodes.size());
 	}
-	
-	// - File is read and the areas are created (Area class).
-	// - Areas are stored in the `areas` list.
-	// - Zone types probabilities are set.
-	//
-	// An `.areas.xml` example file::
-	
-	/* Reads areas
+
+	/* Reads areas from .areas.xml file
+	 * - Areas are stored in the `areas` list.
+	 * - Zone types probabilities are set.
 	 * <areas residential_proba="5" commercial_proba="80" industrial_proba="15"> 
 	 * <area id="1" type="COMMERCIAL" x="20418" y="14500" radius="1500" probability="10"/> 
 	 * <area id="2" type="COMMERCIAL" x="22400" y="16700" radius="1500" probability="15"/> 
@@ -583,7 +594,10 @@ public class RouteGeneration {
 		}
 	}
 	
-	
+	/**
+	 * Assign to each zone the area (based on euclidean distance)
+	 * Populate list of zones for each area
+	 */
 	private void assignZonesToAreas() {
 		logger.info("assigning zones to areas...");
 		// check each point in zone to which area belongs
@@ -592,7 +606,7 @@ public class RouteGeneration {
 				if (z.area == null && a.type == z.type) {
 					for (Point2D.Double p : z.points) {
 						if (a.radius > euclideanDistance(a.x, a.y, p.x, p.y)) {
-							//System.out.println(z.id + " in area" + a.id);
+							//logger.info(z.id + " in area" + a.id);
 							z.area = a;
 							break;
 						}
@@ -627,8 +641,9 @@ public class RouteGeneration {
 		}
 	}
 	
-	// These types are used to generate vehicles, equally distributed.
-	
+	/**
+	 * These types are used to generate vehicles, equally distributed.
+	 */
 	private void readVehicleTypes() {
 		DefaultHandler h = new DefaultHandler() {
 			@Override
@@ -659,13 +674,13 @@ public class RouteGeneration {
 		}
 	}
 	
-	// - baseName.loop.xml files.
-	// - Real data used as input for outer traffic.
-	// - Each real counting loop is linked to an edge (must exist in the
-	// .net.xml file)
-	// - For each loop a Loop object is created.
-	// - For each loop, flows are created: one per hour.
-	
+	/**
+	 * - baseName.loop.xml files.
+	 * - Real data used as input for outer traffic.
+	 * - Each real counting loop is linked to an edge (must exist in the .net.xml file)
+	 * - For each loop a Loop object is created.
+	 * - For each loop, flows are created: one per hour.
+	 */
 	private void readLoops() {
 			DefaultHandler h = new DefaultHandler() {
 				Flow currentFlow = null;
@@ -716,7 +731,9 @@ public class RouteGeneration {
 			}
 		}
 	
-	
+	/**
+	 * Initializes graph from dgs file if exists, otherwise reads net.xml file, generate dgs file and initialize graph.
+	 */
 	private void initializeGraph() {
 		logger.info("initializing graph...");
 		graph = new MultiGraph("ok", false, true);
@@ -752,20 +769,14 @@ public class RouteGeneration {
 			e.printStackTrace();
 		}
 	}
-	
-
-	private void validateGraph() {
-		CheckIfGraphContainLoops();
-		CheckEdgesContainAttribute("weight");
-	}
-	
+		
 	/*
-	 * Checks if loops' base edges exist in the graph so that a Dijkstra
+	 * Checks if induction loops' base edges exist in the graph so that a Dijkstra
 	 */
-	private void CheckIfGraphContainLoops() {
+	private void CheckIfGraphContainInductionLoops() {
 		for (Loop loop : loops) {
 			if (graph.getNode(loop.edge) == null) {
-				System.out.printf("Error: source %s missing in the graph%n", loop.edge);
+				logger.error("Error: Induction loop from edge " + loop.edge + " is missing in the graph");
 			}
 		}
 	}
@@ -779,31 +790,275 @@ public class RouteGeneration {
 			if (n.getAttribute(attrName) != null)
 				hasIt++;
 		}
-		if(hasIt != graph.getNodeCount()){
-		System.out.printf("%d nodes have the \"weight\" attribute over %d%n", hasIt, graph.getNodeCount());
+		if(hasIt != graph.getNodeCount()) {
+			logger.warn(hasIt + " nodes have the \"weight\" attribute over " + graph.getNodeCount());
 		}
 	}
+	
+	private ArrayList<String> computeDijkstraAndFindIsolatedZones() {
+		CheckIfGraphContainInductionLoops();
+		CheckEdgesContainAttribute("weight");
+		
+		referenceDjk = new Dijkstra(Dijkstra.Element.NODE, "referenceDjk","weight");
+		referenceDjk.init(graph);
+		referenceDjk.setSource(graph.getNode(referenceNodeId));
+		referenceDjk.compute();
+		
+		// ---------- generate shortest paths for outer zones ----------
+		logger.info("computing the sortest path from each induction loop edge...");
+		for (Loop loop : loops) {
+			Dijkstra djk = new Dijkstra(Dijkstra.Element.NODE, loop.edge,"weight");
+			djk.init(graph);
+			djk.setSource(graph.getNode(loop.edge));
+			djk.compute();
+			loop.dijkstra = loop.edge;
+		}
 
+		// ---------- generate shortest paths for RESIDENTIAL zones ----------
+		// Generate one shortest path for each Residential zone so as to be able
+		// to create INNER traffic.
+		// This process is VERY slow and should be changed for optimization
+		// purposed. One possibility : store the shortest path in the DGS file.
+		logger.info("computing the shortest path from a random node of each residential zone to a reference node ... ");
+		
+		ArrayList<String> zonesToRemove = new ArrayList<String>();
+		
+		for (Zone zone : zones.values()) {
+			if (zone.type == ZoneType.RESIDENTIAL) {
+				Node node = null;
+				Dijkstra djk = null;
+				boolean unreachable=true;
+				int limit = 0;
+				do {
+					if (limit > 5) {
+						zonesToRemove.add(zone.id);
+						break;
+					}
+					node = nodeInZone(zone);
+					djk = new Dijkstra(Dijkstra.Element.NODE, node.getId(),"weight");
+					djk.init(graph);
+					djk.setSource(node);
+					djk.compute();
+					// checks if there is a path from the node in the zone to the referenceNode
+					if (djk.getPathLength(graph.getNode(referenceNodeId)) != Double.POSITIVE_INFINITY) {
+						unreachable=false;
+					}
+					limit++;
+				} while (unreachable);
+				zone.shortestPath = node.getId();
+				zone.sourceNode = node;
+				djk = null;
+			}
+		}
+		
+//		logger.info("  _checking accessibility of Residential zones. This takes a while... %n"); 
+		logger.info("Computing path from a random point in each zone to a reference node. This takes a while... %n"); 
+		zonesToRemove.addAll(fillZoneNodes(5));
+		
+		return zonesToRemove;
+	}
+
+	private static ArrayList<String> readStringList(String fileName) {
+		ArrayList<String> strings = new ArrayList<String>();
+		DataInputStream in;
+		try {
+			in = new DataInputStream(new FileInputStream(fileName));
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+			while ((strLine = br.readLine()) != null) {
+				strLine.trim();
+				strings.add(strLine);
+			}
+			in.close();
+			return strings;
+		}
+		catch (Exception e) {
+			logger.error("Error: " + e.getMessage());
+			return null;
+		}
+	}
+	
+	private static void writeStringList(ArrayList<String> strings, String fileName) {
+		DataOutputStream out;
+		try {
+			out = new DataOutputStream(new FileOutputStream(fileName));
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
+			for (String string : strings) {
+				bw.write(string);
+				bw.newLine();
+			}
+			bw.flush();
+			out.close();
+		}
+		catch (Exception e) {
+			logger.error("Error: " + e.getMessage());
+		}
+	}
 	
 	/**
+	 * Updates probabilities after the all zone removing stuff
+	 */
+	private void updateProbabilities() {
+		for(Area a : areas){
+			a.sumSurfaceZones=0;
+		}
+		defaultAreaCOM.sumSurfaceZones=0;
+		defaultAreaRES.sumSurfaceZones=0;
+		defaultAreaIND.sumSurfaceZones=0;
+		sumResidentialSurface=0;
+		for (Zone z : zones.values()) {
+			z.area.sumSurfaceZones += z.surface;
+			if (z.type == ZoneType.RESIDENTIAL) {
+				sumResidentialSurface += z.surface;
+			}
+		}
+		// recompute probabilities !!
+		for (Zone z : zones.values()) {
+			z.probability = (z.surface / z.area.sumSurfaceZones) * z.type.probability * z.area.probability;
+		}
+	}
+	
+	private void removeZones(ArrayList<String> zonesToRemove) {
+		for (String zoneId : zonesToRemove) {
+			zones.remove(zoneId);
+		}
+	}
+	
+	/**
+	 * Populates zone.near_nodes and computes Dijkstra for each node
+	 * Checks if a path from a referenceNode to the each node exists
+	 * @param maxNearNodesCount the maximum number of near nodes for each zone
+	 * @return Zones that don't have a path from a reference node
+	 */
+	public ArrayList<String> fillZoneNodes(int maxNearNodesCount) {
+		if (maxNearNodesCount < 1) {
+			maxNearNodesCount = 5;
+		}
+		int pickupRepeatCount = 5;
+		ArrayList<String> zonesToRemove = new ArrayList<String>();
+		for (Zone zone : zones.values()) {
+			for (int i = 0; i < maxNearNodesCount; i++) {
+				int times = 0;
+				Node node = null;
+				do {
+					node = nodeInZone(zone);
+					// test if there is a path from a reference node to this node
+					if (referenceDjk.getPathLength(node) == Double.POSITIVE_INFINITY ) {
+						node = null;
+					}
+					times++;
+				}  while (node == null && times <= pickupRepeatCount);
+				if (node != null) {
+					zone.near_nodes.add(node);
+				}
+			}
+			if(zone.near_nodes.size()==0) {
+				zonesToRemove.add(zone.id);
+			}
+		}
+		return zonesToRemove;
+	}
+	
+	public Path createRandomPath(String djk, Node source) {
+		Path p = getShortestPath(djk, source, pickUpOneDestination());
+		if (p.empty()) {
+			return null;
+		} else {
+			return p;
+		}
+	}
+	
+	/**
+	 * @param djk
+	 * @param source
+	 * @param pickUpOneDestination
 	 * @return
 	 */
-	private Node pickUpOneDestination() {
-		// select a zone based on its proba
+	private Path getShortestPath(String djk, Node source, Node target) {
+		Dijkstra dummyDjk = new Dijkstra(Dijkstra.Element.EDGE,djk,"weight");
+		dummyDjk.setSource(source);
+		// NOTE requires that dijkstra was previously computed !
+		return dummyDjk.getPath(target);
+	}
+	
+	private Zone pickUpOneZone(ZoneType zoneType) {
 		Zone zone = null;
-		while (zone == null) {
-			double draw = random.nextDouble();
+		// XXX there should be always a zone selected but just in case there is an exit condition
+		int maxTrials = 5;
+		int trials = 0;
+		while (zone == null && (maxTrials == -1 || trials++ < maxTrials)) {
+			//random = new Random(randomSeed);
+			double rand = random.nextDouble();
 			double sum = 0.0;
 			for (Zone z : zones.values()) {
-				sum += z.probability;
-				if (sum > draw) {
-					zone = z;
-					break;
+				if (zoneType == null || (zoneType != null && z.type == zoneType)) {
+					sum += z.surface;
+					if (sum > (rand * sumResidentialSurface)) {
+						zone = z;
+						break;
+					}
 				}
 			}
 		}
+		return zone;
+	}
+	
+	/**
+	 * @return a random node from previously remembered near_nodes in random zone. 
+	 * Nodes in zone are restricted to near_nodes - computed while Dijsktra (max 5 in each zone)
+	 */
+	private Node pickUpOneDestination() {
+		// select a zone based on its proba
+		Zone zone = pickUpOneZone(null);
+		//random = new Random(randomSeed);
 		int randNode = (int) (random.nextDouble() * zone.near_nodes.size());
 		return zone.near_nodes.get(randNode);
+	}
+
+	/**
+	 * @param zone
+	 * @return a random noede by a random point(x,y) in the zone
+	 */
+	private Node nodeInZone(Zone zone) {
+		Point2D.Double point = pointInZone(zone);
+		return getClosestNode(point);
+	}
+	
+	private Point2D.Double pointInZone(Zone zone) {
+		Point2D.Double point = new Point2D.Double();
+		//random = new Random(randomSeed);
+		do {
+			point.x = random.nextDouble()
+					* (zone.max_x_boundary - zone.min_x_boundary)
+					+ zone.min_x_boundary;
+			point.y = random.nextDouble()
+					* (zone.max_y_boundary - zone.min_y_boundary)
+					+ zone.min_y_boundary;
+		} while (!isIn(point, zone));
+		return point;
+	}
+	
+	private boolean isIn(Point2D.Double point, Zone zone) {
+		Point2D.Double other = new Point2D.Double(zone.max_x_boundary, point.y);
+		int n = 0;
+		for (int i = 0; i < zone.points.size() - 1; i++) {
+			if (intersect(point, other, zone.points.get(i), zone.points.get(i + 1))) {
+				n++;
+			}
+		}
+		return n % 2 == 1;
+	}
+
+	private boolean intersect(Point2D.Double A, Point2D.Double B, Point2D.Double C, Point2D.Double D) {
+		return ccw(A, C, D) != ccw(B, C, D) && ccw(A, B, C) != ccw(A, B, D);
+	}
+	
+	private boolean ccw(Point2D.Double A, Point2D.Double B, Point2D.Double C) {
+		return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
+	}
+
+	private double euclideanDistance(double x, double y, double x2, double y2) {
+		return Math.sqrt(Math.pow((x - x2), 2) + Math.pow((y - y2), 2));
 	}
 
 	private Node getClosestNode(Point2D.Double p) {
@@ -827,65 +1082,526 @@ public class RouteGeneration {
 		return closestNode;
 	}
 
-	/**
-	 * @param point
-	 * @param zone
-	 * @return
-	 */
-	private boolean isIn(Point2D.Double point, Zone zone) {
-		Point2D.Double other = new Point2D.Double(zone.max_x_boundary, point.y);
-		int n = 0;
-		for (int i = 0; i < zone.points.size() - 1; i++) {
-			if (intersect(point, other, zone.points.get(i), zone.points.get(i + 1))) {
-				n++;
+	// SUMO route generation
+	
+	private void writeVTypes() {
+		try {
+			// ------------- Compute the vtypes ------------------
+			for (VType vt : vtypes) {
+				ai.clear();
+				ai.addAttribute("", "", "accel", "CDATA", vt.accel);
+				ai.addAttribute("", "", "color", "CDATA", vt.color);
+				ai.addAttribute("", "", "decel", "CDATA", vt.decel);
+				ai.addAttribute("", "", "id", "CDATA", vt.id);
+				ai.addAttribute("", "", "length", "CDATA", vt.length);
+				ai.addAttribute("", "", "minGap", "CDATA", vt.minGap);
+				ai.addAttribute("", "", "maxSpeed", "CDATA", vt.maxSpeed);
+				ai.addAttribute("", "", "sigma", "CDATA", vt.sigma);
+				tfh.startElement("", "", "vType", ai);
+				tfh.endElement("", "", "vType");
 			}
+			// ---------------- the default truck vtype ----------------
+			ai.clear();
+			ai.addAttribute("", "", "accel", "CDATA", "1.05");
+			ai.addAttribute("", "", "color", "CDATA", "0.1,0.1,0.1");
+			ai.addAttribute("", "", "decel", "CDATA", "4");
+			ai.addAttribute("", "", "id", "CDATA", "truck");
+			ai.addAttribute("", "", "length", "CDATA", "15");
+			ai.addAttribute("", "", "minGap", "CDATA", "2.5");
+			ai.addAttribute("", "", "maxSpeed", "CDATA", "30");
+			ai.addAttribute("", "", "sigma", "CDATA", "0");
+			tfh.startElement("", "", "vType", ai);
+			tfh.endElement("", "", "vType");
 		}
-		return n % 2 == 1;
-	}
-
-	private boolean ccw(Point2D.Double A, Point2D.Double B, Point2D.Double C) {
-		return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
-	}
-
-	private boolean intersect(Point2D.Double A, Point2D.Double B, Point2D.Double C, Point2D.Double D) {
-		return ccw(A, C, D) != ccw(B, C, D) && ccw(A, B, C) != ccw(A, B, D);
-	}
-
-	public Path createRandomPath(String djk, Node source) {
-		Path p = getShortestPath(djk, source, pickUpOneDestination());
-		if (p.empty()) {
-			return null;
-		} else {
-			return p;
+		catch (Exception e) {
+			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * @param djk
-	 * @param source
-	 * @param pickUpOneDestination
-	 * @return
-	 */
-	private Path getShortestPath(String djk, Node source, Node target) {
-		Dijkstra dummyDjk = new Dijkstra(Dijkstra.Element.EDGE,djk,"weight");
-		dummyDjk.setSource(source);
-		return dummyDjk.getPath(target);
-	}
-
-	private Point2D.Double pointInZone(Zone zone) {
-		Point2D.Double point = new Point2D.Double();
-		do {
-			point.x = random.nextDouble()
-					* (zone.max_x_boundary - zone.min_x_boundary)
-					+ zone.min_x_boundary;
-			point.y = random.nextDouble()
-					* (zone.max_y_boundary - zone.min_y_boundary)
-					+ zone.min_y_boundary;
-		} while (!isIn(point, zone));
-		return point;
 	}
 	
-	// does the flow generation process
+	public void generateSumoRoutes() {
+		
+		logger.info("__Starting Sumo route generation.");
+		
+		try {
+			sr = new StreamResult(baseFolder + baseName + ".rou.xml");
+			xmlMain();
+
+			tfh.startElement("", "", "routes", ai);
+
+			writeVTypes();
+
+			while (!loops.isEmpty()) {
+				// inside flow OR outside flow?
+				if (random.nextDouble() < insideFlowRatio) {
+					// inside flow
+					Path p = goInsideFlow();
+					vehicleCounter++;
+					ai.clear();
+					ai.addAttribute("", "", "id", "CDATA", "resdidentialXXX" /*+ zone.id */+ "_h" + currentHour + "_c" + vehicleCounter);
+					ai.addAttribute("", "", "type", "CDATA", vtypes.get((int) (org.util.Random.next() * vtypes.size())).id);
+					ai.addAttribute("", "", "depart", "CDATA", "" + (int) currentTime);
+					try {
+						tfh.startElement("", "", "vehicle", ai);
+						ai.clear();
+						ai.addAttribute("", "", "edges", "CDATA", pathToString(p));
+						tfh.startElement("", "", "route", ai);
+						tfh.endElement("", "", "route");
+						tfh.endElement("", "", "vehicle");
+					} 
+					catch (SAXException e) {
+						e.printStackTrace();
+					}
+				} 
+				else {
+					// outside flow
+					nextLoop = loops.pollFirst();
+					nextFlow = nextLoop.flows.pollFirst();
+					//logger.info("going for outside flow: "+nextFlow);
+					currentTime = nextFlow.next;
+					if (nextFlow.go()) {
+						if (currentHour != nextFlow.hour) {
+							logger.info("  _writing flows for hour " + currentHour);
+							currentHour = nextFlow.hour;
+						}
+						nextLoop.flows.add(nextFlow);
+						loops.add(nextLoop);
+					}
+					if (nextLoop.flows.size() > 0) {
+						loops.add(nextLoop);
+					}
+				}
+			}
+			tfh.endElement("", "", "routes");
+			logger.info("Done.");
+			tfh.endDocument();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private Path goInsideFlow() {
+		Zone zone = pickUpOneZone(ZoneType.RESIDENTIAL);
+		if (zone == null) {
+			logger.error("  _zone is NULL in goInsideFlow!");
+			return (null);
+		}
+		Path p = null;
+		int count = 0;
+		do {
+			if (count > 3) {
+				logger.info("  _infinite loop on zone " + zone.id);
+				return (null);
+			}
+			p = createRandomPath(zone.shortestPath, zone.sourceNode);
+			count++;
+		} 
+		while (p == null);
+		return (p);
+	}
+
+	public static String pathToString(Path path){
+		StringBuilder sb = new StringBuilder();
+		List<Node> l = path.getNodePath();
+		for (int i = 0; i < l.size() ; i++) {
+			l.get(i).addAttribute("ui.class", "path");
+			sb.append(l.get(i).getId());
+			if (i < l.size()-1) {
+				sb.append(" ");
+			}
+		}
+		return sb.toString();
+	}
+	
+	// SUMO flows generation
+	
+	private void writeRoutesFromFlows() {
+		logger.info("__Starting writing SUMO routes.");
+		
+		try {
+			sr = new StreamResult(baseFolder + baseName + ".rou.xml");
+			xmlMain();
+
+			tfh.startElement("", "", "routes", ai);
+
+			writeVTypes();
+			
+			DefaultHandler h = new DefaultHandler() {
+				@Override
+				public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+					super.startElement(uri, localName, qName, attributes);
+					if (qName.equals("flow")) {
+						String id = attributes.getValue("id");
+						if (id == null) {
+							return;
+						}
+						String from = attributes.getValue("from");
+						String to = attributes.getValue("to");
+						String begin = attributes.getValue("begin");
+						//String end = attributes.getValue("end");					
+						String type = attributes.getValue("type");
+						//String number = attributes.getValue("number);
+						String route = getRoute(from, to);
+						writeRoute(id, type, begin, route);
+					}
+				}
+			};
+			try {
+				XMLReader parser = XMLReaderFactory.createXMLReader();
+				parser.setContentHandler(h);
+				logger.info("reading flows from .flows.xml file and writing rou.xml...");
+				parser.parse(new InputSource(baseFolder + baseName + ".flows.xml"));
+				
+				tfh.endElement("", "", "routes");
+				logger.info("Done routes.");
+				tfh.endDocument();
+				
+			} catch (Exception ex) {
+				ex.printStackTrace(System.err);
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private String getRoute(String from, String to) {
+		if (from == null || to == null) {
+			return null;
+		}
+		String route = null;
+		Dijkstra djk = new Dijkstra(Dijkstra.Element.NODE, from, "weight");
+		djk.init(graph);
+		Node nodeFrom = graph.getNode(from);
+		Node nodeTo = graph.getNode(to);
+		djk.setSource(nodeFrom);	
+		try {
+			route = pathToString(djk.getPath(nodeTo));
+			
+			// check the error for flow from -35894685#0 to -24247122
+			if (from.equals("-35894685#0")) {
+				// no connection between 34072830#0 and 117285293#1
+				String badNode1Id = "34072830#0";
+				String badNode2Id = "117285293#1";
+				Node badNode1 = graph.getNode(badNode1Id);
+				Node badNode2 = graph.getNode(badNode2Id);
+				Double weight = badNode1.getAttribute("weight");
+				Double weight2 = badNode2.getAttribute("weight");
+				Dijkstra djk2 = new Dijkstra(Dijkstra.Element.NODE, from, "weight");
+				route = pathToString(djk.getPath(graph.getNode("-24247122")));
+				String path2 = pathToString(djk.getPath(graph.getNode(referenceNodeId)));
+			}
+			
+		}
+		catch (Exception ex) {
+			djk.compute();
+			route = pathToString(djk.getPath(nodeTo));
+		}
+		return route;
+	}
+	
+	private void writeRoute(String id, String type, String depart, String edges) {
+		ai.clear();
+		ai.addAttribute("", "", "id", "CDATA", id);
+		ai.addAttribute("", "", "type", "CDATA", type);
+		ai.addAttribute("", "", "depart", "CDATA", depart);
+		try {
+			tfh.startElement("", "", "vehicle", ai);
+			ai.clear();
+			ai.addAttribute("", "", "edges", "CDATA", edges);
+			tfh.startElement("", "", "route", ai);
+			tfh.endElement("", "", "route");
+			tfh.endElement("", "", "vehicle");
+		} 
+		catch (SAXException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void generateSumoFlows() {
+		
+		logger.info("__Starting Sumo flows generation.");
+		
+		try {
+			sr = new StreamResult(baseFolder + baseName + ".flows.xml");
+
+			xmlMain();
+
+			tfh.startElement("", "", "flows", ai);
+			
+			while (!loops.isEmpty()) {
+				String vehicleId = vtypes.get((int)(org.util.Random.next() * vtypes.size())).id;
+				int numberOfVehicles = 1;
+				
+				// inside flow OR outside flow?
+				if (random.nextDouble() < insideFlowRatio) {
+					// inside flow
+					Node sourceNode = getResidentialNode(3,5);
+					if (sourceNode == null) {
+						logger.warn("Any random residential node was chosen");
+						continue;
+					}
+					Node destinationNode = getDestinationNode(sourceNode, 3, 5);
+					if (destinationNode == null) {
+						logger.warn("Inside flow. There is no path from loop edge " + sourceNode.getId() + "to a random node ");
+						continue;
+					}		
+					vehicleCounter++;
+					writeFlow(vehicleCounter, sourceNode.getId(), destinationNode.getId(), (int)currentTime, stopTime, vehicleId, numberOfVehicles); 
+				} 
+				else {
+					// outside flow
+					nextLoop = loops.pollFirst();
+					nextFlow = nextLoop.flows.pollFirst();
+					currentTime = nextFlow.next;
+					if (nextFlow.go2()) {
+						Node sourceNode = graph.getNode(nextLoop.edge);
+						Node destinationNode = getDestinationNode(sourceNode, 10, 10);
+						if (destinationNode == null) {
+							logger.warn("Outside flow. There is no path from loop edge " + sourceNode.getId() + "to a random node ");
+						}
+						else {
+							vehicleCounter++;
+							writeFlow(vehicleCounter, sourceNode.getId(), destinationNode.getId(), (int)currentTime, stopTime, vehicleId, numberOfVehicles); 
+							if (currentHour != nextFlow.hour) {
+								logger.info("  _writing flows for hour " + currentHour);
+								currentHour = nextFlow.hour;
+							}
+						}
+						nextLoop.flows.add(nextFlow);
+						loops.add(nextLoop);
+					}
+					if (nextLoop.flows.size() > 0) {
+						loops.add(nextLoop);
+					}
+				}
+			}
+			tfh.endElement("", "", "flows");
+			logger.info("Done flows.");
+			tfh.endDocument();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private Node getDestinationNode(Node sourceNode, int randomZonesLimit, int randomNodesLimit) {
+		
+		Dijkstra djk = new Dijkstra(Dijkstra.Element.NODE, sourceNode.getId(),"weight");
+		djk.init(graph);
+		djk.setSource(sourceNode);	
+		
+		Node node = null;
+		Zone zone = null;
+		int randomZonesCount = 0;
+		boolean unreachable = true;
+	
+		while (zone == null && randomZonesCount < randomZonesLimit && unreachable) {
+			zone = pickUpOneZone(null);
+			if (zone != null) {
+				int randomNodesCount = 0;
+				while (unreachable && randomNodesCount < randomNodesLimit) {
+					node = nodeInZone(zone);
+					if (node != null) {
+						try {
+							djk.getPath(node);
+						}
+						catch (Exception ex) {
+							djk.compute();
+						}
+						// checks if there is a path from the node in the zone to the referenceNode
+						if (djk.getPathLength(graph.getNode(node.getId())) != Double.POSITIVE_INFINITY) {
+							unreachable=false;
+						}
+					}
+					randomNodesCount++;
+				}
+				if (unreachable) {
+					zone = null;
+				}
+			}
+			randomZonesLimit++;
+		} 
+		if (unreachable) {
+			node = null;
+		}
+		return node;
+	}
+	
+	private Node getResidentialNode(int randomZonesLimit, int randomNodesLimit) {
+		Node node = null;
+		Zone zone = null;
+		int randomZonesCount = 0;
+		while (zone == null && randomZonesCount < randomZonesLimit) {
+			zone = pickUpOneZone(ZoneType.RESIDENTIAL);
+			if (zone != null) {
+				int randomNodesCount = 0;
+				while (zone == null && randomNodesCount < randomNodesLimit) {
+					node = nodeInZone(zone);
+					randomNodesCount++;
+				}
+			}
+			randomZonesLimit++;
+		} 
+		return node;
+	}
+	
+	private void writeFlow(int vehicleCounter, String sourceId, String destinationId, int begin, int end, String vehicleId, int numberOfVehicles) {
+		try {
+			tfh.startElement("", "", "flow", ai);
+			ai.clear();
+			ai.addAttribute("", "", "id", "CDATA", "trip" + "_h" + currentHour + "_c" + vehicleCounter);
+			ai.addAttribute("", "", "from", "CDATA", "" + sourceId);
+			ai.addAttribute("", "", "to", "CDATA", "" + destinationId);
+			ai.addAttribute("", "", "begin", "CDATA", "" + begin);
+			ai.addAttribute("", "", "end", "CDATA", "" + end);
+			ai.addAttribute("", "", "type", "CDATA", "" + vehicleId);
+			ai.addAttribute("", "", "number", "CDATA", "" + numberOfVehicles);
+			tfh.endElement("", "", "flow");	
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	// Xml writing
+	
+	public void xmlMain() throws Exception {
+		SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+		tfh = tf.newTransformerHandler();
+		Transformer serTf = tfh.getTransformer();
+		serTf.setOutputProperty(OutputKeys.ENCODING, "utf-8");
+		serTf.setOutputProperty(OutputKeys.INDENT, "yes");
+		tfh.setResult(sr);
+		tfh.startDocument();
+		ai = new AttributesImpl();
+	}
+	
+	
+	// SUMO TraCI
+
+	private static void ReadTravelTime() {
+		
+		SumoTraciConnection conn = new SumoTraciConnection(
+				"./test/Luxembourg/Luxembourg.sumocfg",  // config file
+				12346,                                 // random seed
+				false                                  // look for geolocalization info in the map
+				);
+		try {
+			conn.runServer();
+			
+			// the first two steps of this simulation have no vehicles.
+//			conn.nextSimStep();
+//			conn.nextSimStep();
+			
+			for (int i = 0; i < 100; i++) {
+				int time = conn.getCurrentSimStep();
+				Set<String> vehicles = conn.getActiveVehicles();
+				
+				//logger.info("At time step " + time + ", there are "+ vehicles.size() + " vehicles: " + vehicles);
+				if (vehicles.size()>0) {
+
+					//String aVehicleID = vehicles.iterator().next();
+					
+//					Vehicle aVehicle = conn.getVehicle(aVehicleID);
+//					logger.info("Vehicle " + aVehicleID + " will traverse these edges: " + aVehicle.getCurrentRoute());
+					
+//					String edgeID = "94661965#0";
+//					double travelTime = conn.getEdgeTravelTime(edgeID);
+//					logger.info("travelTime of " + edgeID + ": " + travelTime);
+				}
+				
+				conn.nextSimStep();
+			}
+			String edgeID;
+			double travelTime;
+			
+			edgeID = "50118056#1";
+			travelTime = conn.getEdgeTravelTime(edgeID);
+			logger.info("travelTime of " + edgeID + ": " + travelTime);
+			
+			edgeID = "56640729#2";
+			travelTime = conn.getCurrentTravelTime(edgeID);
+			logger.info("travelTime of " + edgeID + ": " + travelTime);
+			
+			edgeID = "50118056#1";
+			travelTime = conn.getCurrentTravelTime(edgeID);
+			logger.info("travelTime of " + edgeID + ": " + travelTime);
+			
+			edgeID = "56640729#2";
+			travelTime = conn.getCurrentTravelTime(edgeID);
+			logger.info("travelTime of " + edgeID + ": " + travelTime);
+			
+			conn.close();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	// Parameters
+	
+	public String[] getParametersNames() {
+
+		ArrayList<String> paramsNames = new ArrayList<String>();
+
+		// Zone types
+		paramsNames.add("Residential Type");
+		paramsNames.add("Industrial Type");
+		paramsNames.add("Commercial Type");
+
+		// inner traffic ratio
+		paramsNames.add("Inner Traffic");
+
+		// loop through areas
+		for (Area a : areas) {
+			switch(a.type){
+			case COMMERCIAL: paramsNames.add("COM(" + a.id + ")");break;
+			case INDUSTRIAL: paramsNames.add("IND(" + a.id + ")");break;
+			case RESIDENTIAL: paramsNames.add("RES(" + a.id + ")");break;
+			}
+		}
+
+		String[] strings = new String[paramsNames.size()];
+		return paramsNames.toArray(strings);
+	}
+
+	public double[][] getParametersBoundaries() {
+
+		double[] min = new double[4 + areas.size()];
+		double[] max = new double[4 + areas.size()];
+
+		min[0] = 1.0;
+		min[1] = 1.0;
+		min[2] = 1.0;
+
+		min[3] = 0.3;
+
+		max[0] = 100.0;
+		max[1] = 100.0;
+		max[2] = 100.0;
+
+		max[3] = 0.7;
+
+		for (int i = 0; i < areas.size(); i++) {
+			min[4 + i] = 1.0;
+			max[4 + i] = 10.0;
+		}
+
+		double bounds[][] = new double[2][min.length];
+		bounds[0] = min;
+		bounds[1] = max;
+
+		return bounds;
+	}
+	
+	
+	// Optimization part
+	
+	/*
+	 * Does the flow generation process
+	 */
 	public void flowGeneration() {
 		for (Loop loop : loops) {
 			for (Flow flow : loop.flows) {
@@ -897,7 +1613,7 @@ public class RouteGeneration {
 					do {
 						path = createRandomPath(loop.dijkstra,graph.getNode(loop.edge));
 						if (path == null) {
-							System.out.println("  _outer raffic infinit loop: " + loop.edge+" flow:" + flow.hour );
+							logger.info("  _outer raffic infinit loop: " + loop.edge+" flow:" + flow.hour );
 						}
 					} while(path==null);
 					flowGenerationUp(flow, path);
@@ -930,76 +1646,6 @@ public class RouteGeneration {
 			}
 		}
 	}
-
-	private Path goInsideFlow() {
-		Zone zone = null;
-		double rand = random.nextDouble();
-		zone = null;
-		double sum = 0.0;
-		for (Zone z : zones.values()) {
-			if (z.type == ZoneType.RESIDENTIAL) {
-				sum += z.surface;
-				if (sum > (rand * sumResidentialSurface)) {
-					zone = z;
-					break;
-				}
-			}
-		}
-		if (zone == null) {
-			System.out.printf("  _zone is NULL in goInsideFlow !!! rand=%f sum=%f%n",rand,sum);
-			return (null);
-		}
-		Path p = null;
-		int count = 0;
-		do {
-			if (count > 3) {
-				System.out.println("  _infinite loop on zone " + zone.id);
-				return (null);
-			}
-			p = createRandomPath(zone.shortestPath, zone.sourceNode);
-			count++;
-		} 
-		while (p == null);
-		return (p);
-	}
-
-	private double euclideanDistance(double x, double y, double x2, double y2) {
-		return Math.sqrt(Math.pow((x - x2), 2) + Math.pow((y - y2), 2));
-	}
-
-	public void xmlMain() throws Exception {
-		SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
-		tfh = tf.newTransformerHandler();
-		Transformer serTf = tfh.getTransformer();
-		serTf.setOutputProperty(OutputKeys.ENCODING, "utf-8");
-		serTf.setOutputProperty(OutputKeys.INDENT, "yes");
-		tfh.setResult(sr);
-		tfh.startDocument();
-		ai = new AttributesImpl();
-	}
-
-	public void fillZoneNodes(Zone z) {
-		for (int i = 0; i < 5; i++) {
-			int times = 0;
-			Node n = null;
-			do {
-				Point2D.Double point = pointInZone(z);
-				n = getClosestNode(point);
-				// test this node
-				if (referenceDjk.getPathLength(n) == Double.POSITIVE_INFINITY ) {
-					n = null;
-				}
-				times++;
-			} 
-			while (n == null && times <= 5);
-			if (n != null) {
-				z.near_nodes.add(n);
-			}
-		}
-		if(z.near_nodes.size()==0){
-			zonesToRemove.add(z);
-		}
-	}
 	
 	public double evaluate(double[] individual) {
 		ZoneType.RESIDENTIAL.probability = individual[0];
@@ -1021,7 +1667,7 @@ public class RouteGeneration {
 		for(int i=0; i<ind.getLength();i++) {
 			individual += " " + ind.getAllele(i);
 		}
-		System.out.println(individual);
+		logger.info(individual);
 		
 		ZoneType.RESIDENTIAL.probability = (Double)ind.getAllele(0)/100;
 		ZoneType.INDUSTRIAL.probability = (Double)ind.getAllele(1)/100;
@@ -1081,13 +1727,13 @@ public class RouteGeneration {
 		for(Detector d : currentSolution.values()){
 			
 			//Prints counted traffic in control point BEFORE shift
-			//System.out.println(" Before Shift: " + d);
+			//logger.info(" Before Shift: " + d);
 			
 			//Applies Shifting Ratio
 			d.shift();
 			
 			//Prints counted traffic in control point AFTER shift
-			//System.out.println(" After Shift: " + d);
+			//logger.info(" After Shift: " + d);
 		}
 		
 		fitness = evaluator.compareTo(currentSolution);
@@ -1095,417 +1741,5 @@ public class RouteGeneration {
 		System.out.printf("%.1f s%n",(System.currentTimeMillis()-start)/1000.0);
 		return fitness;
 	}
-	
-	public String[] getParametersNames() {
 
-		ArrayList<String> paramsNames = new ArrayList<String>();
-
-		// Zone types
-		paramsNames.add("Residential Type");
-		paramsNames.add("Industrial Type");
-		paramsNames.add("Commercial Type");
-
-		// inner traffic ratio
-		paramsNames.add("Inner Traffic");
-
-		// loop through areas
-		for (Area a : areas) {
-			switch(a.type){
-			case COMMERCIAL: paramsNames.add("COM(" + a.id + ")");break;
-			case INDUSTRIAL: paramsNames.add("IND(" + a.id + ")");break;
-			case RESIDENTIAL: paramsNames.add("RES(" + a.id + ")");break;
-			}
-		}
-
-		String[] strings = new String[paramsNames.size()];
-		return paramsNames.toArray(strings);
-	}
-
-	public double[][] getParametersBoundaries() {
-
-		double[] min = new double[4 + areas.size()];
-		double[] max = new double[4 + areas.size()];
-
-		min[0] = 1.0;
-		min[1] = 1.0;
-		min[2] = 1.0;
-
-		min[3] = 0.3;
-
-		max[0] = 100.0;
-		max[1] = 100.0;
-		max[2] = 100.0;
-
-		max[3] = 0.7;
-
-		for (int i = 0; i < areas.size(); i++) {
-			min[4 + i] = 1.0;
-			max[4 + i] = 10.0;
-		}
-
-		double bounds[][] = new double[2][min.length];
-		bounds[0] = min;
-		bounds[1] = max;
-
-		return bounds;
-	}
-
-	public void generateSumoRoutes() {
-		
-		System.out.println("__Starting Sumo route generation.");
-		
-		try {
-			sr = new StreamResult(baseFolder + baseName + ".rou.xml");
-			xmlMain();
-
-			tfh.startElement("", "", "routes", ai);
-
-			// ------------- Compute the vtypes ------------------
-			for (VType vt : vtypes) {
-				ai.clear();
-				ai.addAttribute("", "", "accel", "CDATA", vt.accel);
-				ai.addAttribute("", "", "color", "CDATA", vt.color);
-				ai.addAttribute("", "", "decel", "CDATA", vt.decel);
-				ai.addAttribute("", "", "id", "CDATA", vt.id);
-				ai.addAttribute("", "", "length", "CDATA", vt.length);
-				ai.addAttribute("", "", "minGap", "CDATA", vt.minGap);
-				ai.addAttribute("", "", "maxSpeed", "CDATA", vt.maxSpeed);
-				ai.addAttribute("", "", "sigma", "CDATA", vt.sigma);
-				tfh.startElement("", "", "vType", ai);
-				tfh.endElement("", "", "vType");
-			}
-			// ---------------- the default truck vtype ----------------
-			ai.clear();
-			ai.addAttribute("", "", "accel", "CDATA", "1.05");
-			ai.addAttribute("", "", "color", "CDATA", "0.1,0.1,0.1");
-			ai.addAttribute("", "", "decel", "CDATA", "4");
-			ai.addAttribute("", "", "id", "CDATA", "truck");
-			ai.addAttribute("", "", "length", "CDATA", "15");
-			ai.addAttribute("", "", "minGap", "CDATA", "2.5");
-			ai.addAttribute("", "", "maxSpeed", "CDATA", "30");
-			ai.addAttribute("", "", "sigma", "CDATA", "0");
-			tfh.startElement("", "", "vType", ai);
-			tfh.endElement("", "", "vType");
-
-			while (!loops.isEmpty()) {
-				// inside flow OR outside flow?
-				if (random.nextDouble() < insideFlowRatio) {
-					// inside flow
-					Path p = goInsideFlow();
-					vehicleCounter++;
-					ai.clear();
-					ai.addAttribute("", "", "id", "CDATA", "resdidentialXXX" /*+ zone.id */+ "_h" + currentHour + "_c" + vehicleCounter);
-					ai.addAttribute("", "", "type", "CDATA", vtypes.get((int) (org.util.Random.next() * vtypes.size())).id);
-					ai.addAttribute("", "", "depart", "CDATA", "" + (int) currentTime);
-					try {
-						tfh.startElement("", "", "vehicle", ai);
-						ai.clear();
-						ai.addAttribute("", "", "edges", "CDATA", pathToString(p));
-						tfh.startElement("", "", "route", ai);
-						tfh.endElement("", "", "route");
-						tfh.endElement("", "", "vehicle");
-					} 
-					catch (SAXException e) {
-						e.printStackTrace();
-					}
-				} 
-				else {
-					// outside flow
-					nextLoop = loops.pollFirst();
-					nextFlow = nextLoop.flows.pollFirst();
-					//System.out.println("going for outside flow: "+nextFlow);
-					currentTime = nextFlow.next;
-					if (nextFlow.go()) {
-						if (currentHour != nextFlow.hour) {
-							System.out.println("  _writing flows for hour " + currentHour);
-							currentHour = nextFlow.hour;
-						}
-						nextLoop.flows.add(nextFlow);
-						loops.add(nextLoop);
-					}
-					if (nextLoop.flows.size() > 0) {
-						loops.add(nextLoop);
-					}
-				}
-			}
-			tfh.endElement("", "", "routes");
-			System.out.println("Done.");
-			tfh.endDocument();
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static String pathToString(Path path){
-		StringBuilder sb = new StringBuilder();
-		List<Node> l = path.getNodePath();
-		for (int i = 0; i < l.size() ; i++) {
-			l.get(i).addAttribute("ui.class", "path");
-			sb.append(l.get(i).getId());
-			if (i < l.size()-1) {
-				sb.append(" ");
-			}
-		}
-		return sb.toString();
-	}
-	
-	private void init() {
-		
-	}
-	
-	private void computeDijkstraAndFindIzolatedZones() {
-		// check if loops' base edges exist in the graph so that a Dijkstra
-				// check if edges have an attribute for computing shortest path 
-				validateGraph();
-				
-				referenceDjk = new Dijkstra(Dijkstra.Element.NODE, "referenceDjk","weight");
-				referenceDjk.init(graph);
-				referenceDjk.setSource(graph.getNode(referenceNodeId));
-				referenceDjk.compute();
-				
-				// -------------------------------------------------------------------
-				// ---------- generate shortest paths for outer zones ----------
-				System.out.println("__Flows ShortestPaths");
-				for (Loop loop : loops) {
-					Dijkstra djk = new Dijkstra(Dijkstra.Element.NODE, loop.edge,"weight");
-					djk.init(graph);
-					djk.setSource(graph.getNode(loop.edge));
-					djk.compute();
-					loop.dijkstra = loop.edge;
-				}
-
-				// -------------------------------------------------------------------
-				// ---------- generate shortest paths for RESIDENTIAL zones ----------
-				//
-				// Generate one shortest path for each Residential zone so as to be able
-				// to create INNER traffic.
-				//
-				// This process is VERY slow and should be changed for optimization
-				// purposed. One possibility : store the shortest path in the DGS file.
-				//
-				System.out.println("__Residential Zones ShortestPaths... (be patient), zones count: " + zones.values().size());
-				
-				zonesToRemove = new ArrayList<Zone>();
-				for (Zone z : zones.values()) {
-					if (z.type == ZoneType.RESIDENTIAL) {
-						Node n = null;
-						Dijkstra djk = null;
-						boolean unreachable=true;
-						int limit = 0;
-						do {
-							if (limit > 5) {
-								zonesToRemove.add(z);
-								System.out.printf("  _zone %s should be removed.%n", z.id);
-								break;
-
-							}
-							Point2D.Double point = pointInZone(z);
-							n = getClosestNode(point);
-							djk = new Dijkstra(Dijkstra.Element.NODE, n.getId(),"weight");
-							djk.init(graph);
-							djk.setSource(n);
-							djk.compute();
-							// checks if a path from the node in the zone to the referenceNode exists
-							if (djk.getPathLength(graph.getNode(referenceNodeId))!=Double.POSITIVE_INFINITY) {
-								unreachable=false;
-							}
-							limit++;
-						} while (unreachable);
-						z.shortestPath = n.getId();
-						z.sourceNode = n;
-						djk = null;
-					}
-				}
-				if(zonesToRemove.size()>0){
-					System.out.printf("  _removed %d zones for having no route to the rest of the map.%n",zonesToRemove.size());
-				}
-				for (Zone z : zonesToRemove) {
-					zones.remove(z.id);
-				}
-				
-				zonesToRemove.clear();
-				// checks if a path from referenceNode to the node from in zone exists and stores the node in zone.near_nodes
-				System.out.printf("  _checking accessibility of Residential zones. This takes a while... %n"); 
-				for (Zone z : zones.values()) {
-						fillZoneNodes(z);
-				}
-				if(zonesToRemove.size()>0){
-					System.out.printf("  _removed %d zones for being unreachable from the rest of the map.%n",zonesToRemove.size());
-				}
-				for (Zone z : zonesToRemove) {
-					zones.remove(z.id);
-				}
-				
-				
-				// update probas after the all zone removing stuff
-				for(Area a : areas){
-					a.sumSurfaceZones=0;
-				}
-				defaultAreaCOM.sumSurfaceZones=0;
-				defaultAreaRES.sumSurfaceZones=0;
-				defaultAreaIND.sumSurfaceZones=0;
-				sumResidentialSurface=0;
-				for (Zone z : zones.values()) {
-					z.area.sumSurfaceZones += z.surface;
-					if (z.type == ZoneType.RESIDENTIAL) {
-						sumResidentialSurface += z.surface;
-					}
-				}
-				
-				// recompute probabilities !!
-				for (Zone z : zones.values()) {
-					z.probability = (z.surface / z.area.sumSurfaceZones) * z.type.probability * z.area.probability;
-				}
-
-				
-				if(port!=0){
-					System.out.println("__Starting listenning on port "+port);
-					try {
-						new RGServer(this, port);
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-	}
-	
-	
-	private String sourceEdge;
-	private String destinationEdge;	
-	public void GetEdges(Path p) {
-		if (p!=null) {
-			List<Node> edges = p.getNodePath();
-			if (!edges.isEmpty()) {
-				this.sourceEdge = edges.get(0).getId();
-				this.destinationEdge = edges.get(edges.size()-1).getId();
-			}
-		}
-	}
-	
-	public void generateSumoTrips() {
-		System.out.println("__Starting Sumo trips.");
-		try {
-			sr = new StreamResult(baseFolder + baseName + ".trips.xml");
-			xmlMain();
-
-			tfh.startElement("", "", "trips", ai);
-
-			while (!loops.isEmpty()) {
-				int repno= 1;
-				int begin = 1;
-				int end = 5002;				
-				// inside flow OR outside flow?
-				if (Math.random() < insideFlowRatio) {
-					// inside flow					
-					Path p = goInsideFlow();
-					GetEdges(p);					
-					vehicleCounter++;
-					tfh.startElement("", "", "trip", ai);
-					ai.clear();
-					ai.addAttribute("", "", "id", "CDATA", "trip" + "_h" + currentHour + "_c" + vehicleCounter);
-					ai.addAttribute("", "", "repno", "CDATA", ""+repno);
-					ai.addAttribute("", "", "depart", "CDATA", "" + (int) currentTime);
-					ai.addAttribute("", "", "from", "CDATA", "" + this.sourceEdge);
-					ai.addAttribute("", "", "to", "CDATA", "" + this.destinationEdge);
-					ai.addAttribute("", "", "begin", "CDATA", "" + begin);
-					ai.addAttribute("", "", "end", "CDATA", "" + end);
-					tfh.endElement("", "", "trip");					
-				} 
-				else {
-					// outside flow
-					nextLoop = loops.pollFirst();
-					nextFlow = nextLoop.flows.pollFirst();
-					currentTime = nextFlow.next;
-					
-					if (nextFlow.goAndSetPath()) {
-						Path p = nextFlow.GetPath();
-						GetEdges(p);
-						tfh.startElement("", "", "trip", ai);
-						ai.clear();
-						ai.addAttribute("", "", "id", "CDATA", "trip" + "_h" + currentHour + "_c" + vehicleCounter);
-						ai.addAttribute("", "", "repno", "CDATA", ""+repno);
-						ai.addAttribute("", "", "depart", "CDATA", "" + (int) currentTime);
-						ai.addAttribute("", "", "from", "CDATA", "" + this.sourceEdge);
-						ai.addAttribute("", "", "to", "CDATA", "" + this.destinationEdge);
-						ai.addAttribute("", "", "begin", "CDATA", "" + begin);
-						ai.addAttribute("", "", "end", "CDATA", "" + end);
-						tfh.endElement("", "", "trip");						
-						if (currentHour != nextFlow.hour) {
-							System.out.println("  _writing flows for hour " + currentHour);
-							currentHour = nextFlow.hour;
-						}
-						nextLoop.flows.add(nextFlow);
-						loops.add(nextLoop);
-					}
-				}
-			}
-			tfh.endElement("", "", "trips");
-			System.out.println("Done trips.");
-			tfh.endDocument();
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private static void ReadTravelTime() {
-		
-		SumoTraciConnection conn = new SumoTraciConnection(
-				"./test/Luxembourg/Luxembourg.sumocfg",  // config file
-				12346,                                 // random seed
-				false                                  // look for geolocalization info in the map
-				);
-		try {
-			conn.runServer();
-			
-			// the first two steps of this simulation have no vehicles.
-//			conn.nextSimStep();
-//			conn.nextSimStep();
-			
-			for (int i = 0; i < 100; i++) {
-				int time = conn.getCurrentSimStep();
-				Set<String> vehicles = conn.getActiveVehicles();
-				
-				//System.out.println("At time step " + time + ", there are "+ vehicles.size() + " vehicles: " + vehicles);
-				if (vehicles.size()>0) {
-
-					//String aVehicleID = vehicles.iterator().next();
-					
-//					Vehicle aVehicle = conn.getVehicle(aVehicleID);
-//					System.out.println("Vehicle " + aVehicleID + " will traverse these edges: " + aVehicle.getCurrentRoute());
-					
-//					String edgeID = "94661965#0";
-//					double travelTime = conn.getEdgeTravelTime(edgeID);
-//					System.out.println("travelTime of " + edgeID + ": " + travelTime);
-				}
-				
-				conn.nextSimStep();
-			}
-			String edgeID;
-			double travelTime;
-			
-			edgeID = "50118056#1";
-			travelTime = conn.getEdgeTravelTime(edgeID);
-			System.out.println("travelTime of " + edgeID + ": " + travelTime);
-			
-			edgeID = "56640729#2";
-			travelTime = conn.getCurrentTravelTime(edgeID);
-			System.out.println("travelTime of " + edgeID + ": " + travelTime);
-			
-			edgeID = "50118056#1";
-			travelTime = conn.getCurrentTravelTime(edgeID);
-			System.out.println("travelTime of " + edgeID + ": " + travelTime);
-			
-			edgeID = "56640729#2";
-			travelTime = conn.getCurrentTravelTime(edgeID);
-			System.out.println("travelTime of " + edgeID + ": " + travelTime);
-			
-			conn.close();
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
 }
