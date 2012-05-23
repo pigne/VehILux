@@ -107,7 +107,10 @@ public class SumoEvaluation {
 			super.startElement(uri, localName, qName, attributes);
 
 			if (qName.equals("interval")) {
-				currentDetector.vehicles[(int) (Double.parseDouble(attributes.getValue("begin")) / 3600.0)] += (int) (Double.parseDouble(attributes.getValue("nVehContrib")));
+				int currentHour = (int) (Double.parseDouble(attributes.getValue("begin")) / 3600.0);
+				if (currentHour < stopHour) {
+					currentDetector.vehicles[currentHour] += (int) (Double.parseDouble(attributes.getValue("nVehContrib")));
+				}
 			}
 		}
 	};
@@ -158,15 +161,15 @@ public class SumoEvaluation {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		out.printf("time ");
+		out.printf("time\t");
 		for (Detector d : detectors.values()) {
-			out.printf("%s ", d.id);
+			out.printf("%s\t", d.id);
 		}
 		out.println();
 		for (int i = 0; i < stopHour; i++) {
-			out.printf("%d ", i + 1);
+			out.printf("%d\t", i + 1);
 			for (Detector d : detectors.values()) {
-				out.printf("%d ", d.vehicles[i]);
+				out.printf("%d\t", d.vehicles[i]);
 			}
 			out.printf("%n");
 		}

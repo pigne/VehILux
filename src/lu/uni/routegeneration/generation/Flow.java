@@ -159,6 +159,19 @@ public class Flow   implements Comparable<Flow> {
 		}
 		return next();
 	}
+	
+	boolean go2() {
+		if (next > rg.getStopTime()) {
+			return false;
+		}
+		if (nextVehicle == CAR) {
+			C++;
+		}
+		else {
+			T++;
+		}
+		return next();
+	}
 
 	public int compareTo(Flow f) {
 		if (this == f)
@@ -179,16 +192,32 @@ public class Flow   implements Comparable<Flow> {
 		return this.path;
 	}
 	
-	boolean goAndSetPath() {
+//	boolean goAndSetPath() {
+//		if (next > rg.getStopTime()) {
+//			return false;
+//		}
+//		try {
+//			rg.incrementVehicleCounter();
+//			do{
+//				this.path=rg.createRandomPath(loop.dijkstra,rg.getGraph().getNode(loop.edge));
+//			}
+//			while(this.path==null);
+//			if (nextVehicle == CAR) {
+//				C++;
+//			}
+//			else {
+//				T++;
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		return next();
+//	}   
+	boolean goNext() {
 		if (next > rg.getStopTime()) {
 			return false;
 		}
 		try {
-			rg.incrementVehicleCounter();
-			do{
-				this.path=rg.createRandomPath(loop.dijkstra,rg.getGraph().getNode(loop.edge));
-			}
-			while(this.path==null);
 			if (nextVehicle == CAR) {
 				C++;
 			}

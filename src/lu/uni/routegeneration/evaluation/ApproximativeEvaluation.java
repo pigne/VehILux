@@ -39,7 +39,7 @@ public class ApproximativeEvaluation {
 
 	
 	
-	String baseFolder = "./test//Luxembourg/";
+	String baseFolder = "./test/Luxembourg/";
 	String baseName = "Luxembourg";
 	int stopHour = 11;
 	int currentHour=0;
@@ -136,19 +136,19 @@ public class ApproximativeEvaluation {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		out.printf("time ");
+		out.printf("time\t");
 		for(String s : detectors){
-			out.printf("%s ",s);
+			out.printf("%s\t",s);
 		}
 		out.println();
 		for(int i =0; i< stopHour; i++){
-			out.printf("%d ",i+1);
+			out.printf("%d\t",i+1);
 			for(String s  : edges){
 				Integer I = h_inductionLoops.get(i).get(s);
 				if(I==null)
-					out.print("0 ");
+					out.print("0\t");
 				else
-					out.printf("%d ",I);
+					out.printf("%d\t",I);
 			}
 			out.printf("%n");
 		}

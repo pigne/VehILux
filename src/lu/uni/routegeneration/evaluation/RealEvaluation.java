@@ -33,7 +33,7 @@ public class RealEvaluation {
 	String baseName = "Luxembourg";
 	
 	// --- folder name
-	String baseFolder = "./test//Luxembourg/";
+	String baseFolder = "./test/Luxembourg/";
 
 	int stopHour = 11;
 
@@ -141,15 +141,15 @@ public class RealEvaluation {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		out.printf("time ");
+		out.printf("time\t");
 		for (Detector d : controls.values()) {
-			out.printf("%s ", d.id);
+			out.printf("%s\t", d.id);
 		}
 		out.println();
 		for (int i = 0; i < stopHour; i++) {
-			out.printf("%d ", i + 1);
+			out.printf("%d\t", i + 1);
 			for (Detector d : controls.values()) {
-				out.printf("%d ", d.vehicles[i]);
+				out.printf("%d\t", d.vehicles[i]);
 			}
 			out.printf("%n");
 		}
