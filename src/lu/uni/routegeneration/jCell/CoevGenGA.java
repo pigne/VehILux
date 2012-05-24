@@ -78,8 +78,14 @@ public class CoevGenGA extends EvolutionaryAlg
 		 else
 			bestIndividual = population.getIndividual(((Integer) statistic.getStat(SimpleStats.MIN_FIT_POS)).intValue());
  
-      	 // evaluate the best individual again because the other parts of the solution have changed in coevolution
-		problem.evaluate(bestIndividual);
+      	// evaluate the best individual again because the other parts of the solution have changed in coevolution
+		// problem.evaluate(bestIndividual);
+		RouteGenerationProblem rgp = (RouteGenerationProblem)problem;
+		if (rgp != null)
+		{
+			rgp.Skip(); // skip one instead of evaluating, resulting in 100 evaluations pr. generation
+		}
+		 
 		auxPop.setIndividual(0, bestIndividual);
       			
          for (int k=1; k<population.getPopSize(); k++)

@@ -45,6 +45,11 @@ public class RouteGenerationProblem extends Problem{
 	}
 	
 	
+	public void Skip()
+	{
+		nEvals++;
+	}
+	
 	@Override
 	public Object eval(Individual ind) {
 		
@@ -73,7 +78,8 @@ public class RouteGenerationProblem extends Problem{
 		
 		if (skipEvaluation)
 		{
-			System.out.println("skip: " + ind.toString());			
+			ind.setFitness(fitness);
+			System.out.println("skip: " + ind.toString());
 		}
 		else
 		{	

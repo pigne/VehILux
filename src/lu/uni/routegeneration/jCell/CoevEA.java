@@ -300,10 +300,10 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 		// start all island threads
 		for(int i = 0; i < this.islandCount; i++)
 		{
-			if (i > 0 && sequential)
-			{
-				sequenceAfterOthers(i);
-			}
+//			if (i > 0 && sequential)
+//			{
+//				sequenceAfterOthers(i);
+//			}
 			t[i].start();			
 		}
 		
@@ -356,6 +356,26 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 				if (islandMask == null || islandMask[locus])
 				{
 					bestIndividual.setAllele(locus, bestIslandIndividual.getAllele(locus));
+				}
+			}
+		}
+	}
+	
+	public void updatePopulation(Population population, Boolean[] islandMask)
+	{
+		synchronized(this)
+		{	
+			// overwrite all individuals in this islands population with the best global individual, only at loci outside of the islands mask
+			for (int i=0; i<population.getPopSize(); i++)
+			{
+				Individual individual = population.getIndividual(i);
+	
+				for(int locus = 0; locus < islandMask.length; locus++)
+				{
+					if (!islandMask[locus])
+					{
+						individual.setAllele(locus, bestIndividual.getAllele(locus));
+					}
 				}
 			}
 		}
@@ -473,10 +493,22 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 			
 			System.out.println(out);
 		}
-				
 		
 		if (sequential)
 		{
+			if (operationCount[island] == 0)
+			{
+				waitForOthers(island);
+				updatePopulation(population, islandMask);
+				System.out.println("upd " + island);
+			}
+			
+			if (island == islandCount - 1)
+			{
+				// this is to signal to the listener that the parent co-evolutionary algorithm has completed a generation (when all islands have finished their generation)
+				listener.generation(this);	
+			}
+			
 			sequenceAfterOthers(island);
             			
 			try {
@@ -488,37 +520,46 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			updatePopulation(population, islandMask);
 		}
 		
-		synchronized(this)
-		{	
-			// overwrite all individuals in this islands population with the best global individual, only at loci outside of the islands mask
-			for (int i=0; i<population.getPopSize(); i++)
-			{
-				Individual individual = population.getIndividual(i);
-
-				for(int locus = 0; locus < islandMask.length; locus++)
-				{
-					if (!islandMask[locus])
-					{
-						individual.setAllele(locus, bestIndividual.getAllele(locus));
-					}
-				}
-			}
-		}
+//		synchronized(this)
+//		{	
+//			// overwrite all individuals in this islands population with the best global individual, only at loci outside of the islands mask
+//			for (int i=0; i<population.getPopSize(); i++)
+//			{
+//				Individual individual = population.getIndividual(i);
+//
+//				for(int locus = 0; locus < islandMask.length; locus++)
+//				{
+//					if (!islandMask[locus])
+//					{
+//						individual.setAllele(locus, bestIndividual.getAllele(locus));
+//					}
+//				}
+//			}
+//		}
 				
 		if (synchronised)
 		{
+			updatePopulation(population, islandMask);
 			waitForOthers(island);
+			
+			if (island == 0)
+			{
+				// this is to signal to the listener that the parent co-evolutionary algorithm has completed a generation (when all islands have finished their generation)
+				listener.generation(this);	
+			}
 		}		
 		
 		listener.generation(EA);
 		
-		if((synchronised || sequential) && island == islandCount - 1)
-		{
-			// this is to signal to the listener that the parent co-evolutionary algorithm has completed a generation (when all islands have finished their generation)  
-			listener.generation(this);
-		}
+//		if((synchronised || sequential) && island == islandCount - 1)
+//		{
+//			// this is to signal to the listener that the parent co-evolutionary algorithm has completed a generation (when all islands have finished their generation)
+//			listener.generation(this);
+//		}
 		
 	}
 	
@@ -593,6 +634,12 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 			
 			System.out.println("seq("+island+")"+thisGeneration+"/"+targetGeneration + ":" + (System.currentTimeMillis() - startTimeMillis));
 			
+//			if (thisGeneration == 0)
+//			{
+//				// initialisation phase, do not wait
+//				System.out.println("ext_skip("+island+")"+thisGeneration+"/"+targetGeneration + ":" + (System.currentTimeMillis() - startTimeMillis));
+//				return;				
+//			}
 			// The first island waits until last reaches its generation number, other islands wait until their predecessor reaches their own generation + 1
 			// Any island will stop waiting if the island it is waiting for is not alive
 			while (!(thisGeneration + 1 == targetGeneration || (island == 0 && thisGeneration == targetGeneration)) && (t[islandToWaitFor].isAlive() || (targetGeneration == 0 && island == 0)))						
