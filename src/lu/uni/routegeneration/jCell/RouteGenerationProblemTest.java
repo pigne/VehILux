@@ -53,7 +53,7 @@ public class RouteGenerationProblemTest extends Problem {
 		double fitness = 0;
 		for(int i = 0; i < minAllowedValues.size(); i++)
 		{
-			double delta = (25.0d - (double)ind.getAllele(i)) * (33.0d - (double)ind.getAllele(i)) * (34.0d - (double)ind.getAllele(i)) * (50.0d - (double)ind.getAllele(i));
+			double delta = (25.0d - (Double)ind.getAllele(i)) * (33.0d - (Double)ind.getAllele(i)) * (34.0d - (Double)ind.getAllele(i)) * (50.0d - (Double)ind.getAllele(i));
 			fitness += Math.abs(delta); 
 		}
 		

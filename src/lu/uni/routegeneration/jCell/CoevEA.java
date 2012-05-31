@@ -108,10 +108,16 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 				this.algorithms[i] = (EvolutionaryAlg)c.getConstructor(Random.class).newInstance(r); //instance.newInstance();
 				this.algorithms[i].setParam(EvolutionaryAlg.PARAM_LISTENER, this);				
 			}
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+		} catch (InstantiationException e){
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvocationTargetException e) {
@@ -312,7 +318,7 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 		{
 			Problem problem = (Problem)this.algorithms[i].getParam(PARAM_PROBLEM);
 			int evaluations = problem.getNEvals();
-			int generations = (int)this.algorithms[i].getParam(PARAM_GENERATION_NUMBER);
+			int generations = (Integer)this.algorithms[i].getParam(PARAM_GENERATION_NUMBER);
 			stats += generations + "(" + evaluations + ") ";
 		}
 		stats += "generations(evaluations)";
@@ -374,9 +380,9 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 				int j = this.r.nextInt(this.islandCount); // start from random island index to prevent same island contributing if fitness are equal
 				for(int i = 0; i< this.islandCount; i++)
 				{					
-					if ((double)this.bestIslandIndividual[j].getFitness() < bestFitness)
+					if ((Double)this.bestIslandIndividual[j].getFitness() < bestFitness)
 					{
-						bestFitness = (double)this.bestIslandIndividual[j].getFitness();
+						bestFitness = (Double)this.bestIslandIndividual[j].getFitness();
 						bestIslandIndex = j;
 					}
 					if(++j == this.islandCount) j=0;
@@ -387,7 +393,7 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 			
 			synchronized(lockObj)
 			{
-				boolean islandIsElite = bestIndividual == null || (double)bestIslandIndividual[island].getFitness() < (double)bestIndividual.getFitness();
+				boolean islandIsElite = bestIndividual == null || (Double)bestIslandIndividual[island].getFitness() < (Double)bestIndividual.getFitness();
 				// update the current best individual of best island only, or if this is just after the first generation 
 				if (island == bestIslandIndex && islandIsElite || operationCount[island] <= 2)
 				{
@@ -418,7 +424,7 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 			String out = "";
 			for(int i = 0; i< this.islandCount; i++)
 			{
-				int generation =  (int)this.algorithms[i].getParam(PARAM_GENERATION_NUMBER);
+				int generation =  (Integer)this.algorithms[i].getParam(PARAM_GENERATION_NUMBER);
 				if (i == island)					
 				{
 					out += "[" + generation + "] ";
@@ -572,8 +578,8 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 			if (islandToWaitFor < 0)
 				islandToWaitFor = this.islandCount - 1;
 						
-			int targetGeneration = (int)this.algorithms[islandToWaitFor].getParam(PARAM_GENERATION_NUMBER);
-			int thisGeneration = (int)this.algorithms[island].getParam(PARAM_GENERATION_NUMBER);
+			int targetGeneration = (Integer)this.algorithms[islandToWaitFor].getParam(PARAM_GENERATION_NUMBER);
+			int thisGeneration = (Integer)this.algorithms[island].getParam(PARAM_GENERATION_NUMBER);
 			
 			System.out.println("seq("+island+")"+thisGeneration+"/"+targetGeneration + ":" + (System.currentTimeMillis() - startTimeMillis));
 			
@@ -590,7 +596,7 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				targetGeneration = (int)this.algorithms[islandToWaitFor].getParam(PARAM_GENERATION_NUMBER);
+				targetGeneration = (Integer)this.algorithms[islandToWaitFor].getParam(PARAM_GENERATION_NUMBER);
 			}
 			
 			System.out.println("ext("+island+")"+thisGeneration+"/"+targetGeneration + ":" + (System.currentTimeMillis() - startTimeMillis));

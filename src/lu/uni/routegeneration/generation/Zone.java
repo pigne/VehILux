@@ -31,7 +31,7 @@ public class Zone {
 	public double max_y_boundary;
 	public ArrayList<Point2D.Double> points;
 	public ArrayList<Node> near_nodes;
-        public double surface;
+    public double surface;
 	public double probability;
 	public Area area = null;
 	public String shortestPath;
@@ -39,13 +39,12 @@ public class Zone {
 
 	public Zone() {
 		points = new ArrayList<Point2D.Double>();
-                near_nodes = new ArrayList<Node>();
+        near_nodes = new ArrayList<Node>();
 	}
 
 	public String toString() {
 		String s = new String();
-		s = String
-				.format(
+		s = String.format(
 						Locale.US,
 						"Zone %s:%n  -type: %s%n  -surface: %.15f%n  -boundaries: (%f,%f) (%f,%f)%n  -points: [",
 						this.id, this.type, this.surface, this.min_x_boundary,

@@ -103,14 +103,14 @@ public class RouteGenerationProblem extends Problem{
     		{	    			
     			if (i != locus + groupLength - 1)
     			{
-    				value = Math.round((double)individual.getAllele(i));
+    				value = Math.round((Double)individual.getAllele(i));
     				// accumulate decimals
-    				remainder += (double)individual.getAllele(i) - value;    				
+    				remainder += (Double)individual.getAllele(i) - value;    				
     			}
     			else
     			{
     				// add accumulated remaining decimals to last value in group (to maintain group sum of 100), round to eliminate numeric precision errors
-    				value =  Math.round((double)individual.getAllele(i) + remainder);
+    				value =  Math.round((Double)individual.getAllele(i) + remainder);
     			}
     			
     			individual.setAllele(i, value);
@@ -136,7 +136,7 @@ public class RouteGenerationProblem extends Problem{
     		double sum = 0;
     		for (int i = locus; i < locus + groupLength; i++)
     		{
-    			sum += (double)individual.getAllele(i);
+    			sum += (Double)individual.getAllele(i);
     		}
 
     		// if the group sum is different from 100 and group is composed of 2 alleles or more
@@ -145,7 +145,7 @@ public class RouteGenerationProblem extends Problem{
     			// normalise alleles
 				for (int i = locus; i < locus + groupLength; i++)
 	        	{
-	    			double targetValue = 100 * (double)individual.getAllele(i) / sum;
+	    			double targetValue = 100 * (Double)individual.getAllele(i) / sum;
 
 	    			individual.setAllele(i, targetValue);
         		}

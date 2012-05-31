@@ -8,7 +8,7 @@
  * @author Yoann Pigné
  *
  */
-package lu.uni.routegeneration.generation;
+package lu.uni.routegeneration.ui;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;

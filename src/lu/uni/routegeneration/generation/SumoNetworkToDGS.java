@@ -150,14 +150,21 @@ public class SumoNetworkToDGS extends DefaultHandler {
 				otherNode = g.addNode(otherNodeId);
 				otherNode.addAttribute("label", otherNodeId);
 			}
+			
+			
+			
 			Edge link = currentNode.getEdgeToward(otherNodeId);
 			if (link == null) {
 				Edge e2 = otherNode.getEdgeToward(currentNode.getId());
 				if (e2 != null) {
-					System.out.printf(" !!! opposite-direction edge already exists between %s and %s !!!%n", currentNode.getId(), otherNodeId);
+					//System.out.printf(" !!! opposite-direction edge already exists between %s and %s !!!%n", currentNode.getId(), otherNodeId);
 				}
 				g.addEdge(currentNode.getId() + "_" + otherNode.getId(), currentNode.getId(), otherNode.getId(), true);
+				if (id.equals("138950605-AddedOffRampEdge")) {
+					System.out.println("adding edge " + currentNode.getId() + "_" + otherNode.getId());
+				}
 			}
+
 		} 
 		else if (qName.equals("junction")) {
 			String id = attributes.getValue("id");

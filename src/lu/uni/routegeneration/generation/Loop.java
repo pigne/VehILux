@@ -16,13 +16,60 @@ import java.util.TreeSet;
  * 
  */
 public class Loop  implements Comparable<Loop>  {
-	public int nextTime;
-	String id;
-	String edge;
-	TreeSet<Flow> flows = new TreeSet<Flow>();
+	
+	private String id;
+	private String edge;
+	private TreeSet<Flow> flows;
+	private String dijkstra = null;
+	private double totalFlow;
+	
+	public double getTotalFlow() {
+		return totalFlow;
+	}
 
-	String dijkstra = null;
+	public String getDijkstra() {
+		return dijkstra;
+	}
 
+	public void setDijkstra(String dijkstra) {
+		this.dijkstra = dijkstra;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public String getEdge() {
+		return edge;
+	}
+
+	public TreeSet<Flow> getFlows() {
+		return flows;
+	}
+
+
+	public Loop(String id, String edge) {
+		this.id = id;
+		this.edge = edge;
+		this.flows = new TreeSet<Flow>();
+	}
+	
+	public void addFlow(Flow flow) {
+		flows.add(flow);
+		totalFlow += flow.getVehicles();
+	}
+	
+	public Flow getAndRemoveNextFlow() {
+		return flows.pollFirst();
+	}
+	
+	public void removeFlow(Flow flow) {
+		flows.remove(flow);
+	}
+	public boolean hasFlow() {
+		return flows.size() > 0;
+	}
+	
 	@Override
 	public String toString() {
 		String fl = "";
@@ -35,12 +82,11 @@ public class Loop  implements Comparable<Loop>  {
 	public int compareTo(Loop l) {
 		if (l == this)
 			return 0;
-		else if (this.flows.first().next < l.flows.first().next)
+		else if (this.flows.first().getTime() < l.flows.first().getTime()) {
 			return -1;
-		else
-			// if (this.flows.first().next > l.flows.first().next)
+		}
+		else {
 			return 1;
-		// else
-		// return 0;
+		}
 	}
 }
