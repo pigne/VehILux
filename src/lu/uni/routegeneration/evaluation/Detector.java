@@ -22,13 +22,13 @@ public class Detector {
 
 	public Detector(int stopHour) {
 		vehicles = new int[stopHour];
-		for (int i=0; i< vehicles.length; i++){
-			vehicles[i]=0;
+		for (int i=0; i < vehicles.length; i++){
+			vehicles[i] = 0;
 		}
 	}
 	public void reset(){
-		for (int i=0; i< vehicles.length; i++){
-			vehicles[i]=0;
+		for (int i=0; i < vehicles.length; i++){
+			vehicles[i] = 0;
 		}
 	}
 	

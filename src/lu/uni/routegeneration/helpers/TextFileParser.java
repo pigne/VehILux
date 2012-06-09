@@ -13,8 +13,8 @@ import java.util.List;
 
 public class TextFileParser {
 	
-	public static List<String> readStringList(String fileName) {
-		List<String> strings = new ArrayList<String>();
+	public static ArrayList<String> readStringList(String fileName) {
+		ArrayList<String> strings = new ArrayList<String>();
 		DataInputStream in;
 		try {
 			in = new DataInputStream(new FileInputStream(fileName));

@@ -15,20 +15,24 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import javax.swing.JPanel;
+import javax.swing.SizeSequence;
 
 import org.graphstream.graph.Node;
 
 import de.erichseifert.vectorgraphics2d.PDFGraphics2D;
 
 import lu.uni.routegeneration.generation.Area;
+import lu.uni.routegeneration.generation.Loop;
 import lu.uni.routegeneration.ui.Lane;
 import lu.uni.routegeneration.generation.Zone;
 
@@ -37,31 +41,30 @@ import lu.uni.routegeneration.generation.Zone;
  */
 public class EditorPanel extends JPanel {
 
-	double min_x_boundary = Double.MAX_VALUE;
-	double min_y_boundary = Double.MAX_VALUE;
-	double max_x_boundary = Double.MIN_VALUE;
-	double max_y_boundary = Double.MIN_VALUE;
-	Graphics2D g2;
-	double ratioX;
-	double ratioY;
-	double orig_width;
-	double orig_height;
-	double usefull_width;
-	double usefull_height;
-	double mapRatio;
+	private static final Color DEFAULT_POINT_COLOR = Color.magenta;
+	private static final Integer DEFAULT_POINT_RADIOUS = 5;
+	
+	private double min_x_boundary = Double.MAX_VALUE;
+	private double min_y_boundary = Double.MAX_VALUE;
+	private double max_x_boundary = Double.MIN_VALUE;
+	private double max_y_boundary = Double.MIN_VALUE;
+	private Graphics2D g2;
+	private double ratioX;
+	private double ratioY;
+	private double orig_width;
+	private double orig_height;
+	private double usefull_width;
+	private double usefull_height;
+	private double mapRatio;
 	
 	// data to display
 	private HashMap<String, Zone> zones = new HashMap<String, Zone>();
 	private ArrayList<Lane> edges = new ArrayList<Lane>();
 	private ArrayList<Area> areas = new ArrayList<Area>();
-	private ArrayList<Point2D.Double> sources = new ArrayList<Point2D.Double>();
-	private ArrayList<Point2D.Double> destinations = new ArrayList<Point2D.Double>();
+	private HashMap<String, ArrayList<Point2D.Double>> points = new HashMap<String, ArrayList<Point2D.Double>>();
+	private HashMap<String, Color> colors = new HashMap<String, Color>();
+	private HashMap<String, Integer> sizes = new HashMap<String, Integer>();
 	private int step = 0;
-	private ArrayList<Color> colors = new ArrayList<Color>();
-	
-	public ArrayList<Point2D.Double> getSources() {
-		return sources;
-	}
 
 	private ArrayList<Point2D.Double> nodesToPoints(ArrayList<Node> nodes) {
 		ArrayList<Point2D.Double> points = new ArrayList<Point2D.Double>();
@@ -75,16 +78,16 @@ public class EditorPanel extends JPanel {
 		return points;
 	}
 	
-	public void setSources(ArrayList<Node> sources) {
-		this.sources = nodesToPoints(sources);
+	public void setNodes(String name, ArrayList<Node> nodes, Color color) {
+		if (points.containsKey(name)) {
+			points.remove(name);
+		}
+		points.put(name, nodesToPoints(nodes));
+		colors.put(name, color);
 	}
 
-	public ArrayList<Point2D.Double> getDestinations() {
-		return destinations;
-	}
-
-	public void setDestinations(ArrayList<Point2D.Double> destinations) {
-		this.destinations = destinations;
+	public ArrayList<Point2D.Double> getPoints(String name) {
+		return points.get(name);
 	}
 
 	public ArrayList<Area> getAreas() {
@@ -111,34 +114,55 @@ public class EditorPanel extends JPanel {
 		this.edges = edges;
 	}
 
-
 	//graph.addAttribute("ui.stylesheet", styleSheet);
 	// ------ For a graphical output of the graph (very slow...)
 	// graph.addAttribute("ui.antialias");
 	// graph.display(false);
 	
-	
-	private String styleSheet = "graph { padding: 60px; fill-color:#eeeeee;}"
-			+ "node { z-index:3; size: 1px; fill-color: #777777; }"
-			+ "node.internal{ fill-color: #BB4444; }"
-			+ "edge  { fill-color: #404040; size: 1px;}"
-			+ "sprite {text-style:bold; text-color: #555555;  fill-color:#eeeeee; }"
-			+ "edge.path {fill-color: #ff4040;}";
+//	private String styleSheet = "graph { padding: 60px; fill-color:#eeeeee;}"
+//			+ "node { z-index:3; size: 1px; fill-color: #777777; }"
+//			+ "node.internal{ fill-color: #BB4444; }"
+//			+ "edge  { fill-color: #404040; size: 1px;}"
+//			+ "sprite {text-style:bold; text-color: #555555;  fill-color:#eeeeee; }"
+//			+ "edge.path {fill-color: #ff4040;}";
 	
 
-	public EditorPanel(double min_x_boundary, double min_y_boundary, double max_x_boundary, double max_y_boundary) {
-		this.min_x_boundary = min_x_boundary;
-		this.min_y_boundary = min_y_boundary;
-		this.max_x_boundary = max_x_boundary;
-		this.max_y_boundary = max_y_boundary;
+	public EditorPanel(HashMap<String, Zone> zones, ArrayList<Area> areas) {
+		this.zones = zones;
+		this.areas = areas;
+		
+		min_x_boundary = Double.MAX_VALUE;
+		min_y_boundary = Double.MAX_VALUE;
+		max_x_boundary = Double.MIN_VALUE;
+		max_y_boundary = Double.MIN_VALUE;
+		for (Zone z : zones.values()) {
+			if (z.min_x_boundary < min_x_boundary) {
+				min_x_boundary = z.min_x_boundary;
+			}
+			if (z.max_x_boundary > max_x_boundary) {
+				max_x_boundary = z.max_x_boundary;
+			}
+			if (z.min_y_boundary < min_y_boundary) {
+				min_y_boundary = z.min_y_boundary;
+			}
+			if (z.max_y_boundary > max_y_boundary) {
+				max_y_boundary = z.max_y_boundary;
+			}
+		}
 		mapRatio = (max_x_boundary - min_x_boundary) / (max_y_boundary - min_y_boundary);
-		colors.add(new Color(255,20,11));
-		colors.add(Color.red);
-		colors.add(Color.magenta);
-		colors.add(Color.yellow);
-		colors.add(Color.orange);
+		
+		this.setBackground(Color.white);
 	}
 
+	public void run() {
+		EditorListener ae = new EditorListener(this);
+		ae.run();	
+		try {
+				this.wait(5000);
+		}
+		catch (Exception e) {}	
+	}
+	
 	@Override
 	public void paintComponent(Graphics g) {
 		g2 = (Graphics2D) g;
@@ -162,34 +186,16 @@ public class EditorPanel extends JPanel {
 		ratioY = usefull_height / (max_y_boundary - min_y_boundary);
 		
 		drawZones();
-		//drawAreas();
-
-		drawPoints(sources, colors.get(step));
+		drawAreas();
+		drawPoints();
 	}
 	
-	public void drawPoint(Point2D.Double point, Color color) {
+	public void drawPoint(Point2D.Double point, Color color, int radious) {
 		g2.setColor(color);
 		g2.fillOval(
 				(int) ((point.x - min_x_boundary) * ratioX + orig_width / 2 - usefull_width / 2),
 				(int) (orig_height - ((point.y - min_y_boundary) * ratioY + orig_height / 2 - usefull_height / 2)),
-				5, 5);
-	}
-	
-	public void generateSnapshot(String path) {
-		PDFGraphics2D g = new PDFGraphics2D(0.0, 0.0, getWidth(), getHeight());
-		g.setFontRendering(PDFGraphics2D.FontRendering.VECTORS);
-		paint(g);
-		step = (++step)%colors.size();
-		try {
-			FileOutputStream ff = new FileOutputStream(path);
-			try {
-				ff.write(g.getBytes());
-			} finally {
-				ff.close();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+				radious, radious);
 	}
 	
 	public void drawZones() {
@@ -231,9 +237,23 @@ public class EditorPanel extends JPanel {
 		}
 	}
 	
-	public void drawPoints(ArrayList<Point2D.Double> points, Color color) {
-		for (Point2D.Double point : points) {
-			drawPoint(point, color);
+	public void drawPoints() {
+		for (String name : points.keySet())	{
+			ArrayList<Point2D.Double> pointArray = points.get(name);
+			if (pointArray == null) {
+				return;
+			}
+			Color color = colors.get(name);
+			if (color == null) {
+				color = DEFAULT_POINT_COLOR;
+			}
+			Integer radious = sizes.get(name);
+			if (radious == null) {
+				radious = DEFAULT_POINT_RADIOUS;
+			}
+			for (Point2D.Double point : pointArray) {
+				drawPoint(point, color, radious);
+			}
 		}
 	}
 	
@@ -249,4 +269,29 @@ public class EditorPanel extends JPanel {
 			g2.drawPolyline(xs, ys, edge.shape.size());
 		}
 	}
+	
+	public void generateScreenShot(String outputDirPath, String path) {
+		File file = new File(outputDirPath);
+		if (!file.exists()) {
+			File dir = new File(outputDirPath);  
+			dir.mkdir();
+		}
+		PDFGraphics2D g = new PDFGraphics2D(0.0, 0.0, getWidth(), getHeight());
+		g.setFontRendering(PDFGraphics2D.FontRendering.VECTORS);
+		paint(g);
+		step = (++step)%colors.size();
+		try {
+			FileOutputStream ff = new FileOutputStream(path);
+			try {
+				ff.write(g.getBytes());
+			} 
+			finally {
+				ff.close();
+			}
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 }

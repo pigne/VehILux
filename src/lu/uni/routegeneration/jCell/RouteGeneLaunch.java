@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.Date;
 import java.util.Vector;
 
+import lu.uni.routegeneration.evaluation.RealEvaluation;
 import lu.uni.routegeneration.generation.RouteGeneration;
 
 
@@ -63,7 +64,7 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private Problem evalProblem; // problem dedicated to evaluating combined solution
     
-    public RouteGeneLaunch(){
+    public RouteGeneLaunch() {
     	BestIndPerGen = new Vector<Double>();
     	bestIslandIndPerGen = new Vector[islandcount];
         for(int island = 0; island< islandcount; island++)
@@ -124,21 +125,38 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static Problem CreateProblem()
     {
-    	Problem problem = new RouteGenerationProblem();    	
-    	//Problem problem = new RouteGenerationProblemTest();
-    	
+    	String baseFolder = "./test/Kirchberg/";
+		String baseName = "Kirchberg";
+		
+    	RouteGeneration rg = new RouteGeneration();
+		rg.setBaseFolder(baseFolder);
+		rg.setBaseName(baseName);
+		rg.setStopHour(11);
+		rg.setReferenceNodeId("56640729#4");
+		rg.readInput();
+		rg.computeDijkstra();
+		
+		RealEvaluation evaluator = new RealEvaluation();
+		evaluator.setBaseFolder(baseFolder);
+		evaluator.setBaseName(baseName);
+		evaluator.setStopHour(11);
+		evaluator.readInput();
+
+    	Problem problem = new RouteGenerationProblem(rg, evaluator);    
     	return problem;
     }
+    
     static int index;
     
     public static void main (String args[]) throws Exception
     {
-    	String algorithm = args[0];
+    	String algorithm = args.length==0? "cGA" : args[0];
     	
     	int numberofruns = 1;
     	Vector<Vector<Double>> results = new Vector<Vector<Double>>();
     	
     	long start, end;
+    	
     	start = (new Date()).getTime();
     	
     	Individual bestIndiv = null;
@@ -171,22 +189,26 @@ public class RouteGeneLaunch  implements GenerationListener
             	{
 	            	if(algorithm.equalsIgnoreCase("cGA")){
 	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new CellularGA(r));
-	            	} else if (algorithm.equalsIgnoreCase("genGA")){           
+	            	} 
+	            	else if (algorithm.equalsIgnoreCase("genGA")){           
 	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new GenGA(r));		            	
-		            } else if(algorithm.equalsIgnoreCase("ssGA")){  
+		            } 
+	            	else if(algorithm.equalsIgnoreCase("ssGA")){  
 		            	((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new SSGA(r));
 		            }
             	}
             }
             else
             {
-	            if(algorithm.equalsIgnoreCase("cGA")){
+	            if(algorithm.equalsIgnoreCase("cGA")) {
 	            	ea = new CellularGA(r);
 	            	System.out.println("cGA");
-	            } else if (algorithm.equalsIgnoreCase("genGA")){           
+	            }
+	            else if (algorithm.equalsIgnoreCase("genGA")) {           
 	            	ea = new GenGA(r);
 	            	System.out.println("genGA");
-	            } else if(algorithm.equalsIgnoreCase("ssGA")){  
+	            } 
+	            else if(algorithm.equalsIgnoreCase("ssGA")) {  
 	            	ea = new SSGA(r);
 	            	System.out.println("ssGA");
 	            }

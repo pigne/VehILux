@@ -18,18 +18,12 @@ import java.util.TreeSet;
 import org.graphstream.algorithm.ConnectedComponents;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
-import org.graphstream.graph.IdAlreadyInUseException;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
-import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.stream.file.FileSink;
-import org.util.SingletonException;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  * Utility class for the SUMO Route Generator.
@@ -47,12 +41,12 @@ public class SumoNetworkToDGS extends DefaultHandler {
 	private Node currentNode = null;
 	boolean firstPass = true;
 	String currentLane = null;
-	private String styleSheet = "graph { padding: 60px; fill-color:#eeeeee;}"
-			+ "node { z-index:3; size: 1px; fill-color: #777777; }"
-			+ "node.internal{ fill-color: #BB4444; }"
-			+ "edge  { fill-color: #404040; size: 1px;}"
-			+ "sprite {text-style:bold; text-color: #555555;  fill-color:#eeeeee; }"
-			+ "edge.path {fill-color: #ff4040;}";
+//	private String styleSheet = "graph { padding: 60px; fill-color:#eeeeee;}"
+//			+ "node { z-index:3; size: 1px; fill-color: #777777; }"
+//			+ "node.internal{ fill-color: #BB4444; }"
+//			+ "edge  { fill-color: #404040; size: 1px;}"
+//			+ "sprite {text-style:bold; text-color: #555555;  fill-color:#eeeeee; }"
+//			+ "edge.path {fill-color: #ff4040;}";
 
 	private String baseName;
 	private String folderName;
@@ -160,9 +154,6 @@ public class SumoNetworkToDGS extends DefaultHandler {
 					//System.out.printf(" !!! opposite-direction edge already exists between %s and %s !!!%n", currentNode.getId(), otherNodeId);
 				}
 				g.addEdge(currentNode.getId() + "_" + otherNode.getId(), currentNode.getId(), otherNode.getId(), true);
-				if (id.equals("138950605-AddedOffRampEdge")) {
-					System.out.println("adding edge " + currentNode.getId() + "_" + otherNode.getId());
-				}
 			}
 
 		} 

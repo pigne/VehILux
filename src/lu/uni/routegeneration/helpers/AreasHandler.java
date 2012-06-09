@@ -3,14 +3,11 @@ package lu.uni.routegeneration.helpers;
 import java.util.ArrayList;
 
 import lu.uni.routegeneration.generation.Area;
-import lu.uni.routegeneration.generation.Zone;
 import lu.uni.routegeneration.generation.ZoneType;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import com.sun.org.apache.bcel.internal.generic.NEW;
 
 /**
 * <areas residential_proba="5" commercial_proba="80" industrial_proba="15"> 
@@ -23,6 +20,7 @@ public class AreasHandler extends DefaultHandler {
 	private double residentialTypeProbability = 0.0;
 	private double commercialTypeProbability = 0.0;
 	private double industrialTypeProbability = 0.0;
+	
 	public double getResidentialTypeProbability() {
 		return residentialTypeProbability;
 	}

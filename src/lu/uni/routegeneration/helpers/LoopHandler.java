@@ -47,6 +47,7 @@ public class LoopHandler extends DefaultHandler {
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if (qName.equals("loop")) {
 			loops.add(currentLoop);
+			//System.out.println("cars: " + currentLoop.)
 		} 
 		else if (qName.equals("flow")) {
 			if(currentFlow !=null){

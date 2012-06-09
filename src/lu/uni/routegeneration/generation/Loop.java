@@ -22,6 +22,56 @@ public class Loop  implements Comparable<Loop>  {
 	private TreeSet<Flow> flows;
 	private String dijkstra = null;
 	private double totalFlow;
+	private int sumEntered;
+	private int sumLeft;
+	private double sumSec;
+	private int stopHour;
+	
+	public void setStopHour(int stopHour) {
+		this.stopHour = stopHour;
+	}
+
+	public int getSumEntered() {
+		return sumEntered;
+	}
+	
+	public void addEntered(int entered, int hour) {
+		this.sumEntered += entered;
+		Flow currentFlow = getFlow(hour);
+		currentFlow.addEntered(entered);
+	}
+
+	public Flow getFlow(int hour) {
+		Flow currentFlow = null;
+		for (Flow flow : flows) {
+			if (flow.getHour() == hour) {
+				currentFlow = flow;
+			}
+		}
+		if (currentFlow == null) {
+			currentFlow = new Flow(hour,0,0,stopHour);
+			flows.add(currentFlow);
+		}
+		return currentFlow;
+	}
+	
+	public int getSumLeft() {
+		return sumLeft;
+	}
+
+	public void addLeft(int left, int hour) {
+		this.sumLeft += left;
+		Flow currentFlow = getFlow(hour);
+		currentFlow.addLeft(left);
+	}
+
+	public double getSumSec() {
+		return sumSec;
+	}
+
+	public void addSec(double sec, int hour) {
+		this.sumSec += sec;
+	}
 	
 	public double getTotalFlow() {
 		return totalFlow;
@@ -59,13 +109,10 @@ public class Loop  implements Comparable<Loop>  {
 		totalFlow += flow.getVehicles();
 	}
 	
-	public Flow getAndRemoveNextFlow() {
-		return flows.pollFirst();
-	}
-	
 	public void removeFlow(Flow flow) {
 		flows.remove(flow);
 	}
+	
 	public boolean hasFlow() {
 		return flows.size() > 0;
 	}

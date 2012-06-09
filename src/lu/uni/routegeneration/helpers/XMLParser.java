@@ -1,6 +1,7 @@
 package lu.uni.routegeneration.helpers;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.transform.OutputKeys;
@@ -9,6 +10,7 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import lu.uni.routegeneration.generation.Trip;
 import lu.uni.routegeneration.generation.VType;
 
 import org.xml.sax.ContentHandler;
@@ -20,6 +22,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 
 public class XMLParser {
+	
 	public static void readFile(String path, ContentHandler h) {
 		try {
 			File file = new File(path);
@@ -81,6 +84,57 @@ public class XMLParser {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void writeFlows(String baseFolder, String baseName, String outputFolder, ArrayList<Trip> trips, ArrayList<VType> vtypes, int stopTime) {
+		String path = baseFolder + outputFolder + baseName + ".flows.xml";
+		String outputDirPath = baseFolder + outputFolder;
+		try {
+			File file = new File(outputDirPath);
+			if (!file.exists()) {
+				File dir = new File(outputDirPath);  
+				dir.mkdir();
+			}
+			StreamResult sr = new StreamResult(path);
+			TransformerHandler tfh = XMLParser.xmlMain(sr);
+			AttributesImpl ai = new AttributesImpl();
+			tfh.startElement("", "", "flows", ai);
+			XMLParser.writeVTypes(vtypes, tfh, ai);
+			for (Trip trip : trips) {
+				XMLParser.writeFlow(trip.getId(), trip.getSourceId(), trip.getDestinationId(), trip.getDepartTime(), stopTime, trip.getVehicleId(), 1, tfh, ai); 
+			}
+			tfh.endElement("", "", "flows");
+			tfh.endDocument();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void writeRoutes(String baseFolder, String baseName, String outputFolder, ArrayList<Trip> trips, ArrayList<VType> vtypes) {
+		String path = baseFolder + outputFolder + baseName + ".rou.xml";
+		String outputDirPath = baseFolder + outputFolder;
+		try {
+			File file = new File(outputDirPath);
+			if (!file.exists()) {
+				File dir = new File(outputDirPath);  
+				dir.mkdir();
+			}
+			StreamResult sr = new StreamResult(path);
+			final TransformerHandler tfh = XMLParser.xmlMain(sr);
+			final AttributesImpl ai = new AttributesImpl();
+			tfh.startElement("", "", "routes", ai);
+			XMLParser.writeVTypes(vtypes, tfh, ai);
+			for (Trip trip : trips) {
+				XMLParser.writeRoute(trip.getId(), trip.getVehicleId(), trip.getDepartTime(), trip.getRoute(), tfh, ai);
+			}
+			tfh.endElement("", "", "routes");
+			tfh.endDocument();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	public static void writeVTypes(List<VType> vtypes, TransformerHandler tfh, AttributesImpl ai) {
 		try {

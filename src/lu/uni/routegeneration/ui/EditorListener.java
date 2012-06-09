@@ -50,15 +50,15 @@ public class EditorListener implements ActionListener, MBoxListener {
 		this.editorPanel = editorPanel;
 		mbox = new MBoxStandalone(this);
 		window = new JFrame("Areas Editor");
-		window.setPreferredSize(new Dimension(2475, 3300));
+		window.setPreferredSize(new Dimension(1240, 2200));
 		window.setBackground(Color.white);
 		window.setLayout(new BorderLayout(5, 5));
 		window.getContentPane().add(editorPanel, BorderLayout.CENTER);
 		uim = new UIMemoryPanel();
 		window.getContentPane().add(uim, BorderLayout.EAST);
 		window.pack();
-		//window.setVisible(true);
-		//window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		window.setVisible(true);
+		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
 	/**

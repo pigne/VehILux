@@ -15,6 +15,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.TreeSet;
+
+import lu.uni.routegeneration.generation.Flow;
+import lu.uni.routegeneration.generation.Loop;
+import lu.uni.routegeneration.helpers.LoopHandler;
+import lu.uni.routegeneration.helpers.XMLParser;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -29,10 +35,8 @@ import org.xml.sax.helpers.XMLReaderFactory;
 public class RealEvaluation {
 
 	// ----------- PARAMETERS ----------
-	// --- base name
+
 	String baseName = "Luxembourg";
-	
-	// --- folder name
 	String baseFolder = "./test/Luxembourg/";
 
 	int stopHour = 11;
@@ -85,63 +89,83 @@ public class RealEvaluation {
 		this.stopHour = stopHour;
 	}
 
-
-	class CLoopHandler extends DefaultHandler {
-
-		@Override
-		public void startElement(String uri, String localName, String qName,
-				Attributes attributes) throws SAXException {
-			super.startElement(uri, localName, qName, attributes);
-
-			if (qName.equals("loop")) {
-				currentDetectorName = attributes.getValue("id");
-				currentDetector = new Detector(stopHour);
-				currentDetector.id = currentDetectorName;
-				currentDetector.edge = attributes.getValue("edge");
-				controls.put(currentDetectorName, currentDetector);
-			} else if (qName.equals("flow")) {
-				int h = (int) (Double.parseDouble(attributes.getValue("hour")));
-				if (h <= stopHour) {
-
-					currentDetector.vehicles[h - 1] = (int) Double
-							.parseDouble(attributes.getValue("cars"))
-							+ (int) Double.parseDouble(attributes
-									.getValue("trucks"));
-
+	public RealEvaluation() {
+		
+	}
+	
+	public void readInput() {
+		LoopHandler h = new LoopHandler(stopHour);
+		XMLParser.readFile(baseFolder + baseName + ".control.xml", h);
+		TreeSet<Loop> loops = h.getLoops();
+		controls = new HashMap<String, Detector>();
+		for (Loop loop : loops) {
+			Detector detector = new Detector(stopHour);
+			detector.id = loop.getId();
+			detector.edge = loop.getEdge();
+			for (Flow flow : loop.getFlows()) {
+				if (flow.getHour() <= detector.vehicles.length) {
+					detector.vehicles[flow.getHour()-1] = flow.getVehicles();
 				}
 			}
+			controls.put(detector.id, detector);
 		}
-
-	};
-
-	public RealEvaluation() {
-		//org.util.Environment.getGlobalEnvironment().readCommandLine(args);
-		//org.util.Environment.getGlobalEnvironment().initializeFieldsOf(this);
-		DefaultHandler h;
-
-		controls = new HashMap<String, Detector>();
-
+	}
+	
+	public double compareTo(HashMap<String, Detector> solutions){
+		double[] sum = new double[stopHour];
+		for (String id : solutions.keySet()){
+			Detector solution = solutions.get(id);
+ 			Detector control = controls.get(id);
+ 			if (control == null) {
+ 				System.err.println("Detector Error. Control Detector " + id + " does not exist.");
+ 			}
+ 			if (solution.vehicles.length != control.vehicles.length) {
+ 				System.err.println("Detector Error. Solution and control lengths differ");
+ 			}
+ 			for(int i = 0 ; i< solution.vehicles.length; i++){
+ 				sum[i] += Math.abs((solution.vehicles[i]-control.vehicles[i]));
+ 			}
+		}
+		double ssum = 0.0;
+		for (double v : sum){
+	 		ssum += v;
+		}
+	 	return ssum;
+	}
+	
+	public double[] eachDetectorCompareTo(HashMap<String, Detector> solutions){
+		double[] detectors = new double[solutions.size()];
+		int di = 0;
+		for(String id : solutions.keySet()){
+			double sum = 0;
+			Detector solution = solutions.get(id);
+ 			Detector control = controls.get(id);
+ 			if(control == null){
+ 				System.err.println("Detector Error. Does not exist.");
+ 			}
+ 			if(solution.vehicles.length != control.vehicles.length){
+ 				System.err.println("Detector Error. Solution and control length differ");
+ 			}
+ 			for(int i = 0 ; i< solution.vehicles.length; i++){
+ 				sum += Math.abs(control.vehicles[i]-control.vehicles[i]);
+ 			}
+ 			detectors[di++]=sum;
+		}
+		
+	 	return detectors;
+	}
+	
+	public void write() {
+		String path = baseFolder + baseName + ".real_eval.log";	
+		File f = new File(path);
 		PrintStream out = null;
-
-		File f = new File(baseFolder + baseName + ".control.xml");
-		h = new CLoopHandler();
-		try {
-			XMLReader parser = XMLReaderFactory.createXMLReader();
-			parser.setContentHandler(h);
-			parser.parse(new InputSource(new FileInputStream(f)));
-		} catch (Exception ex) {
-			ex.printStackTrace(System.err);
-		}
-
-		f = new File(baseFolder + baseName + ".real_eval.log");
-
-		out = null;
 		try {
 			out = new PrintStream(f);
-		} catch (FileNotFoundException e) {
+		} 
+		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		out.printf("time\t");
+		out.printf("\t");
 		for (Detector d : controls.values()) {
 			out.printf("%s\t", d.id);
 		}
@@ -155,67 +179,16 @@ public class RealEvaluation {
 		}
 		out.printf("%n");
 		out.close();
-
 	}
-	
-	
-	public double compareTo(HashMap<String, Detector> solution){
-		
-		double[] sum =new double[stopHour];
-		
-		for(String id : solution.keySet()){
-			Detector sd = solution.get(id);
- 			Detector cd = controls.get(id);
- 			if(cd == null){
- 				System.err.println("Detector Error. Does not exist.");
- 			}
- 			if(sd.vehicles.length != cd.vehicles.length){
- 				System.err.println("Detector Error. Solution and control length differ");
- 			}
- 			for(int i = 0 ; i<sd.vehicles.length; i++){
- 				sum[i]+=Math.abs((sd.vehicles[i]-cd.vehicles[i]));
- 			}
-		}
-		double ssum=0.0;
-		for(double v : sum){
-	 		ssum+=v;
-		}
-	 	return ssum;
-	}
-
-	
-	public double[] eachDetectorCompareTo(HashMap<String, Detector> solution){
-		
-		double[] detectors = new double[solution.size()];
-		int di=0;
-		for(String id : solution.keySet()){
-			double sum =0;
-			Detector sd = solution.get(id);
- 			Detector cd = controls.get(id);
- 			if(cd == null){
- 				System.err.println("Detector Error. Does not exist.");
- 			}
- 			if(sd.vehicles.length != cd.vehicles.length){
- 				System.err.println("Detector Error. Solution and control length differ");
- 			}
- 			for(int i = 0 ; i<sd.vehicles.length; i++){
- 				sum+=Math.abs((sd.vehicles[i]-cd.vehicles[i]));
- 			}
- 			detectors[di++]=sum;
-		}
-		
-	 	return detectors;
-	}
-
-	
 	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		new RealEvaluation();
+		RealEvaluation real = new RealEvaluation();
+		real.readInput();
+		real.write();
 		System.out.println("Done.");
-
 	}
 
 }
