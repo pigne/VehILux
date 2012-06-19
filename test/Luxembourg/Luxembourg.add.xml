@@ -38,8 +38,8 @@
 <inductionLoop id="420_0" lane="-34425561#1_0" pos="1" freq="3600" file="Luxembourg.e1.420_0.xml" friendlyPos="true" splitByType="false" /> 
 <inductionLoop id="420_1" lane="-34425561#1_1" pos="1" freq="3600" file="Luxembourg.e1.420_1.xml" friendlyPos="true" splitByType="false" /> 
 
-<inductionLoop id="407_0" lane="125333159#0_0" pos="1" freq="3600" file="Luxembourg.e1.407_0.xml" friendlyPos="true" splitByType="false" /> 
-<inductionLoop id="407_1" lane="125333159#0_1" pos="1" freq="3600" file="Luxembourg.e1.407_1.xml" friendlyPos="true" splitByType="false" /> 
+<inductionLoop id="407_0" lane="-125333159#0_0" pos="1" freq="3600" file="Luxembourg.e1.407_0.xml" friendlyPos="true" splitByType="false" /> 
+<inductionLoop id="407_1" lane="-125333159#0_1" pos="1" freq="3600" file="Luxembourg.e1.407_1.xml" friendlyPos="true" splitByType="false" /> 
 
 </additionals>
 

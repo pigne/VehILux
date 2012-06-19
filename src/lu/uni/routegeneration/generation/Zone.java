@@ -51,9 +51,9 @@ public class Zone {
 		String s = new String();
 		s = String.format(
 						Locale.US,
-						"Zone %s:%n  -type: %s%n  -surface: %.15f%n  -boundaries: (%f,%f) (%f,%f)%n  -points: [",
-						this.id, this.type, this.surface, this.min_x_boundary,
-						this.min_y_boundary, this.max_x_boundary,
+						"Zone %s:%n  -type: %s%n  -surface: %.15f%n   -probability: %.5f%n  -boundaries: (%f,%f) (%f,%f)%n  -points: [",
+						this.id, this.type, this.surface, this.probability,
+						this.min_x_boundary, this.min_y_boundary, this.max_x_boundary,
 						this.max_y_boundary);
 		for (Point2D.Double p : this.points) {
 			s += String.format(Locale.US, "(%.4f,%.4f) ", p.x, p.y);

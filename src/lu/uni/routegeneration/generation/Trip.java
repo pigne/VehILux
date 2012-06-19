@@ -2,6 +2,9 @@ package lu.uni.routegeneration.generation;
 
 import java.util.List;
 
+import lu.uni.routegeneration.evaluation.Detector;
+
+import org.apache.log4j.Level;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
 
@@ -12,8 +15,11 @@ public class Trip {
 	private String destinationId;
 	private Path path;
 	private String route;
-	private int departTime;
+	//private String[] edges;
+	private double departTime;
 	private String vehicleId;
+	private double weight;
+	private ZoneType destinationZoneType;
 	
 	public String getId() {
 		return id;
@@ -31,11 +37,11 @@ public class Trip {
 		this.vehicleId = vehicleId;
 	}
 
-	public int getDepartTime() {
+	public double getDepartTime() {
 		return departTime;
 	}
 
-	public void setDepartTime(int departTime) {
+	public void setDepartTime(double departTime) {
 		this.departTime = departTime;
 	}
 
@@ -51,6 +57,14 @@ public class Trip {
 		return destinationId;
 	}
 
+	public ZoneType getDestinationZoneType() {
+		return destinationZoneType;
+	}
+	
+	public void setDestinationZoneType(ZoneType destinationZoneType) {
+		this.destinationZoneType = destinationZoneType;
+	}
+	
 	public void setDestinationId(String destinationId) {
 		this.destinationId = destinationId;
 	}
@@ -61,6 +75,7 @@ public class Trip {
 
 	public void setRoute(String route) {
 		this.route = route;
+		splitRoute(route);
 	}
 	
 	public Trip(String id) {
@@ -96,8 +111,8 @@ public class Trip {
 		route = sb.toString();
 	}
 	
-	public double getWeight() {
-		double weight = 0;
+	public double computeWeight() {
+		weight = 0;
 		if (path != null) {
 			for (Node node : path.getNodePath()) {
 				weight += (Double)node.getAttribute("weight");
@@ -107,4 +122,13 @@ public class Trip {
 		return weight;
 	}
 	
+	private void splitRoute(String route) {
+		if (route != null && !route.isEmpty()) {
+			String[] edges = route.split(" ");
+			if (edges.length > 0) {
+				destinationId = edges[0];
+				sourceId = edges[edges.length -1];
+			}
+		}
+	}
 }

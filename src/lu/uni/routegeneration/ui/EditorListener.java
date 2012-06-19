@@ -49,11 +49,12 @@ public class EditorListener implements ActionListener, MBoxListener {
 	public EditorListener(EditorPanel editorPanel) {
 		this.editorPanel = editorPanel;
 		mbox = new MBoxStandalone(this);
-		window = new JFrame("Areas Editor");
-		window.setPreferredSize(new Dimension(1240, 2200));
+		window = new JFrame("VehlLux");
+		window.setPreferredSize(new Dimension(800, 600));
 		window.setBackground(Color.white);
 		window.setLayout(new BorderLayout(5, 5));
 		window.getContentPane().add(editorPanel, BorderLayout.CENTER);
+		window.getContentPane().setBackground(Color.white);
 		uim = new UIMemoryPanel();
 		window.getContentPane().add(uim, BorderLayout.EAST);
 		window.pack();
@@ -65,9 +66,9 @@ public class EditorListener implements ActionListener, MBoxListener {
 	 * 
 	 */
 	public void run() {
-		timer = new Timer(300, this);
+		timer = new Timer(0, this);
 		timer.setCoalesce(true);
-		timer.setDelay(300);
+		timer.setDelay(1000);
 		timer.setRepeats(true);
 		timer.start();
 	}
@@ -82,6 +83,7 @@ public class EditorListener implements ActionListener, MBoxListener {
 		if (count++%10==0){
 			mbox.processMessages();
 			window.repaint();
+			//editorPanel.repaint();
 		}
 		uim.repaint();
 	}

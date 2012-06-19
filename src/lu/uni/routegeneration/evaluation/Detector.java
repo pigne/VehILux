@@ -26,6 +26,24 @@ public class Detector {
 			vehicles[i] = 0;
 		}
 	}
+	
+	public Detector(int stopHour, String id) {
+		this.id = id;
+		vehicles = new int[stopHour];
+		for (int i=0; i < vehicles.length; i++){
+			vehicles[i] = 0;
+		}
+	}
+	
+	public Detector(int stopHour, String id, String edge) {
+		this.id = id;
+		this.edge = edge;
+		vehicles = new int[stopHour];
+		for (int i=0; i < vehicles.length; i++){
+			vehicles[i] = 0;
+		}
+	}
+	
 	public void reset(){
 		for (int i=0; i < vehicles.length; i++){
 			vehicles[i] = 0;

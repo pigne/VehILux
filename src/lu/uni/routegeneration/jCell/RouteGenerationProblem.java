@@ -54,15 +54,11 @@ public class RouteGenerationProblem extends Problem {
         this.evaluator = evaluator;
 		this.stopHour = routeGen.getStopHour();
 		
-        currentSolution = new HashMap<String, Detector>();
-		detectorIds = new HashMap<String, String>();
-		for(Detector detector : evaluator.controls.values()){
-			Detector det = new Detector(stopHour);
-			det.id = detector.id;
-			detectorIds.put(detector.edge, detector.id);
-			currentSolution.put(det.id, det);
-		}
+        this.currentSolution = evaluator.initializeSolution();
+        this.detectorIds = evaluator.getDetectorIds();
 	}
+	
+
 	
 	@Override
 	public Object eval(Individual ind) {
@@ -118,7 +114,7 @@ public class RouteGenerationProblem extends Problem {
 		//Zid
 		routeGen.getDefaultIndustrialArea().setProbability((Double)ind.getAllele(8)/100);
 		
-		//Fills in the Residentia area probability
+		//Fills in the Residential area probability
 		//Zr1
 		routeGen.getAreas().get(4).setProbability((Double)ind.getAllele(9)/100);
 		
@@ -171,7 +167,7 @@ public class RouteGenerationProblem extends Problem {
 				if (detector == null) {
 					detector = currentSolution.put(detectorId, new Detector(stopHour));
 				}
-				detector.vehicles[trip.getDepartTime()/3600 - 1] += 1;
+				detector.vehicles[(int)trip.getDepartTime()/3600] += 1;
 			}
 		}
 	}

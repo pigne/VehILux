@@ -63,6 +63,7 @@ public class Area {
 	}
 
 	private ArrayList<Zone> zones;
+	
 	public void addZone(Zone zone) {
 		zones.add(zone);
 	}
@@ -90,7 +91,7 @@ public class Area {
 		this.probability = probability;
 		this.zoneType = zoneType;
 		color = zoneType.getColor();
-		Color transparentColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), 60);
+		Color transparentColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), 40);
 		color = transparentColor;
 		zones = new ArrayList<Zone>();
 		surface = 0.0;

@@ -10,11 +10,16 @@
  */
 package lu.uni.routegeneration.ui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
+import java.awt.Toolkit;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,6 +29,7 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.Vector;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import javax.swing.SizeSequence;
 
@@ -42,7 +48,8 @@ import lu.uni.routegeneration.generation.Zone;
 public class EditorPanel extends JPanel {
 
 	private static final Color DEFAULT_POINT_COLOR = Color.magenta;
-	private static final Integer DEFAULT_POINT_RADIOUS = 5;
+	private static final Integer DEFAULT_POINT_WIDTH = 5;
+	private static final ShapeType DEFAULT_POINT_SHAPE = ShapeType.OVAL;
 	
 	private double min_x_boundary = Double.MAX_VALUE;
 	private double min_y_boundary = Double.MAX_VALUE;
@@ -64,8 +71,48 @@ public class EditorPanel extends JPanel {
 	private HashMap<String, ArrayList<Point2D.Double>> points = new HashMap<String, ArrayList<Point2D.Double>>();
 	private HashMap<String, Color> colors = new HashMap<String, Color>();
 	private HashMap<String, Integer> sizes = new HashMap<String, Integer>();
+	private HashMap<String, ShapeType> shapes = new HashMap<String, ShapeType>();
 	private int step = 0;
+	private boolean displayEdges;
+	private boolean displayAreas;
+	private boolean displayZones;
+	private ArrayList<String> displayPoints = new ArrayList<String>();
+	
+	public boolean isDisplayEdges() {
+		return displayEdges;
+	}
 
+	public void setDisplayEdges(boolean displayEdges) {
+		this.displayEdges = displayEdges;
+	}
+
+	public boolean isDisplayAreas() {
+		return displayAreas;
+	}
+
+	public void setDisplayAreas(boolean displayAreas) {
+		this.displayAreas = displayAreas;
+	}
+	
+	public boolean isDisplayZones() {
+		return displayZones;
+	}
+
+	public void setDisplayZones(boolean displayZones) {
+		this.displayZones = displayZones;
+	}
+
+	public ArrayList<String> getDisplayPoints() {
+		return displayPoints;
+	}
+
+	public void setDisplayPoints(String[] pointsNames) {
+		this.displayPoints = new ArrayList<String>();
+		for (int i = 0; i < pointsNames.length; ++i) {
+			this.displayPoints.add(pointsNames[i]);
+		}
+	}
+	
 	private ArrayList<Point2D.Double> nodesToPoints(ArrayList<Node> nodes) {
 		ArrayList<Point2D.Double> points = new ArrayList<Point2D.Double>();
 		for (Node node : nodes) {
@@ -78,14 +125,16 @@ public class EditorPanel extends JPanel {
 		return points;
 	}
 	
-	public void setNodes(String name, ArrayList<Node> nodes, Color color) {
+	public void setNodes(String name, ArrayList<Node> nodes, Color color, int width, ShapeType shape) {
 		if (points.containsKey(name)) {
 			points.remove(name);
 		}
 		points.put(name, nodesToPoints(nodes));
 		colors.put(name, color);
+		sizes.put(name, width);
+		shapes.put(name, shape);
 	}
-
+	
 	public ArrayList<Point2D.Double> getPoints(String name) {
 		return points.get(name);
 	}
@@ -151,22 +200,19 @@ public class EditorPanel extends JPanel {
 		}
 		mapRatio = (max_x_boundary - min_x_boundary) / (max_y_boundary - min_y_boundary);
 		
-		this.setBackground(Color.white);
 	}
 
 	public void run() {
 		EditorListener ae = new EditorListener(this);
 		ae.run();	
-		try {
-				this.wait(5000);
-		}
-		catch (Exception e) {}	
 	}
+	boolean firstTime = true;
 	
 	@Override
 	public void paintComponent(Graphics g) {
 		g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+
 		orig_width = getWidth();
 		orig_height = getHeight();
 		double pixelRatio = orig_width / orig_height;
@@ -179,35 +225,49 @@ public class EditorPanel extends JPanel {
 			usefull_width = orig_height * mapRatio;
 		}
 
-		g2.setColor(Color.gray);
-		g2.drawRect((int) (orig_width / 2 - usefull_width / 2), (int) (orig_height / 2 - usefull_height / 2), (int) usefull_width - 1, (int) usefull_height - 1);
-
+		g2.setColor(Color.white);
+		g2.fillRect((int) (orig_width / 2 - usefull_width / 2), (int) (orig_height / 2 - usefull_height / 2), (int) usefull_width - 1, (int) usefull_height - 1);
 		ratioX = usefull_width / (max_x_boundary - min_x_boundary);
 		ratioY = usefull_height / (max_y_boundary - min_y_boundary);
-		
-		drawZones();
+		g2.setColor(Color.gray);
+		g2.drawRect((int) (orig_width / 2 - usefull_width / 2), (int) (orig_height / 2 - usefull_height / 2), (int) usefull_width - 1, (int) usefull_height - 1);
+		ratioX = usefull_width / (max_x_boundary - min_x_boundary);
+		ratioY = usefull_height / (max_y_boundary - min_y_boundary);
 		drawAreas();
+		drawEdges();
+		drawZones();
 		drawPoints();
+		
 	}
 	
-	public void drawPoint(Point2D.Double point, Color color, int radious) {
+	public void drawPoint(Point2D.Double point, Color color, int width, ShapeType shape) {
 		g2.setColor(color);
+		if (shape.equals(ShapeType.RECT)) {
+			g2.fillRect(
+				(int) ((point.x - min_x_boundary) * ratioX + orig_width / 2 - usefull_width / 2),
+				(int) (orig_height - ((point.y - min_y_boundary) * ratioY + orig_height / 2 - usefull_height / 2)),
+				width, width);
+		}
+		else if (shape.equals(ShapeType.OVAL)) {
 		g2.fillOval(
 				(int) ((point.x - min_x_boundary) * ratioX + orig_width / 2 - usefull_width / 2),
 				(int) (orig_height - ((point.y - min_y_boundary) * ratioY + orig_height / 2 - usefull_height / 2)),
-				radious, radious);
+				width, width);
+		}
 	}
 	
 	public void drawZones() {
-		for (Zone z : zones.values()) {
-			int[] xs = new int[z.points.size()];
-			int[] ys = new int[z.points.size()];
-			for (int i = 0; i < z.points.size(); i++) {
-				xs[i] = (int) ((z.points.get(i).x - min_x_boundary) * ratioX + orig_width / 2 - usefull_width / 2);
-				ys[i] = (int) (orig_height - ((z.points.get(i).y - min_y_boundary) * ratioY + orig_height / 2 - usefull_height / 2));
+		if (displayZones) {
+			for (Zone z : zones.values()) {
+				int[] xs = new int[z.points.size()];
+				int[] ys = new int[z.points.size()];
+				for (int i = 0; i < z.points.size(); i++) {
+					xs[i] = (int) ((z.points.get(i).x - min_x_boundary) * ratioX + orig_width / 2 - usefull_width / 2);
+					ys[i] = (int) (orig_height - ((z.points.get(i).y - min_y_boundary) * ratioY + orig_height / 2 - usefull_height / 2));
+				}
+				g2.setColor(z.color);
+				g2.fillPolygon(xs, ys, z.points.size());
 			}
-			g2.setColor(z.color);
-			g2.fillPolygon(xs, ys, z.points.size());
 		}
 	}
 	
@@ -223,50 +283,63 @@ public class EditorPanel extends JPanel {
 	}
 	
 	public void drawAreas() {
-		for (Area area : areas) {
-			if (area.getId() != null) {
-				int x = (int) ((area.getX() - area.getRadius() - min_x_boundary) * ratioX + orig_width / 2.0 - usefull_width / 2.0);
-				int y = (int) (orig_height - ((area.getY() + area.getRadius() - min_y_boundary) * ratioY + orig_height / 2.0 - usefull_height / 2.0));
-				int w = (int) (area.getRadius() * 2 * ratioX);
-				int h = (int) (area.getRadius() * 2 * ratioY);
-				g2.setColor(area.getColor());
-				g2.fillOval(x, y, w, h);
-				g2.setColor(area.getColor());
-				g2.drawOval(x, y, w, h);
+		if (displayAreas) {
+			for (Area area : areas) {
+				if (area.getId() != null) {
+					int x = (int) ((area.getX() - area.getRadius() - min_x_boundary) * ratioX + orig_width / 2.0 - usefull_width / 2.0);
+					int y = (int) (orig_height - ((area.getY() + area.getRadius() - min_y_boundary) * ratioY + orig_height / 2.0 - usefull_height / 2.0));
+					int w = (int) (area.getRadius() * 2 * ratioX);
+					int h = (int) (area.getRadius() * 2 * ratioY);
+					g2.setColor(area.getColor());
+					g2.fillOval(x, y, w, h);
+					g2.setColor(area.getColor());
+					g2.drawOval(x, y, w, h);
+				}
 			}
 		}
 	}
 	
 	public void drawPoints() {
 		for (String name : points.keySet())	{
-			ArrayList<Point2D.Double> pointArray = points.get(name);
-			if (pointArray == null) {
-				return;
-			}
-			Color color = colors.get(name);
-			if (color == null) {
-				color = DEFAULT_POINT_COLOR;
-			}
-			Integer radious = sizes.get(name);
-			if (radious == null) {
-				radious = DEFAULT_POINT_RADIOUS;
-			}
-			for (Point2D.Double point : pointArray) {
-				drawPoint(point, color, radious);
+			if (displayPoints.contains(name)) {
+				ArrayList<Point2D.Double> pointArray = points.get(name);
+				if (pointArray == null) {
+					return;
+				}
+				Color color = colors.get(name);
+				if (color == null) {
+					color = DEFAULT_POINT_COLOR;
+				}
+				Integer width = sizes.get(name);
+				if (width == null) {
+					width = DEFAULT_POINT_WIDTH;
+				}
+				ShapeType shape = shapes.get(name);
+				if (shape == null) {
+					shape = DEFAULT_POINT_SHAPE;
+				}
+				for (Point2D.Double point : pointArray) {
+					drawPoint(point, color, width, shape);
+				}
 			}
 		}
 	}
 	
 	public void drawEdges() {
-		g2.setColor(new Color(150, 150, 150, 140));
-		for (Lane edge : edges) {
-			int[] xs = new int[edge.shape.size()];
-			int[] ys = new int[edge.shape.size()];
-			for (int i = 0; i < edge.shape.size(); i++) {
-				xs[i] = (int) ((edge.shape.get(i).x - min_x_boundary) * ratioX + orig_width / 2 - usefull_width / 2);
-				ys[i] = (int) (orig_height - ((edge.shape.get(i).y - min_y_boundary) * ratioY + orig_height / 2 - usefull_height / 2));
+		if (displayEdges) {
+			g2.setColor(new Color(150, 150, 150, 150));
+			
+			g2.setStroke(new BasicStroke(0.1F)); 
+			
+			for (Lane edge : edges) {
+				int[] xs = new int[edge.shape.size()];
+				int[] ys = new int[edge.shape.size()];
+				for (int i = 0; i < edge.shape.size(); i++) {
+					xs[i] = (int) ((edge.shape.get(i).x - min_x_boundary) * ratioX + orig_width / 2 - usefull_width / 2);
+					ys[i] = (int) (orig_height - ((edge.shape.get(i).y - min_y_boundary) * ratioY + orig_height / 2 - usefull_height / 2));
+				}
+				g2.drawPolyline(xs, ys, edge.shape.size());
 			}
-			g2.drawPolyline(xs, ys, edge.shape.size());
 		}
 	}
 	
@@ -278,8 +351,7 @@ public class EditorPanel extends JPanel {
 		}
 		PDFGraphics2D g = new PDFGraphics2D(0.0, 0.0, getWidth(), getHeight());
 		g.setFontRendering(PDFGraphics2D.FontRendering.VECTORS);
-		paint(g);
-		step = (++step)%colors.size();
+		this.paint(g);
 		try {
 			FileOutputStream ff = new FileOutputStream(path);
 			try {
@@ -294,4 +366,30 @@ public class EditorPanel extends JPanel {
 		}
 	}
 
+	public void writeImage(String outputDirPath, String path) {
+		
+		File file = new File(outputDirPath);
+		if (!file.exists()) {
+			File dir = new File(outputDirPath);  
+			dir.mkdir();
+		}
+        
+        BufferedImage bi = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics g = bi.createGraphics();
+        this.paint(g);
+//        Graphics g = bi.getGraphics();
+//        paintComponent( g );
+        
+        try {
+            File outputfile = new File(path);
+            ImageIO.write(bi, "png", outputfile);
+        } 
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+ 
+        System.out.println("Screen Captured Successfully and Saved to:\n"+path);
+	}
+	
+	
 }

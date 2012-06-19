@@ -1,37 +1,45 @@
 import static org.junit.Assert.*;
 
 import java.awt.Color;
+import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.TreeSet;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
+import lu.uni.routegeneration.helpers.ArgumentsParser;
 import lu.uni.routegeneration.helpers.DumpHandler;
 import lu.uni.routegeneration.helpers.LoopHandler;
+import lu.uni.routegeneration.helpers.NetHandler;
+import lu.uni.routegeneration.helpers.RouteHandler;
 import lu.uni.routegeneration.helpers.TextFileParser;
 import lu.uni.routegeneration.helpers.XMLParser;
 import lu.uni.routegeneration.jCell.RouteGenerationProblem;
 import lu.uni.routegeneration.ui.EditorPanel;
+import lu.uni.routegeneration.ui.Lane;
+import lu.uni.routegeneration.ui.ShapeType;
 import lu.uni.routegeneration.evaluation.Detector;
+import lu.uni.routegeneration.evaluation.GawronEvaluation;
 import lu.uni.routegeneration.evaluation.RealEvaluation;
 import lu.uni.routegeneration.generation.Flow;
 import lu.uni.routegeneration.generation.Loop;
 import lu.uni.routegeneration.generation.RouteGeneration;
 import lu.uni.routegeneration.generation.Trip;
+import lu.uni.routegeneration.generation.ZoneType;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +50,8 @@ public class RouteGenerationTest extends TestCase {
 	private String baseFolder = "./test/Luxembourg/";
 	private String baseName = "Luxembourg";
 	private int stopHour = 11;
-	
+	private ArrayList<String> controls = new ArrayList<String>();
+
 	public RouteGenerationTest() {
 		BasicConfigurator.configure();
 		logger.info("constructor");
@@ -51,147 +60,6 @@ public class RouteGenerationTest extends TestCase {
 	@Before
 	public void setUp() {
 		logger.info("setUp");
-	}
-	
-	@Test
-	public void testLuxGeneration() {
-		baseFolder = "./test/Luxembourg/";
-		baseName = "Luxembourg";
-		
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
-		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
-		File file = new File(baseFolder + outputFolder);
-		if (!file.exists()) {
-			File dir = new File(baseFolder + outputFolder);  
-			dir.mkdir();
-		}
-		
-		RouteGeneration rg = new RouteGeneration();
-		rg.setBaseFolder(baseFolder);
-		rg.setBaseName(baseName);
-		rg.readInput();
-		rg.computeDijkstra();
-		
-		// 0.2
-		rg.setInsideFlowRatio(0.2);
-		rg.generateTrips();
-		XMLParser.writeFlows(baseFolder, baseName, outputFolder + "_02", rg.getTrips(), rg.getVTypes(), rg.getStopTime());
-		XMLParser.writeRoutes(baseFolder, baseName, outputFolder+ "_02", rg.getTrips(), rg.getVTypes());
-		
-		// 0.3
-		rg.setInsideFlowRatio(0.3);
-		rg.generateTrips();
-		XMLParser.writeFlows(baseFolder, baseName, outputFolder + "_03", rg.getTrips(), rg.getVTypes(), rg.getStopTime());
-		XMLParser.writeRoutes(baseFolder, baseName, outputFolder+ "_03", rg.getTrips(), rg.getVTypes());
-		
-		// 0.4
-		rg.setInsideFlowRatio(0.4);
-		rg.generateTrips();
-		XMLParser.writeFlows(baseFolder, baseName, outputFolder + "_04", rg.getTrips(), rg.getVTypes(), rg.getStopTime());
-		XMLParser.writeRoutes(baseFolder, baseName, outputFolder+ "_04", rg.getTrips(), rg.getVTypes());
-		
-	}
-	
-	@Test
-	public void testOptimization() {
-		baseFolder = "./test/Kirchberg/";
-		baseName = "Kirchberg";
-		
-		RouteGeneration rg = new RouteGeneration();
-		rg.setBaseFolder(baseFolder);
-		rg.setBaseName(baseName);
-		rg.setStopHour(11);
-		rg.setReferenceNodeId("56640729#4");
-		rg.readInput();
-		rg.computeDijkstra();
-		
-		RealEvaluation evaluator = new RealEvaluation();
-		evaluator.setBaseFolder(baseFolder);
-		evaluator.setBaseName(baseName);
-		evaluator.setStopHour(11);
-		evaluator.readInput();
-		RouteGenerationProblem rgProblem = new RouteGenerationProblem(rg, evaluator);
-		
-		
-	}
-	@Test
-	public void testKirchbergGeneration() {
-		baseFolder = "./test/Kirchberg/";
-		baseName = "Kirchberg";
-		
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
-		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
-		File file = new File(baseFolder + outputFolder);
-		if (!file.exists()) {
-			File dir = new File(baseFolder + outputFolder);  
-			dir.mkdir();
-		}
-		
-		RouteGeneration rg = new RouteGeneration();
-		rg.setBaseFolder(baseFolder);
-		rg.setBaseName(baseName);
-		rg.setReferenceNodeId("56640729#4");
-		rg.readInput();
-		rg.computeDijkstra();
-		
-		rg.generateTrips();
-		
-		XMLParser.writeFlows(baseFolder, baseName, outputFolder, rg.getTrips(), rg.getVTypes(), rg.getStopTime());
-		XMLParser.writeRoutes(baseFolder, baseName, outputFolder, rg.getTrips(), rg.getVTypes());
-	}
-	
-	@Test
-	public void testShowPoints() {
-		
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
-		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
-		
-		RouteGeneration rg = new RouteGeneration();
-		rg.readInput();
-		
-		EditorPanel editor = new EditorPanel(rg.getZones(), rg.getAreas());
-		
-		// show loops
-		ArrayList<String> edgeIds = new ArrayList<String>();
-		for (Loop loop : rg.getLoops()) {
-			edgeIds.add(loop.getEdge());
-		}
-		editor.setNodes("loops", rg.getNodes(edgeIds), Color.magenta);
-		
-		// show controls
-		LoopHandler h = new LoopHandler(stopHour);
-		XMLParser.readFile(baseFolder + baseName + ".control.xml", h);
-		edgeIds = new ArrayList<String>();
-		for (Loop loop : h.getLoops()) {
-			edgeIds.add(loop.getEdge());
-		}
-		editor.setNodes("controls", rg.getNodes(edgeIds), Color.cyan);
-		
-		// show points of teleporting
-		edgeIds = TextFileParser.readStringList(baseFolder + "uniquelines.txt");
-		editor.setNodes("teleporting", rg.getNodes(edgeIds), Color.red);
-		logger.info("unique lines:" + edgeIds.size());
-		File file = new File(baseFolder + outputFolder);
-		if (!file.exists()) {
-			File dir = new File(baseFolder + outputFolder);  
-			dir.mkdir();
-		}
-		
-		editor.run();
-		
-		editor.generateScreenShot(baseFolder + outputFolder, baseFolder + outputFolder + "screenshot.pdf");
-		
-		try {
-			System.in.read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	@Test
-	public void testDump() {
-		ArrayList<String> controls = new ArrayList<String>();
 		controls.add("1431");
 		controls.add("1429");
 		controls.add("445");
@@ -205,75 +73,357 @@ public class RouteGenerationTest extends TestCase {
 		controls.add("403");
 		controls.add("401");
 		controls.add("400");
-		LoopHandler loopHandler = new LoopHandler(stopHour);
-		XMLParser.readFile(baseFolder + baseName + ".control.xml", loopHandler);
-		ArrayList<String> edgeIds = new ArrayList<String>();
-		for (String control : controls) {
-			for (Loop loop : loopHandler.getLoops()) {
-				if (loop.getId().equals(control)) {
-					edgeIds.add(loop.getEdge());
-				}
-			}
-		}
-		DumpHandler h = new DumpHandler(edgeIds, stopHour);
-		XMLParser.readFile(baseFolder + "dump.xml", h);
-		System.out.println("edge\tsec\th.sumEntered\th.sumLeft");
-		HashMap<String,Loop> loops = h.getLoops();
-		for (String edgeId : edgeIds) {
-			Loop loop  = loops.get(edgeId);
-			System.out.println(loop.getEdge() + "\t" + loop.getSumSec() + "\t" + loop.getSumEntered() + "\t" + loop.getSumLeft());
-		}
-		System.out.println("Entered:");
-		for (int i = 0; i < stopHour; i++) {
-			System.out.printf("\t%d", i + 1);
-		}
-		System.out.printf("%n");
-		for (String edgeId : edgeIds) {
-			Loop loop  = loops.get(edgeId);
-			System.out.printf("%s\t", loop.getId());
-			for (int i = 0; i < stopHour; i++) {
-				Flow flow = loop.getFlow(i);
-				System.out.printf("%d\t", flow.getEntered());
-			}
-			System.out.printf("%n");
-		}
-		System.out.printf("%n");
-		
-		System.out.println("Left:");
-		for (int i = 0; i < stopHour; i++) {
-			System.out.printf("\t%d", i + 1);
-		}
-		System.out.printf("%n");
-		for (String edgeId : edgeIds) {
-			Loop loop  = loops.get(edgeId);
-			System.out.printf("%s\t", loop.getId());
-			for (int i = 0; i < stopHour; i++) {
-				Flow flow = loop.getFlow(i);
-				System.out.printf("%d\t", flow.getLeft());
-			}
-			System.out.printf("%n");
-		}
-		System.out.printf("%n");	
 	}
 	
-	public void testGetRoute() {
+	
+	@Test
+	public void testGenerateTrips() {
 		
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
 		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
+		File file = new File(baseFolder + outputFolder);
+		if (!file.exists()) {
+			File dir = new File(baseFolder + outputFolder);  
+			dir.mkdir();
+		}
+		
+		String baseFolder = ArgumentsParser.getBaseFolder();
+	    String baseName = ArgumentsParser.getBaseName();
+	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
+	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
+	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
+	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
+	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
+	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
+	    int stopHour = ArgumentsParser.getStopHour();
 		
 		RouteGeneration rg = new RouteGeneration();
 		rg.setBaseFolder(baseFolder);
 		rg.setBaseName(baseName);
+		rg.setStopHour(stopHour);
+		rg.setReferenceNodeId(referenceNodeId);
 		rg.readInput();
+		rg.setInsideFlowRatio(insideFlowRatio);
+		rg.setDefaultResidentialAreaProbability(defaultResidentialAreaProbability);
+		rg.setDefaultCommercialAreaProbability(defaultCommercialAreaProbability);
+		rg.setDefaultIndustrialAreaProbability(defaultIndustrialAreaProbability);
 		
-		String fromId = "-9068621";
-		String toId = "-9070454";
-		Path path = rg.getPath(fromId, toId);
-		Trip trip = new Trip(path);
-		double weight = trip.getWeight();
-		System.out.println(trip.getRoute() + " " + weight);
+		rg.computeDijkstra();
+		ArrayList<Trip> trips = rg.generateSortedTrips();
+		int res=0;
+		int com=0;
+		int ind=0;
+		for (Trip trip : trips) {
+			//logger.info("trip dest: " + trip.getDestinationZoneType().name());
+			if (trip.getDestinationZoneType().equals(ZoneType.RESIDENTIAL)) {
+				res++;
+			}
+			else if (trip.getDestinationZoneType().equals(ZoneType.COMMERCIAL)) {
+				com++;
+			}
+			else if (trip.getDestinationZoneType().equals(ZoneType.INDUSTRIAL)) {
+				ind++;
+			}
+		}
+		logger.info("res" + res);
+		logger.info("com" + com);
+		logger.info("ind" + ind);
 		
+		XMLParser.writeFlows(rg.getBaseFolder(), rg.getBaseName(), outputFolder, rg.getTrips(), rg.getVTypes(), rg.getStopTime());
+		XMLParser.writeRoutes(rg.getBaseFolder(), rg.getBaseName(), outputFolder, rg.getTrips(), rg.getVTypes());
+	}
+//	
+//	@Test
+//	public void testOptimization() {
+//		baseFolder = "./test/Kirchberg/";
+//		baseName = "Kirchberg";
+//		
+//		RouteGeneration rg = new RouteGeneration();
+//		rg.setBaseFolder(baseFolder);
+//		rg.setBaseName(baseName);
+//		rg.setStopHour(11);
+//		rg.setReferenceNodeId("56640729#4");
+//		rg.readInput();
+//		rg.computeDijkstra();
+//		
+//		RealEvaluation evaluator = new RealEvaluation();
+//		evaluator.setBaseFolder(baseFolder);
+//		evaluator.setBaseName(baseName);
+//		evaluator.setStopHour(11);
+//		evaluator.readInput();
+//		RouteGenerationProblem rgProblem = new RouteGenerationProblem(rg, evaluator);
+//		
+//	}
+//	
+//	@Test
+//	public void testKirchbergGeneration() {
+//		baseFolder = "./test/Kirchberg/";
+//		baseName = "Kirchberg";
+//		
+//		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
+//		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
+//		File file = new File(baseFolder + outputFolder);
+//		if (!file.exists()) {
+//			File dir = new File(baseFolder + outputFolder);  
+//			dir.mkdir();
+//		}
+//		
+//		RouteGeneration rg = new RouteGeneration();
+//		rg.setBaseFolder(baseFolder);
+//		rg.setBaseName(baseName);
+//		rg.setReferenceNodeId("56640729#4");
+//		rg.readInput();
+//		rg.computeDijkstra();
+//		
+//		rg.generateTrips();
+//		
+//		XMLParser.writeFlows(baseFolder, baseName, outputFolder, rg.getTrips(), rg.getVTypes(), rg.getStopTime());
+//		XMLParser.writeRoutes(baseFolder, baseName, outputFolder, rg.getTrips(), rg.getVTypes());
+//	}
+	
+	@Test 
+	public void testReadTrips() {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
+		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
+		
+	    String baseFolder = ArgumentsParser.getBaseFolder();
+	    String baseName = ArgumentsParser.getBaseName();
+	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
+	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
+	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
+	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
+	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
+	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
+	    int stopHour = ArgumentsParser.getStopHour();
+	    
+		RouteGeneration rg = new RouteGeneration();
+		rg.setBaseFolder(baseFolder);
+		rg.setBaseName(baseName);
+		rg.setStopHour(stopHour);
+		rg.setReferenceNodeId(referenceNodeId);
+		rg.readInput();
+		rg.setInsideFlowRatio(insideFlowRatio);
+		rg.setDefaultResidentialAreaProbability(defaultResidentialAreaProbability);
+		rg.setDefaultCommercialAreaProbability(defaultCommercialAreaProbability);
+		rg.setDefaultIndustrialAreaProbability(defaultIndustrialAreaProbability);
+		
+		EditorPanel editor = new EditorPanel(rg.getZones(), rg.getAreas());
+		
+		// show loops
+		ArrayList<String> edgeIds = new ArrayList<String>();
+		for (Loop loop : rg.getLoops()) {
+			edgeIds.add(loop.getEdge());
+		}
+		editor.setNodes("loops", rg.getNodes(edgeIds), Color.cyan, 10, ShapeType.RECT );
+		
+		// show controls
+		LoopHandler h = new LoopHandler(stopHour);
+		XMLParser.readFile(baseFolder + baseName + ".control.xml", h);
+		edgeIds = new ArrayList<String>();
+		for (Loop loop : h.getLoops()) {
+			edgeIds.add(loop.getEdge());
+		}
+		editor.setNodes("controls", rg.getNodes(edgeIds), Color.yellow, 10, ShapeType.OVAL);
+		
+		// show sources
+		RouteHandler routeHandler = new RouteHandler();
+		XMLParser.readFile(baseFolder + baseName + ".rou.xml", routeHandler);
+		ArrayList<Trip> trips = routeHandler.getTrips();
+		int currentHour = 0;
+		ArrayList<String>[] sources = new ArrayList[stopHour];
+		ArrayList<String>[] destinations = new ArrayList[stopHour];
+		for (int i = 0; i < stopHour; ++i) {
+			sources[i] = new ArrayList<String>();
+			destinations[i] = new ArrayList<String>();
+		}
+		logger.info("trips: " +trips.size());
+		for (Trip trip : trips) {
+			int hour = (int) trip.getDepartTime()/3600;
+			sources[hour].add(trip.getSourceId());
+			destinations[hour].add(trip.getDestinationId());
+		}
+		//editor.setDisplayAreas(true);
+		editor.setDisplayPoints(new String[]{"sources", "destinations"});
+		editor.setDisplayEdges(true);
+		editor.setDisplayZones(true);
+		editor.run();
+		
+		for (int i = 0; i < stopHour; ++i) {
+			// show sources
+			//editor.setNodes("sources", rg.getNodes(sources[i]), Color.green, 5, ShapeType.OVAL);
+			
+			// show destinations
+			editor.setNodes("destinations", rg.getNodes(destinations[i]), Color.orange, 5, ShapeType.OVAL);
+			
+			//editor.generateScreenShot(baseFolder + outputFolder, baseFolder + outputFolder + "screenshot"+i+".pdf");
+			editor.writeImage(baseFolder + outputFolder, baseFolder + outputFolder + "screenshot"+i+".png");
+			
+		}
+		
+		try {
+			System.in.read();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
+//	@Test
+//	public void testShowMap() {
+////		baseFolder = "./test/Kirchberg/";
+////		baseName = "Kirchberg";
+//		
+//		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
+//		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
+//		
+//		RouteGeneration rg = new RouteGeneration();
+//		rg.setBaseFolder(baseFolder);
+//		rg.setBaseName(baseName);
+////		rg.setReferenceNodeId("56640729#4");
+//		rg.readInput();
+//		
+//		EditorPanel editor = new EditorPanel(rg.getZones(), rg.getAreas());
+//		editor.run();
+//		
+//		// show loops
+//		ArrayList<String> edgeIds = new ArrayList<String>();
+//		for (Loop loop : rg.getLoops()) {
+//			edgeIds.add(loop.getEdge());
+//		}
+//		editor.setNodes("loops", rg.getNodes(edgeIds), Color.black, 12, ShapeType.RECT);
+//		
+//		// show controls
+//		LoopHandler h = new LoopHandler(stopHour);
+//		XMLParser.readFile(baseFolder + baseName + ".control.xml", h);
+//		edgeIds = new ArrayList<String>();
+//		for (Loop loop : h.getLoops()) {
+//			edgeIds.add(loop.getEdge());
+//		}
+//		editor.setNodes("controls", rg.getNodes(edgeIds), Color.black, 12, ShapeType.OVAL);
+//		
+//		// show points of teleporting
+////		edgeIds = TextFileParser.readStringList(baseFolder + "uniquelines.txt");
+////		editor.setNodes("teleporting", rg.getNodes(edgeIds), Color.red, 5);
+////		logger.info("unique lines:" + edgeIds.size());
+////		File file = new File(baseFolder + outputFolder);
+////		if (!file.exists()) {
+////			File dir = new File(baseFolder + outputFolder);  
+////			dir.mkdir();
+////		}
+//		
+//		NetHandler netHandler = new NetHandler(true);
+//		XMLParser.readFile(baseFolder + baseName + ".net.xml", netHandler);
+//		ArrayList<Lane> edges = netHandler.getEdges();
+//		editor.setEdges(edges);
+//		
+//		editor.setDisplayAreas(true);
+//		editor.setDisplayPoints(new String[]{"loops", "controls"});
+//		editor.setDisplayEdges(true);
+//		editor.setDisplayZones(true);
+//		
+//		
+//		editor.generateScreenShot(baseFolder + outputFolder, baseFolder + outputFolder + "screenshot.pdf");
+//		editor.writeImage(baseFolder + outputFolder, baseFolder + outputFolder + "screenshot.png");
+//		
+//		try {
+//			System.in.read();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+	
+//	@Test
+//	public void testShowPoints() {
+//		
+//		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
+//		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
+//		
+//		RouteGeneration rg = new RouteGeneration();
+//		rg.readInput();
+//		
+//		EditorPanel editor = new EditorPanel(rg.getZones(), rg.getAreas());
+//		
+//		// show loops
+//		ArrayList<String> edgeIds = new ArrayList<String>();
+//		for (Loop loop : rg.getLoops()) {
+//			edgeIds.add(loop.getEdge());
+//		}
+//		editor.setNodes("loops", rg.getNodes(edgeIds), Color.blue, 10, ShapeType.RECT);
+//		
+//		// show controls
+//		LoopHandler h = new LoopHandler(stopHour);
+//		XMLParser.readFile(baseFolder + baseName + ".control.xml", h);
+//		edgeIds = new ArrayList<String>();
+//		for (Loop loop : h.getLoops()) {
+//			edgeIds.add(loop.getEdge());
+//		}
+//		editor.setNodes("controls", rg.getNodes(edgeIds), Color.red, 10, ShapeType.OVAL);
+//	
+//		editor.run();
+//		
+//		editor.generateScreenShot(baseFolder + outputFolder, baseFolder + outputFolder + "screenshot.pdf");
+//		
+//		try {
+//			System.in.read();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+//	
+//	public void testGetRoute() {
+//		
+//		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
+//		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
+//		
+//		RouteGeneration rg = new RouteGeneration();
+//		rg.setBaseFolder(baseFolder);
+//		rg.setBaseName(baseName);
+//		rg.readInput();
+//		
+//		String fromId = "-31670823#0";
+//		String toId = "149399817#1";
+//		Path path = rg.getPath(fromId, toId);
+//		Trip trip = new Trip(path);
+//		double weight = trip.computeWeight();
+//		System.out.println(trip.getRoute() + " " + weight);
+//		
+//	}
+//	
+	
+//	@Test
+//	public void testEvaluate() {
+//		//ArgumentsParser.parse(args);
+//	    String baseFolder = ArgumentsParser.getBaseFolder();
+//		baseFolder = "./test/evalTest/";
+//	    String baseName = ArgumentsParser.getBaseName();
+//	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
+//	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
+//	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
+//	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
+//	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
+//	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
+//	    int stopHour = ArgumentsParser.getStopHour();
+//		GawronEvaluation evaluation = new GawronEvaluation();
+//		evaluation.evaluate(baseFolder, baseName, stopHour, new double[] {defaultResidentialAreaProbability, defaultCommercialAreaProbability, defaultIndustrialAreaProbability}, insideFlowRatio, shiftingRatio, 3, 900);
+//	}
+//	
+//	@Test
+//	public void testEvaluateBig() {
+//		//ArgumentsParser.parse(args);
+//	    String baseFolder = ArgumentsParser.getBaseFolder();
+//		baseFolder = "./test/evalBig/";
+//	    String baseName = ArgumentsParser.getBaseName();
+//	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
+//	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
+//	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
+//	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
+//	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
+//	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
+//	    int stopHour = ArgumentsParser.getStopHour();
+//		GawronEvaluation evaluation = new GawronEvaluation();
+//		evaluation.evaluate(baseFolder, baseName, stopHour, new double[] {defaultResidentialAreaProbability, defaultCommercialAreaProbability, defaultIndustrialAreaProbability}, insideFlowRatio, shiftingRatio, 1, 3600);
+//	}
 	
 }

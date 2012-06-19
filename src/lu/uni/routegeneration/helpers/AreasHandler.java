@@ -63,14 +63,14 @@ public class AreasHandler extends DefaultHandler {
 			residentialTypeProbability += Double.parseDouble(attributes.getValue("residential_proba"));
 			commercialTypeProbability += Double.parseDouble(attributes.getValue("commercial_proba"));
 			industrialTypeProbability += Double.parseDouble(attributes.getValue("industrial_proba"));
-			sum += residentialTypeProbability;
-			sum += commercialTypeProbability;
-			sum += industrialTypeProbability;
-			if (sum != 0) {
-				residentialTypeProbability /= sum;
-				commercialTypeProbability /= sum;
-				industrialTypeProbability /= sum;
-			}
+//			sum += residentialTypeProbability;
+//			sum += commercialTypeProbability;
+//			sum += industrialTypeProbability;
+//			if (sum != 0) {
+//				residentialTypeProbability /= sum;
+//				commercialTypeProbability /= sum;
+//				industrialTypeProbability /= sum;
+//			}
 		}
 		if (qName.equals("area")) {
 			String id = attributes.getValue("id");
@@ -100,19 +100,19 @@ public class AreasHandler extends DefaultHandler {
 
 	@Override
 	public void endDocument() throws SAXException {
-		for (Area area : areas) {
-			double normalisedProbability = 0;
-			if (area.getZoneType().equals(ZoneType.RESIDENTIAL)) {
-				normalisedProbability = area.getProbability() / residentialAreasSumProbability;
-			}  
-			else if (area.getZoneType().equals(ZoneType.COMMERCIAL)) {
-				normalisedProbability = area.getProbability() / commercialAreasSumProbability;
-			}
-			else if (area.getZoneType().equals(ZoneType.INDUSTRIAL)) {
-				normalisedProbability = area.getProbability() / industrialAreasSumProbability;
-			}
-			area.setProbability(normalisedProbability);
-		}
+//		for (Area area : areas) {
+//			double normalisedProbability = 0;
+//			if (area.getZoneType().equals(ZoneType.RESIDENTIAL)) {
+//				normalisedProbability = area.getProbability() / residentialAreasSumProbability;
+//			}  
+//			else if (area.getZoneType().equals(ZoneType.COMMERCIAL)) {
+//				normalisedProbability = area.getProbability() / commercialAreasSumProbability;
+//			}
+//			else if (area.getZoneType().equals(ZoneType.INDUSTRIAL)) {
+//				normalisedProbability = area.getProbability() / industrialAreasSumProbability;
+//			}
+//			area.setProbability(normalisedProbability);
+//		}
 	}
 
 };

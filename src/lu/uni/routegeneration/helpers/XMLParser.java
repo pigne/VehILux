@@ -67,7 +67,7 @@ public class XMLParser {
 		}
 	}
 	
-	public static void writeRoute(String id, String type, int depart, String edges, TransformerHandler tfh, AttributesImpl ai) {
+	public static void writeRoute(String id, String type, double depart, String edges, TransformerHandler tfh, AttributesImpl ai) {
 		ai.clear();
 		ai.addAttribute("", "", "id", "CDATA", id);
 		ai.addAttribute("", "", "type", "CDATA", type);
@@ -100,7 +100,7 @@ public class XMLParser {
 			tfh.startElement("", "", "flows", ai);
 			XMLParser.writeVTypes(vtypes, tfh, ai);
 			for (Trip trip : trips) {
-				XMLParser.writeFlow(trip.getId(), trip.getSourceId(), trip.getDestinationId(), trip.getDepartTime(), stopTime, trip.getVehicleId(), 1, tfh, ai); 
+				XMLParser.writeFlow(trip.getId(), trip.getSourceId(), trip.getDestinationId(), (int)trip.getDepartTime(), stopTime, trip.getVehicleId(), 1, tfh, ai); 
 			}
 			tfh.endElement("", "", "flows");
 			tfh.endDocument();

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
 
+import javax.xml.crypto.dsig.keyinfo.KeyValue;
+
 import lu.uni.routegeneration.generation.Loop;
 
 import org.xml.sax.Attributes;
@@ -12,7 +14,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class DumpHandler extends DefaultHandler {
 	private HashMap<String,Loop> loops =  new HashMap<String, Loop>();
-	public ArrayList<String> edgeIds;
+	private HashMap<String, String> detectorIds;
 	private int stopHour;
 	private int currentHour;
 	
@@ -23,11 +25,12 @@ public class DumpHandler extends DefaultHandler {
 		this.loops = loops;
 	}
 	
-	public DumpHandler(ArrayList<String> edgeIds, int stopHour) {
-		this.edgeIds = edgeIds;
-		for (String edgeId : edgeIds) {
-			Loop loop = new Loop(edgeId, edgeId);
-			loops.put(edgeId, loop);
+	public DumpHandler(HashMap<String, String> detectorIds, int stopHour) {
+		this.detectorIds = detectorIds;
+		for (String edge: detectorIds.keySet()) {
+			String id = detectorIds.get(edge);
+			Loop loop = new Loop(id, edge);
+			loops.put(id, loop);
 		}
 		this.stopHour = stopHour;
 	}
@@ -38,13 +41,13 @@ public class DumpHandler extends DefaultHandler {
 		if (qName.equals("interval")) {
 			int begin = (int)Double.parseDouble(attributes.getValue("begin"));
 			int end = (int)Double.parseDouble(attributes.getValue("end"));
-			currentHour = end / 3600;
+			currentHour = begin / 3600;
 			
 		}
 		if (qName.equals("edge")) {
 			String id = attributes.getValue("id");
-			if (edgeIds.contains(id)) {
-				Loop loop = loops.get(id);
+			if (detectorIds.containsKey(id)) {
+				Loop loop = loops.get(detectorIds.get(id));
 				int sec = (int)Double.parseDouble(attributes.getValue("sampledSeconds"));
 				int entered = (int)Double.parseDouble(attributes.getValue("entered"));
 				int left = (int)Double.parseDouble(attributes.getValue("left"));

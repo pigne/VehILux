@@ -21,7 +21,6 @@ public class Loop  implements Comparable<Loop>  {
 	private String edge;
 	private TreeSet<Flow> flows;
 	private String dijkstra = null;
-	private double totalFlow;
 	private int sumEntered;
 	private int sumLeft;
 	private double sumSec;
@@ -74,7 +73,11 @@ public class Loop  implements Comparable<Loop>  {
 	}
 	
 	public double getTotalFlow() {
-		return totalFlow;
+		double total = 0;
+		for (Flow flow : flows) {
+			total += flow.getVehicles();
+		}
+		return total;
 	}
 
 	public String getDijkstra() {
@@ -106,7 +109,6 @@ public class Loop  implements Comparable<Loop>  {
 	
 	public void addFlow(Flow flow) {
 		flows.add(flow);
-		totalFlow += flow.getVehicles();
 	}
 	
 	public void removeFlow(Flow flow) {

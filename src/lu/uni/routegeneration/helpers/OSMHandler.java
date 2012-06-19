@@ -98,6 +98,7 @@ public class OSMHandler extends DefaultHandler {
 				zone.surface = 0.0;
 				for (int i = 0; i < zone.points.size() - 1; i++) {
 					zone.surface += zone.points.get(i).x * zone.points.get(i + 1).y - zone.points.get(i + 1).x * zone.points.get(i).y; // x0*y1 - x1*y0
+					
 				}
 				zone.surface = Math.abs(zone.surface / 2.0);
 				if (zone.type == ZoneType.RESIDENTIAL) {

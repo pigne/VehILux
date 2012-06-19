@@ -181,6 +181,24 @@ public class RealEvaluation {
 		out.close();
 	}
 	
+	public HashMap<String, String> getDetectorIds() {
+		HashMap<String, String> detectorIds = new HashMap<String, String>();
+		for(Detector detector : controls.values()){
+			detectorIds.put(detector.edge, detector.id);
+		}
+		return detectorIds;
+	}
+	
+	public HashMap<String, Detector> initializeSolution() {
+		HashMap<String, Detector> currentSolution = new HashMap<String, Detector>();
+		for(Detector detector : controls.values()){
+			Detector det = new Detector(stopHour);
+			det.id = detector.id;
+			currentSolution.put(det.id, det);
+		}
+		return currentSolution;
+	}
+	
 	/**
 	 * @param args
 	 */
