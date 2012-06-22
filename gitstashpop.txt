@@ -1,0 +1,31 @@
+Auto-merging src/lu/uni/routegeneration/generation/RouteGeneration.java
+# On branch v2.0
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#	modified:   src/lu/uni/routegeneration/generation/Flow.java
+#	modified:   src/lu/uni/routegeneration/generation/RouteGeneration.java
+#	modified:   src/lu/uni/routegeneration/generation/SumoNetworkToDGS.java
+#	modified:   src/lu/uni/routegeneration/ui/AreasEditor.java
+#	modified:   src/lu/uni/routegeneration/ui/EditorPanel.java
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	gitpull.txt
+#	gitstashlist.txt
+#	gitstashpop.txt
+#	gitstatus.txt
+#	test/Luxembourg/Luxembourg.add.xml~
+#	test/Luxembourg/Luxembourg.approx_eval.log
+#	test/Luxembourg/Luxembourg.e1.xml~
+#	test/Luxembourg/Luxembourg.real_eval.log
+#	test/Luxembourg/Luxembourg.rou.xml~
+#	test/Luxembourg/Luxembourg.sumo_eval.log
+#	test/Luxembourg/Luxembourg.sumocfg~
+#	test/Luxembourg/Luxembourg5x1.osm.xml~
+#	test/Luxembourg/Luxembourg_short.sumo.cfg~
+#	test/Luxembourg/Luxembourg_short.sumocfg~
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (d550ce35e1b97be47732fa0bb1f5cc35e6e0776d)

@@ -1,0 +1,28 @@
+# On branch v2.0
+# Your branch is behind 'origin/v2.0' by 4 commits, and can be fast-forwarded.
+#
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#	modified:   src/lu/uni/routegeneration/generation/Flow.java
+#	modified:   src/lu/uni/routegeneration/generation/RouteGeneration.java
+#	modified:   src/lu/uni/routegeneration/generation/SumoNetworkToDGS.java
+#	modified:   src/lu/uni/routegeneration/ui/AreasEditor.java
+#	modified:   src/lu/uni/routegeneration/ui/EditorPanel.java
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	gitstatus.txt
+#	test/Luxembourg/Luxembourg.add.xml~
+#	test/Luxembourg/Luxembourg.approx_eval.log
+#	test/Luxembourg/Luxembourg.e1.xml~
+#	test/Luxembourg/Luxembourg.real_eval.log
+#	test/Luxembourg/Luxembourg.rou.xml~
+#	test/Luxembourg/Luxembourg.sumo_eval.log
+#	test/Luxembourg/Luxembourg.sumocfg~
+#	test/Luxembourg/Luxembourg5x1.osm.xml~
+#	test/Luxembourg/Luxembourg_short.sumo.cfg~
+#	test/Luxembourg/Luxembourg_short.sumocfg~
+no changes added to commit (use "git add" and/or "git commit -a")

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE vTypes SYSTEM "vehicle-types.dtd">
-<vTypes>
-<vType id="porsche" accel="2" decel="7" sigma="0.6" length="4" maxSpeed="50" minGap="2" color="1,0,0" />
-<vType id="206" accel="1.7" decel="6" sigma="0.5" length="4" maxSpeed="40" minGap="2" color="0.4,1,0.4" />
-<vType id="306" accel="1.7" decel="6" sigma="0.5" length="4.5" maxSpeed="40" minGap="2" color="0.4,0,1" />
-<vType id="twingo" accel="1.4" decel="6" sigma="0.8" length="3.5" maxSpeed="35" minGap="2" color="0.4,0.8,1" />
-<vType id="cx" accel="1.1" decel="5" sigma="0.5" length="5" maxSpeed="35" minGap="2" color="0.9,0.9,0.9" />
-</vTypes>
