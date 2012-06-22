@@ -89,11 +89,6 @@ public class Flow  implements Comparable<Flow> {
 	}
 
 	boolean next() {
-		boolean hasNext = false;
-		if (time < (hour * 3600) && time < stopTime) {
-			hasNext = true;
-		}
-		
 		if (carTime + carStepTime < truckTime + truckStepTime) {
 			nextVehicle = CAR;
 			carTime += carStepTime;
@@ -104,7 +99,10 @@ public class Flow  implements Comparable<Flow> {
 			truckTime += truckStepTime;
 			time = truckTime;
 		}
-		
+		boolean hasNext = false;
+		if (time < (hour * 3600) && time < stopTime) {
+			hasNext = true;
+		}
 		return hasNext;
 	}
 

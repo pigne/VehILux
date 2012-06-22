@@ -44,8 +44,8 @@ public class RouteGenerationProblem extends Problem {
 		
 		//Set the maximum and minimum values for each of the solution variables 
 		//Structure  Tr/Ti/Tc/Zc1/Zc2/Zc3/Zcd/Zi1/Zid/Zr1/Zrd/IR/SR
-		Double minValues[] = {1.0, 	 1.0, 	1.0,   1.0,	  1.0,	 1.0, 	1.0,   1.0,   1.0,   1.0,   1.0,   30.0, 20.0};
-		Double maxValues[] = {100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 70.0, 80.0};
+		Double minValues[] = {1.0, 	 1.0, 	1.0,   1.0,	  1.0,	 1.0, 	1.0,   1.0,   1.0,   1.0,   1.0,   1.0, 1.0};
+		Double maxValues[] = {100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0};
 
 		minAllowedValues = new Vector<Double>(Arrays.asList(minValues));
         maxAllowedValues = new Vector<Double>(Arrays.asList(maxValues));

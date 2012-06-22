@@ -132,54 +132,34 @@ public class RouteGenerationTest extends TestCase {
 		XMLParser.writeFlows(rg.getBaseFolder(), rg.getBaseName(), outputFolder, rg.getTrips(), rg.getVTypes(), rg.getStopTime());
 		XMLParser.writeRoutes(rg.getBaseFolder(), rg.getBaseName(), outputFolder, rg.getTrips(), rg.getVTypes());
 	}
-//	
-//	@Test
-//	public void testOptimization() {
-//		baseFolder = "./test/Kirchberg/";
-//		baseName = "Kirchberg";
-//		
-//		RouteGeneration rg = new RouteGeneration();
-//		rg.setBaseFolder(baseFolder);
-//		rg.setBaseName(baseName);
-//		rg.setStopHour(11);
-//		rg.setReferenceNodeId("56640729#4");
-//		rg.readInput();
-//		rg.computeDijkstra();
-//		
-//		RealEvaluation evaluator = new RealEvaluation();
-//		evaluator.setBaseFolder(baseFolder);
-//		evaluator.setBaseName(baseName);
-//		evaluator.setStopHour(11);
-//		evaluator.readInput();
-//		RouteGenerationProblem rgProblem = new RouteGenerationProblem(rg, evaluator);
-//		
-//	}
-//	
+	
+	@Test
+	public void testOptimization() {
+		baseFolder = "./test/Kirchberg/";
+		baseName = "Kirchberg";
+		
+		RouteGeneration rg = new RouteGeneration();
+		rg.setBaseFolder(baseFolder);
+		rg.setBaseName(baseName);
+		rg.setStopHour(11);
+		rg.setReferenceNodeId("56640729#4");
+		rg.readInput();
+		rg.computeDijkstra();
+		
+		RealEvaluation evaluator = new RealEvaluation();
+		evaluator.setBaseFolder(baseFolder);
+		evaluator.setBaseName(baseName);
+		evaluator.setStopHour(11);
+		evaluator.readInput();
+		RouteGenerationProblem rgProblem = new RouteGenerationProblem(rg, evaluator);
+		
+	}
+	
 //	@Test
 //	public void testKirchbergGeneration() {
 //		baseFolder = "./test/Kirchberg/";
 //		baseName = "Kirchberg";
-//		
-//		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
-//		String outputFolder = dateFormat.format(Calendar.getInstance().getTime()) + "/";
-//		File file = new File(baseFolder + outputFolder);
-//		if (!file.exists()) {
-//			File dir = new File(baseFolder + outputFolder);  
-//			dir.mkdir();
-//		}
-//		
-//		RouteGeneration rg = new RouteGeneration();
-//		rg.setBaseFolder(baseFolder);
-//		rg.setBaseName(baseName);
 //		rg.setReferenceNodeId("56640729#4");
-//		rg.readInput();
-//		rg.computeDijkstra();
-//		
-//		rg.generateTrips();
-//		
-//		XMLParser.writeFlows(baseFolder, baseName, outputFolder, rg.getTrips(), rg.getVTypes(), rg.getStopTime());
-//		XMLParser.writeRoutes(baseFolder, baseName, outputFolder, rg.getTrips(), rg.getVTypes());
-//	}
 	
 	@Test 
 	public void testReadTrips() {
@@ -392,22 +372,22 @@ public class RouteGenerationTest extends TestCase {
 //	}
 //	
 	
-//	@Test
-//	public void testEvaluate() {
-//		//ArgumentsParser.parse(args);
-//	    String baseFolder = ArgumentsParser.getBaseFolder();
-//		baseFolder = "./test/evalTest/";
-//	    String baseName = ArgumentsParser.getBaseName();
-//	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
-//	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
-//	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
-//	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
-//	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
-//	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
-//	    int stopHour = ArgumentsParser.getStopHour();
-//		GawronEvaluation evaluation = new GawronEvaluation();
-//		evaluation.evaluate(baseFolder, baseName, stopHour, new double[] {defaultResidentialAreaProbability, defaultCommercialAreaProbability, defaultIndustrialAreaProbability}, insideFlowRatio, shiftingRatio, 3, 900);
-//	}
+	@Test
+	public void testEvaluate() {
+		//ArgumentsParser.parse(args);
+	    String baseFolder = ArgumentsParser.getBaseFolder();
+		baseFolder = "./test/evalTest/";
+	    String baseName = ArgumentsParser.getBaseName();
+	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
+	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
+	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
+	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
+	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
+	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
+	    int stopHour = ArgumentsParser.getStopHour();
+		GawronEvaluation evaluation = new GawronEvaluation();
+		evaluation.evaluate(baseFolder, baseName, stopHour, new double[] {defaultResidentialAreaProbability, defaultCommercialAreaProbability, defaultIndustrialAreaProbability}, insideFlowRatio, shiftingRatio, 1, 900);
+	}
 //	
 //	@Test
 //	public void testEvaluateBig() {

@@ -33,9 +33,9 @@ public class AreasHandler extends DefaultHandler {
 		return industrialTypeProbability;
 	}
 
-	private double residentialAreasSumProbability = 1.0;
-	private double commercialAreasSumProbability = 1.0;
-	private double industrialAreasSumProbability = 1.0;
+	private double residentialAreasSumProbability = 0.0;
+	private double commercialAreasSumProbability = 0.0;
+	private double industrialAreasSumProbability = 0.0;
 
 	private ArrayList<Area> areas = new ArrayList<Area>();
 	

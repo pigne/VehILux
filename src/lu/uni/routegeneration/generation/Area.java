@@ -68,6 +68,10 @@ public class Area {
 		zones.add(zone);
 	}
 	
+	public void removeZone(String zoneId) {
+		zones.remove(zoneId);
+	}
+	
 	private double surface;
 	
 	public double getSurface() {
