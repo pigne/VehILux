@@ -106,6 +106,7 @@ public class Flow  implements Comparable<Flow> {
 		return hasNext;
 	}
 
+
 	public void resetTime() {
 		time = carTime = truckTime = (hour - 1) * 3600;
 	}

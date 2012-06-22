@@ -16,7 +16,6 @@ import jcell.Population;
 import jcell.Problem;
 import jcell.SimpleStats;
 import jcell.Statistic;
-//import jmetal.util.JMException;
 
 /**
  * @author Sune
@@ -31,6 +30,7 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 
 	public static final int PARAM_ALG			= 2000;
 	public static final int PARAM_BEST_IDV		= 2001;
+	public static final int PARAM_BEST_ISL_IDV	= 2002;
 	
 	// island threads
 	private Thread[] t;
@@ -46,7 +46,7 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 	
 	private int[] islandMask;
 	private Individual bestIndividual;
-		
+			
 	private Individual[] bestIslandIndividual;
 	private int bestIslandIndex;
 	
@@ -108,9 +108,14 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 				this.algorithms[i] = (EvolutionaryAlg)c.getConstructor(Random.class).newInstance(r); //instance.newInstance();
 				this.algorithms[i].setParam(EvolutionaryAlg.PARAM_LISTENER, this);				
 			}
+<<<<<<< HEAD
 		} catch (InstantiationException e){
+=======
+		} catch (InstantiationException e) {
+>>>>>>> refs/remotes/origin/master
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+<<<<<<< HEAD
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -118,6 +123,16 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
+=======
+		}catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IllegalArgumentException e) {
+>>>>>>> refs/remotes/origin/master
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvocationTargetException e) {
@@ -179,6 +194,21 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 		else if (keyValue == CoevEA.PARAM_BEST_IDV)
 		{
 			return this.bestIndividual;
+		}
+		else if (keyValue == CoevEA.PARAM_BEST_ISL_IDV)
+		{
+			int bestIndex = 0;
+			double bestFitness = (Double)this.bestIslandIndividual[0].getFitness();
+			for(int i = 1; i < this.islandCount; i++)
+			{			
+				if ((Double)this.bestIslandIndividual[i].getFitness() < bestFitness)
+				{
+					bestIndex = i;
+					bestFitness = (Double)this.bestIslandIndividual[i].getFitness();
+				}
+			}
+			System.out.println("Best:" + bestIndex);
+			return this.bestIslandIndividual[bestIndex];
 		}
 		else
 		{
@@ -263,8 +293,8 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 	                {                    
 	                	// run experiment for island
 	            		algorithms[island].experiment();
+
 	            		// make sure the last best result is reported to others if algorithm quits prematurely
-	            		// listener.generation(algorithms[island]);
 	            		synchronized(lockObj)
 	    				{
 	    					lockObj.notifyAll();
@@ -290,10 +320,6 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 		// start all island threads
 		for(int i = 0; i < this.islandCount; i++)
 		{
-			if (i > 0 && sequential)
-			{
-				sequenceAfterOthers(i);
-			}
 			t[i].start();			
 		}
 		
@@ -340,12 +366,36 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 		else
 		{
 			// only update best individual at loci corresponding to this islands mask
-			//for(int locus = 0; locus < islandMask.length; locus++)
 			for(int locus = 0; locus < bestIndividual.getLength(); locus++)
 			{
 				if (islandMask == null || islandMask[locus])
 				{
 					bestIndividual.setAllele(locus, bestIslandIndividual.getAllele(locus));
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Updates the population by setting the parts of the solution which are outside the mask
+	 * @param population population to update
+	 * @param islandMask mask corresponding to the island
+	 */
+	public void updatePopulation(Population population, Boolean[] islandMask)
+	{
+		synchronized(this)
+		{	
+			// overwrite all individuals in this islands population with the best global individual, only at loci outside of the islands mask
+			for (int i=0; i<population.getPopSize(); i++)
+			{
+				Individual individual = population.getIndividual(i);
+	
+				for(int locus = 0; locus < islandMask.length; locus++)
+				{
+					if (!islandMask[locus])
+					{
+						individual.setAllele(locus, bestIndividual.getAllele(locus));
+					}
 				}
 			}
 		}
@@ -463,10 +513,22 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 			
 			System.out.println(out);
 		}
-				
 		
 		if (sequential)
 		{
+			if (operationCount[island] == 0)
+			{
+				waitForOthers(island);
+				updatePopulation(population, islandMask);
+				System.out.println("upd " + island);
+			}
+			
+			if (island == islandCount - 1)
+			{
+				// this is to signal to the listener that the parent co-evolutionary algorithm has completed a generation (when all islands have finished their generation)
+				listener.generation(this);	
+			}
+			
 			sequenceAfterOthers(island);
             			
 			try {
@@ -478,38 +540,23 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
-		
-		synchronized(this)
-		{	
-			// overwrite all individuals in this islands population with the best global individual, only at loci outside of the islands mask
-			for (int i=0; i<population.getPopSize(); i++)
-			{
-				Individual individual = population.getIndividual(i);
-
-				for(int locus = 0; locus < islandMask.length; locus++)
-				{
-					if (!islandMask[locus])
-					{
-						individual.setAllele(locus, bestIndividual.getAllele(locus));
-					}
-				}
-			}
+			
+			updatePopulation(population, islandMask);
 		}
 				
 		if (synchronised)
 		{
+			updatePopulation(population, islandMask);
 			waitForOthers(island);
+			
+			if (island == 0)
+			{
+				// this is to signal to the listener that the parent co-evolutionary algorithm has completed a generation (when all islands have finished their generation)
+				listener.generation(this);	
+			}
 		}		
 		
 		listener.generation(EA);
-		
-		if((synchronised || sequential) && island == islandCount - 1)
-		{
-			// this is to signal to the listener that the parent co-evolutionary algorithm has completed a generation (when all islands have finished their generation)  
-			listener.generation(this);
-		}
-		
 	}
 	
 	/** determines the island index of the algorithm 

@@ -97,6 +97,9 @@ public class RouteGeneLaunch  implements GenerationListener
 			pop = new Population(x * y);
 		}
     	
+    	double bestFitness = (new Double(0)).MAX_VALUE;
+    	double fitness;
+    	
     	//Individual ind = new VehILuxIndividual();
     	//VehILuxRealIndividual ind = new VehILuxRealIndividual();
     	// need to initialize each individual to normalise
@@ -115,6 +118,14 @@ public class RouteGeneLaunch  implements GenerationListener
 			if (RouteGenerationProblem.discrete)
 			{
 				RouteGenerationProblem.DiscretiseIndividual(ind);
+			}
+						
+			fitness = (Double)prob.eval(ind);
+			if (fitness < bestFitness)
+			{
+				bestFitness = fitness;
+				
+				System.out.println("New best individual: " + ind.toString() + ":" + fitness);
 			}
 			
 			pop.setIndividual(i, ind);
@@ -164,7 +175,7 @@ public class RouteGeneLaunch  implements GenerationListener
     
     public static void main (String args[]) throws Exception
     {
-    	String algorithm = args.length==0? "cGA" : args[0];
+    	String algorithm = args[0];
     	
     	int numberofruns = 1;
     	Vector<Vector<Double>> results = new Vector<Vector<Double>>();
@@ -203,11 +214,10 @@ public class RouteGeneLaunch  implements GenerationListener
             	{
 	            	if(algorithm.equalsIgnoreCase("cGA")){
 	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new CellularGA(r));
-	            	} 
-	            	else if (algorithm.equalsIgnoreCase("genGA")){           
-	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new GenGA(r));		            	
-		            } 
-	            	else if(algorithm.equalsIgnoreCase("ssGA")){  
+	            	} else if (algorithm.equalsIgnoreCase("genGA")){           
+	            		//((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new GenGA(r));		            	
+	            		((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new CoevGenGA(r));
+		            } else if(algorithm.equalsIgnoreCase("ssGA")){  
 		            	((CoevEA)ea).setParam(island, CoevEA.PARAM_ALG, new SSGA(r));
 		            }
             	}
@@ -294,7 +304,9 @@ public class RouteGeneLaunch  implements GenerationListener
         			}
         			alleleMutationProb = 1.0 / prob.numberOfVariables(); // allele mutation probability;
         			
-	            	Population pop = CreatePopulation(algorithm, prob, r, x / (islandcount / 2), y / (islandcount / 2));
+	            	// Population pop = CreatePopulation(algorithm, prob, r, x / (islandcount / 2), y / (islandcount / 2)); // divides population between the islands
+        			Population pop = CreatePopulation(algorithm, prob, r, x, y);
+        			
 	            	// common parameter objects
 	            	((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_POPULATION, pop);
 	            	((CoevEA)ea).setParam(island, EvolutionaryAlg.PARAM_STATISTIC, new ComplexStats());
@@ -430,7 +442,7 @@ public class RouteGeneLaunch  implements GenerationListener
     	
     	//Saving to file
 		//String filename = "RouteGenProblem_" + x + "x" +y + "Neigh" + CellularGA.PARAM_NEIGHBOURHOOD + "Mp" + ea.getParam(CellularGA.PARAM_MUTATION_PROB) + "Cp" + ea.getParam(CellularGA.PARAM_CROSSOVER_PROB) +"_" + evaluationsLimit + ".dat" ;
-    	String baseName = "RouteGenProblem_" + (x * y) + "_" + (coevolutionary?("coev_" + (synchronised?"sync_":"async_") + (coevSequential?"seq_":"par_")):"noncoev_") + bestIndiv.getFitness() + "_" + generationLimit + "(" + evaluationsLimit + ")";
+    	String baseName = "RouteGenProblem_CC" + algorithm + "_" + (x * y) + "_" + (coevolutionary?("coev_" + (synchronised?"sync_":"async_") + (coevSequential?"seq_":"par_")):"noncoev_") + bestIndiv.getFitness() + "_" + generationLimit + "(" + evaluationsLimit + ")";
     	String filename = baseName + ".dat"; 
     	
 		File save_file = new File(filename);
@@ -472,6 +484,9 @@ public class RouteGeneLaunch  implements GenerationListener
     	out.write("# \tPARAM_SYNCHR_UPDATE: "+ea.getParam(CellularGA.PARAM_SYNCHR_UPDATE)+"\n");
     	out.write("# \tPARAM_CELL_UPDATE: "+ea.getParam(CellularGA.PARAM_CELL_UPDATE)+"\n");
     	//out.write("# \tCrossover: WHX C13 Mutation:Uniform Sel1:TS Sel2:TS\n");
+    	
+    	out.write("# Skipped evaluations:" + RouteGenerationProblem.skipCount + "\n");
+    	System.out.println("# Skipped evaluations:" + RouteGenerationProblem.skipCount);
     	
     	double mean = rgl.getMean(averages);
     	out.write("#\n#\n# Average: "+ mean +"\n");
@@ -556,12 +571,13 @@ public class RouteGeneLaunch  implements GenerationListener
 	    		if (alg instanceof CoevEA)
 	    		{
 	    			//Problem p = (Problem)alg.getParam(CoevEA.PARAM_PROBLEM);
-	    			Individual individual = (Individual)alg.getParam(CoevEA.PARAM_BEST_IDV);
-	    				  
-	    			synchronized(evalProblem)
-	    			{
-	    				individual.setFitness(evalProblem.eval(individual));
-	    			}
+	    			//Individual individual = (Individual)alg.getParam(CoevEA.PARAM_BEST_IDV);	    			
+	    			Individual individual = (Individual)alg.getParam(CoevEA.PARAM_BEST_ISL_IDV);
+	    				    				  
+//	    			synchronized(evalProblem)
+//	    			{
+//	    				individual.setFitness(evalProblem.eval(individual));
+//	    			}
 	    			System.out.println("> " + individual.toString());
 	    			
 	    			BestIndPerGen.add(((Double)individual.getFitness()).doubleValue());
