@@ -15,6 +15,7 @@ import java.util.Vector;
 
 import lu.uni.routegeneration.evaluation.RealEvaluation;
 import lu.uni.routegeneration.generation.RouteGeneration;
+import lu.uni.routegeneration.helpers.ArgumentsParser;
 
 
 import operators.mutation.*;
@@ -125,21 +126,34 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static Problem CreateProblem()
     {
-    	String baseFolder = "./test/Kirchberg/";
-		String baseName = "Kirchberg";
+    	String baseFolder = ArgumentsParser.getBaseFolder();
+	    String baseName = ArgumentsParser.getBaseName();
+	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
+	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
+	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
+	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
+	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
+	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
+	    int stopHour = ArgumentsParser.getStopHour();
 		
-    	RouteGeneration rg = new RouteGeneration();
+	    RouteGeneration rg = new RouteGeneration();
 		rg.setBaseFolder(baseFolder);
 		rg.setBaseName(baseName);
-		rg.setStopHour(11);
-		rg.setReferenceNodeId("56640729#4");
+		rg.setStopHour(stopHour);
+		rg.setReferenceNodeId(referenceNodeId);
 		rg.readInput();
+		rg.setInsideFlowRatio(insideFlowRatio);
+		rg.setDefaultResidentialAreaProbability(defaultResidentialAreaProbability);
+		rg.setDefaultCommercialAreaProbability(defaultCommercialAreaProbability);
+		rg.setDefaultIndustrialAreaProbability(defaultIndustrialAreaProbability);
+		
 		rg.computeDijkstra();
 		
 		RealEvaluation evaluator = new RealEvaluation();
 		evaluator.setBaseFolder(baseFolder);
 		evaluator.setBaseName(baseName);
 		evaluator.setStopHour(11);
+		
 		evaluator.readInput();
 
     	Problem problem = new RouteGenerationProblem(rg, evaluator);    
