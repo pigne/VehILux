@@ -15,6 +15,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
+import jcell.EvolutionaryAlg;
+import jcell.Individual;
+import jcell.Problem;
+
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
@@ -25,6 +29,7 @@ import lu.uni.routegeneration.helpers.NetHandler;
 import lu.uni.routegeneration.helpers.RouteHandler;
 import lu.uni.routegeneration.helpers.TextFileParser;
 import lu.uni.routegeneration.helpers.XMLParser;
+import lu.uni.routegeneration.jCell.CoevEA;
 import lu.uni.routegeneration.jCell.RouteGenerationProblem;
 import lu.uni.routegeneration.ui.EditorPanel;
 import lu.uni.routegeneration.ui.Lane;
@@ -135,24 +140,58 @@ public class RouteGenerationTest extends TestCase {
 	
 	@Test
 	public void testOptimization() {
+		String baseFolder = ArgumentsParser.getBaseFolder();
+	    
+		String baseName = ArgumentsParser.getBaseName();
+	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
+	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
+	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
+	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
+	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
+	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
+	    int stopHour = 11;
+		
 		baseFolder = "./test/Kirchberg/";
 		baseName = "Kirchberg";
-		
-		RouteGeneration rg = new RouteGeneration();
+		referenceNodeId = "56640729#4";
+	    
+	    RouteGeneration rg = new RouteGeneration();
 		rg.setBaseFolder(baseFolder);
 		rg.setBaseName(baseName);
-		rg.setStopHour(11);
-		rg.setReferenceNodeId("56640729#4");
+		rg.setStopHour(stopHour);
+		rg.setReferenceNodeId(referenceNodeId);
 		rg.readInput();
+		rg.setInsideFlowRatio(insideFlowRatio);
+		rg.setDefaultResidentialAreaProbability(defaultResidentialAreaProbability);
+		rg.setDefaultCommercialAreaProbability(defaultCommercialAreaProbability);
+		rg.setDefaultIndustrialAreaProbability(defaultIndustrialAreaProbability);
+		
 		rg.computeDijkstra();
 		
 		RealEvaluation evaluator = new RealEvaluation();
 		evaluator.setBaseFolder(baseFolder);
 		evaluator.setBaseName(baseName);
-		evaluator.setStopHour(11);
-		evaluator.readInput();
-		RouteGenerationProblem rgProblem = new RouteGenerationProblem(rg, evaluator);
+		evaluator.setStopHour(stopHour);
 		
+		evaluator.readInput();
+
+		RouteGenerationProblem problem = new RouteGenerationProblem(rg, evaluator);   
+    	double[] ind = new double[] { 
+    			9.019859885898525,
+    			16.406314982888496,
+    			74.57382513121298,
+    			29.588267662323528,
+    			17.95847782067055,
+    			51.273326645246534,
+    			1.1799278717593802,
+    			4.970798361740271,
+    			95.02920163825972,
+    			28.684498573393284,
+    			71.31550142660672,
+    			69.5180108613385, // inner traffic
+    			39.292397212308};
+    	double fitness = problem.evalTest(ind);
+    	logger.info("fitness: " + fitness);
 	}
 	
 //	@Test
@@ -386,7 +425,7 @@ public class RouteGenerationTest extends TestCase {
 	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
 	    int stopHour = ArgumentsParser.getStopHour();
 		GawronEvaluation evaluation = new GawronEvaluation();
-		evaluation.evaluate(baseFolder, baseName, stopHour, new double[] {defaultResidentialAreaProbability, defaultCommercialAreaProbability, defaultIndustrialAreaProbability}, insideFlowRatio, shiftingRatio, 1, 900);
+		evaluation.evaluate(baseFolder, baseName, stopHour, new double[] {defaultResidentialAreaProbability, defaultCommercialAreaProbability, defaultIndustrialAreaProbability}, insideFlowRatio, shiftingRatio, 1, 3600);
 	}
 //	
 //	@Test

@@ -108,23 +108,11 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 				this.algorithms[i] = (EvolutionaryAlg)c.getConstructor(Random.class).newInstance(r); //instance.newInstance();
 				this.algorithms[i].setParam(EvolutionaryAlg.PARAM_LISTENER, this);				
 			}
-<<<<<<< HEAD
-		} catch (InstantiationException e){
-=======
+
 		} catch (InstantiationException e) {
->>>>>>> refs/remotes/origin/master
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-<<<<<<< HEAD
-		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-=======
-		}catch (IllegalAccessException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}catch (ClassNotFoundException e) {
@@ -132,7 +120,6 @@ public class CoevEA/*<T extends EvolutionaryAlg>*/ extends EvolutionaryAlg imple
 			e.printStackTrace();
 		}
 		catch (IllegalArgumentException e) {
->>>>>>> refs/remotes/origin/master
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvocationTargetException e) {

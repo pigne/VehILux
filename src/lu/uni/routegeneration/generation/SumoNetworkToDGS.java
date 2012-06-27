@@ -69,6 +69,11 @@ public class SumoNetworkToDGS extends DefaultHandler {
 		tls = new TreeSet<String>();
 	}
 
+	private double totalLength = 0;
+	public double getTotalLength() {
+		return totalLength;
+	}
+	
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 
@@ -88,6 +93,7 @@ public class SumoNetworkToDGS extends DefaultHandler {
 			if (currentNode != null) {
 				String maxspeed = attributes.getValue(attributes.getIndex("speed"));
 				String length = attributes.getValue(attributes.getIndex("length"));
+				totalLength += Double.parseDouble(length);
 				String shape = attributes.getValue(attributes.getIndex("shape"));
 				String firstPoint = shape.split(" ")[0];
 				currentNode.addAttribute("x", Double.parseDouble(firstPoint.split(",")[0]));

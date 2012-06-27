@@ -72,6 +72,9 @@ public class XMLParser {
 		ai.addAttribute("", "", "id", "CDATA", id);
 		ai.addAttribute("", "", "type", "CDATA", type);
 		ai.addAttribute("", "", "depart", "CDATA", "" + depart);
+		ai.addAttribute("", "", "departLane", "CDATA", "free");
+		ai.addAttribute("", "", "departPos", "CDATA", "random_free");
+		ai.addAttribute("", "", "departLane", "CDATA", "free");
 		try {
 			tfh.startElement("", "", "vehicle", ai);
 			ai.clear();

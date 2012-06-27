@@ -282,7 +282,6 @@ public class RouteGeneLaunch  implements GenerationListener
 	        				t[island].join();
 	        			
 	        			} catch (InterruptedException e) {
-	        				// TODO Auto-generated catch block
 	        				e.printStackTrace();
 	        			}
 	        		}

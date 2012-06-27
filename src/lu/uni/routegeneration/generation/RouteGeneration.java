@@ -33,6 +33,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 import org.graphstream.algorithm.Dijkstra;
+import org.graphstream.graph.Edge;
 import org.graphstream.graph.ElementNotFoundException;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
@@ -133,6 +134,7 @@ public class RouteGeneration {
 	private Area defaultCommercialArea;
 	private Area defaultResidentialArea;
 	private Random random;
+	long randomSeed = 123456L;
 	
 	// ----------- Getters & Setters ----------
 	
@@ -442,6 +444,7 @@ public class RouteGeneration {
 				parser.setContentHandler(netParser);
 				parser.parse(new InputSource(netPath));
 				logger.info("DGS file generated");
+				logger.info("total length of edges: " + netParser.getTotalLength());
 			} catch (Exception ex) {
 				ex.printStackTrace(System.err);
 			}
@@ -450,6 +453,7 @@ public class RouteGeneration {
 			logger.info("reading the DGS file...");
 			graph.read(baseFolder + baseName + ".dgs");
 			logger.info("graph initialized, nodes: " + graph.getNodeCount() + ", edges: " + graph.getEdgeCount());
+			
 		} 
 		catch (ElementNotFoundException e) {
 			e.printStackTrace();
@@ -539,7 +543,6 @@ public class RouteGeneration {
 		if (maxNodesCount < 1) {
 			maxNodesCount = 5;
 		}
-<<<<<<< HEAD
 		ArrayList<String> zonesToRemove = new ArrayList<String>();
 		for (Zone zone : zones.values()) {
 			if (zoneType == null || (zoneType != null && zone.type == zoneType)) {
@@ -551,309 +554,6 @@ public class RouteGeneration {
 					if (limit > maxNodesCount) {
 						zonesToRemove.add(zone.id);
 						break;
-=======
-	}
-
-	private Path goInsideFlow() {
-		//System.out.println(">InsideFlow");
-		Zone zone = null;
-		String path = null;
-
-		double rand = random.nextDouble();
-		zone = null;
-		double sum = 0.0;
-		for (Zone z : zones.values()) {
-			if (z.type == ZoneType.RESIDENTIAL) {
-				sum += z.surface;
-				if (sum > (rand * sumResidentialSurface)) {
-					zone = z;
-					break;
-				}
-			}
-		}
-		if (zone == null) {
-			System.out.printf("  _zone is NULL in goInsideFlow !!! rand=%f sum=%f%n",rand,sum);
-			return (null);
-		}
-		Path p = null;
-		int count = 0;
-		do {
-			if (count > 3) {
-				System.out.println("  _infinite loop on zone " + zone.id);
-				return (null);
-			}
-			p = createRandomPath(zone.shortestPath, zone.sourceNode);
-			count++;
-
-		} while (p == null);
-		return (p);
-	}
-
-	private double euclideanDistance(double x, double y, double x2, double y2) {
-		return Math.sqrt(Math.pow((x - x2), 2) + Math.pow((y - y2), 2));
-	}
-
-	public void xmlMain() throws Exception {
-		SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory
-				.newInstance();
-
-		tfh = tf.newTransformerHandler();
-		Transformer serTf = tfh.getTransformer();
-		serTf.setOutputProperty(OutputKeys.ENCODING, "utf-8");
-		serTf.setOutputProperty(OutputKeys.INDENT, "yes");
-		tfh.setResult(sr);
-		tfh.startDocument();
-		ai = new AttributesImpl();
-	}
-
-	public void fillZoneNodes(Zone z) {
-		for (int i = 0; i < 5; i++) {
-			int times = 0;
-			Node n = null;
-			do {
-				Point2D.Double point = pointInZone(z);
-				n = getClosestNode(point);
-				// test this node
-				if (referenceDjk.getPathLength(n) == Double.POSITIVE_INFINITY ) {
-					n = null;
-				}
-				times++;
-			} while (n == null && times <= 5);
-			if (n != null) {
-				z.near_nodes.add(n);
-			}
-		}
-		if(z.near_nodes.size()==0){
-			zonesToRemove.add(z);
-		}
-	}
-	
-	public double evaluate(double[] individual) {
-		ZoneType.RESIDENTIAL.probability = individual[0];
-		ZoneType.INDUSTRIAL.probability = individual[1];
-		ZoneType.COMMERCIAL.probability = individual[2];
-		insideFlowRatio = individual[3];
-		for (int i = 4; i < individual.length; i++) {
-			areas.get(i - 4).probability = individual[i];
-		}
-
-		return doEvaluate();
-	}
-	
-	public double evaluate(Individual ind) {
-		
-		random = new Random(randomSeed); // reset seed!
-		
-		//Prints the individual 
-		String individual = "Individual:";
-         for(int i=0; i<ind.getLength();i++) {
-        	 individual += " " + ind.getAllele(i);
-         }
-         System.out.println(individual);
-
-		
-		ZoneType.RESIDENTIAL.probability = (Double)ind.getAllele(0)/100;
-		ZoneType.INDUSTRIAL.probability = (Double)ind.getAllele(1)/100;
-		ZoneType.COMMERCIAL.probability = (Double)ind.getAllele(2)/100;
-			
-		//Fills in the different Commercial areas probabilities
-		// Zc1/Zc2/Zc3/
-		for (int i = 3; i < 6; i++) {
-			areas.get(i - 3).probability = (Double)ind.getAllele(i)/100;
-		}
-		
-		//Fills in the default Commercial area probability
-		//Zcd/
-		defaultAreaCOM.probability = (Double)ind.getAllele(6)/100;
-		
-		//Fills in the Industrial area probability
-		//Zi1
-		areas.get(3).probability = (Double)ind.getAllele(7)/100;
-		
-		//Fills in the default Industrial area probability
-		//Zid
-		defaultAreaIND.probability = (Double)ind.getAllele(8)/100;
-		
-		//Fills in the Residentia area probability
-		//Zr1
-		areas.get(4).probability = (Double)ind.getAllele(9)/100;
-		
-		//Fills in the default Residential area probability
-		//Zrd
-		defaultAreaRES.probability = (Double)ind.getAllele(10)/100;
-		
-		//Fills in the insideFlowRatio and ShiftingRatio
-		//IR/SR
-		insideFlowRatio = (Double)ind.getAllele(11)/100;
-		shiftingRatio = (Double)ind.getAllele(12)/100;
-		
-		
-		return doEvaluate();
-	}
-	
-	
-	private double doEvaluate(){
-		long start = System.currentTimeMillis();
-		double fitness = 0;		
-
-		// recompute probabilities !!
-		for (Zone z : zones.values()) {
-
-			z.probability = (z.surface / z.area.sumSurfaceZones)
-					* z.type.probability * z.area.probability;
-		}
-
-		for(Detector d : currentSolution.values()){
-			d.reset();
-			
-			//Sets the shiftingRatio for each Detector loop
-			d.setShiftingRatio(shiftingRatio);
-		}
-		flowGeneration();
-		
-		//Applies shiftingRatio for each control point
-		for(Detector d : currentSolution.values()){
-			
-			//Prints counted traffic in control point BEFORE shift
-			//System.out.println(" Before Shift: " + d);
-			
-			//Applies Shifting Ratio
-			d.shift();
-			
-			//Prints counted traffic in control point AFTER shift
-			//System.out.println(" After Shift: " + d);
-		}
-		
-		fitness = evaluator.compareTo(currentSolution);
-
-		
-		System.out.printf("%.1f s%n",(System.currentTimeMillis()-start)/1000.0);
-		return fitness;
-
-	}
-	
-
-	public String[] getParametersNames() {
-
-		ArrayList<String> paramsNames = new ArrayList<String>();
-
-		// Zone types
-		paramsNames.add("Residential Type");
-		paramsNames.add("Industrial Type");
-		paramsNames.add("Commercial Type");
-
-		// inner traffic ratio
-		paramsNames.add("Inner Traffic");
-
-		// loop through areas
-		for (Area a : areas) {
-			switch(a.type){
-			case COMMERCIAL: paramsNames.add("COM(" + a.id + ")");break;
-			case INDUSTRIAL: paramsNames.add("IND(" + a.id + ")");break;
-			case RESIDENTIAL: paramsNames.add("RES(" + a.id + ")");break;
-			}
-		}
-
-		String[] strings = new String[paramsNames.size()];
-		return paramsNames.toArray(strings);
-	}
-
-	public double[][] getParametersBoundaries() {
-
-		double[] min = new double[4 + areas.size()];
-		double[] max = new double[4 + areas.size()];
-
-		min[0] = 1.0;
-		min[1] = 1.0;
-		min[2] = 1.0;
-
-		min[3] = 0.3;
-
-		max[0] = 100.0;
-		max[1] = 100.0;
-		max[2] = 100.0;
-
-		max[3] = 0.7;
-
-		for (int i = 0; i < areas.size(); i++) {
-			min[4 + i] = 1.0;
-			max[4 + i] = 10.0;
-		}
-
-		double bounds[][] = new double[2][min.length];
-		bounds[0] = min;
-		bounds[1] = max;
-
-		return bounds;
-	}
-
-
-	public void generateSumoRoutes() {
-		System.out.println("__Starting Sumo route generation.");
-		try {
-			sr = new StreamResult(baseFolder + baseName + ".rou.xml");
-			xmlMain();
-
-			tfh.startElement("", "", "routes", ai);
-
-			// ------------- Compute the vtypes ------------------
-			//
-			for (VType vt : vtypes) {
-				ai.clear();
-				ai.addAttribute("", "", "accel", "CDATA", vt.accel);
-				ai.addAttribute("", "", "color", "CDATA", vt.color);
-				ai.addAttribute("", "", "decel", "CDATA", vt.decel);
-				ai.addAttribute("", "", "id", "CDATA", vt.id);
-				ai.addAttribute("", "", "length", "CDATA", vt.length);
-				ai.addAttribute("", "", "maxspeed", "CDATA", vt.maxspeed);
-				ai.addAttribute("", "", "sigma", "CDATA", vt.sigma);
-				tfh.startElement("", "", "vtype", ai);
-				tfh.endElement("", "", "vtype");
-
-			}
-
-			// ---------------- the default truck vtype ----------------
-			//
-			ai.clear();
-			ai.addAttribute("", "", "accel", "CDATA", "1.05");
-			ai.addAttribute("", "", "color", "CDATA", "0.1,0.1,0.1");
-			ai.addAttribute("", "", "decel", "CDATA", "4");
-			ai.addAttribute("", "", "id", "CDATA", "truck");
-			ai.addAttribute("", "", "length", "CDATA", "15");
-			ai.addAttribute("", "", "maxspeed", "CDATA", "30");
-			ai.addAttribute("", "", "sigma", "CDATA", "0");
-			tfh.startElement("", "", "vtype", ai);
-			tfh.endElement("", "", "vtype");
-
-			while (!loops.isEmpty()) {
-
-				// inside flow OR outside flow?
-				if (random.nextDouble() < insideFlowRatio) {
-					// System.out.println("going for inside flow");
-					// inside flow
-					Path p = goInsideFlow();
-					val++;
-					ai.clear();
-					ai.addAttribute("", "", "id", "CDATA", "resdidentialXXX" /*+ zone.id */+ "_h"
-							+ currentHour + "_c" + val);
-					ai.addAttribute("", "", "type", "CDATA", vtypes
-							.get((int) (random.nextDouble() * vtypes.size())).id);
-					ai.addAttribute("", "", "depart", "CDATA", "" + (int) currentTime);
-
-					try {
-						tfh.startElement("", "", "vehicle", ai);
-
-						ai.clear();
-
-						ai.addAttribute("", "", "edges", "CDATA", pathToString(p));
-						tfh.startElement("", "", "route", ai);
-						tfh.endElement("", "", "route");
-
-						tfh.endElement("", "", "vehicle");
-					} catch (SAXException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
->>>>>>> refs/remotes/origin/master
 					}
 					node = zone.getRandomNode(graph.getNodeIterator());
 					if (getPathLength(node,	graph.getNode(referenceNodeId)) != Double.POSITIVE_INFINITY) {
@@ -1001,7 +701,7 @@ public class RouteGeneration {
 	
 	public ArrayList<Trip> generateTrips() {
 		trips = new ArrayList<Trip>();
-		//random = new Random(); // reset seed!
+		random = new Random(randomSeed); // reset seed!
 		double currentTime = 0;
 		inner = new long[stopHour];
 		outer = new long[stopHour];
@@ -1013,21 +713,23 @@ public class RouteGeneration {
 					currentHour = flow.getHour()-1;
 					for (int i = 0; i < flow.getVehicles(); i++) {
 						currentTime = flow.getTime();
-						String vehicleType = vtypes.get((int)(org.util.Random.next() * vtypes.size())).getId();
-						Trip trip = generateTrip(sourceNode, (int)currentTime, vehicleType, (outer[currentHour] + inner[currentHour]));
-						if (trip != null) {
-							outer[currentHour]++;
-							trips.add(trip);
-						}
-						// may generate additionally an inside flow
-						if (random.nextDouble() < insideFlowRatio) {
-							Zone zone = pickUpOneZone(ZoneType.RESIDENTIAL);
-							sourceNode = zone.sourceNode;
-							vehicleType = vtypes.get((int)(org.util.Random.next() * vtypes.size())).getId();
-							trip = generateTrip(sourceNode, (int)currentTime, vehicleType, (outer[currentHour] + inner[currentHour]));
+						if (currentTime < stopTime) {
+							String vehicleType = vtypes.get((int)(org.util.Random.next() * vtypes.size())).getId();
+							Trip trip = generateTrip(sourceNode, (int)currentTime, vehicleType, (outer[currentHour] + inner[currentHour]));
 							if (trip != null) {
-								inner[currentHour]++;
+								outer[currentHour]++;
 								trips.add(trip);
+							}
+							// may generate additionally an inside flow
+							if (random.nextDouble() < insideFlowRatio) {
+								Zone zone = pickUpOneZone(ZoneType.RESIDENTIAL);
+								sourceNode = zone.sourceNode;
+								vehicleType = vtypes.get((int)(org.util.Random.next() * vtypes.size())).getId();
+								trip = generateTrip(sourceNode, (int)currentTime, vehicleType, (outer[currentHour] + inner[currentHour]));
+								if (trip != null) {
+									inner[currentHour]++;
+									trips.add(trip);
+								}
 							}
 						}
 						flow.next();
@@ -1169,5 +871,142 @@ public class RouteGeneration {
 		}
 		return nodes;
 	}
+	
+	
+//	public double evaluate(Individual ind) {
+//
+//		random = new Random(randomSeed); // reset seed!
+//
+//		//Prints the individual 
+//		String individual = "Individual:";
+//         for(int i=0; i<ind.getLength();i++) {
+//        	 individual += " " + ind.getAllele(i);
+//         }
+//         System.out.println(individual);
+//
+//
+//		ZoneType.RESIDENTIAL.probability = (Double)ind.getAllele(0)/100;
+//		ZoneType.INDUSTRIAL.probability = (Double)ind.getAllele(1)/100;
+//		ZoneType.COMMERCIAL.probability = (Double)ind.getAllele(2)/100;
+//
+//		//Fills in the different Commercial areas probabilities
+//		// Zc1/Zc2/Zc3/
+//		for (int i = 3; i < 6; i++) {
+//			areas.get(i - 3).probability = (Double)ind.getAllele(i)/100;
+//		}
+//
+//		//Fills in the default Commercial area probability
+//		//Zcd/
+//		defaultAreaCOM.probability = (Double)ind.getAllele(6)/100;
+//
+//		//Fills in the Industrial area probability
+//		//Zi1
+//		areas.get(3).probability = (Double)ind.getAllele(7)/100;
+//
+//		//Fills in the default Industrial area probability
+//		//Zid
+//		defaultAreaIND.probability = (Double)ind.getAllele(8)/100;
+//
+//		//Fills in the Residentia area probability
+//		//Zr1
+//		areas.get(4).probability = (Double)ind.getAllele(9)/100;
+//
+//		//Fills in the default Residential area probability
+//		//Zrd
+//		defaultAreaRES.probability = (Double)ind.getAllele(10)/100;
+//
+//		//Fills in the insideFlowRatio and ShiftingRatio
+//		//IR/SR
+//		insideFlowRatio = (Double)ind.getAllele(11)/100;
+//		shiftingRatio = (Double)ind.getAllele(12)/100;
+//
+//		return doEvaluate();
+//	}
+//
+//	private double doEvaluate() {
+//		long start = System.currentTimeMillis();
+//		double fitness = 0;		
+//		// recompute probabilities !!
+//		for (Zone z : zones.values()) {
+//
+//			z.probability = (z.surface / z.area.sumSurfaceZones)
+//					* z.type.probability * z.area.probability; 
+//		}
+//		for(Detector d : currentSolution.values()){
+//			d.reset();
+//
+//			//Sets the shiftingRatio for each Detector loop
+//			d.setShiftingRatio(shiftingRatio);
+//		}
+//		flowGeneration();
+//		//Applies shiftingRatio for each control point
+//		for(Detector d : currentSolution.values()){
+//			//Prints counted traffic in control point BEFORE shift
+//			//System.out.println(" Before Shift: " + d);
+//			//Applies Shifting Ratio
+//			d.shift();
+//			//Prints counted traffic in control point AFTER shift
+//			//System.out.println(" After Shift: " + d);
+//		}
+//		fitness = evaluator.compareTo(currentSolution);
+//
+//		System.out.printf("%.1f s%n",(System.currentTimeMillis()-start)/1000.0);
+//		return fitness;
+//	}
+	
+//	public String[] getParametersNames() {
+//
+//		ArrayList<String> paramsNames = new ArrayList<String>();
+//
+//		// Zone types
+//		paramsNames.add("Residential Type");
+//		paramsNames.add("Industrial Type");
+//		paramsNames.add("Commercial Type");
+//
+//		// inner traffic ratio
+//		paramsNames.add("Inner Traffic");
+//
+//		// loop through areas
+//		for (Area a : areas) {
+//			switch(a.type){
+//			case COMMERCIAL: paramsNames.add("COM(" + a.id + ")");break;
+//			case INDUSTRIAL: paramsNames.add("IND(" + a.id + ")");break;
+//			case RESIDENTIAL: paramsNames.add("RES(" + a.id + ")");break;
+//			}
+//		}
+//
+//		String[] strings = new String[paramsNames.size()];
+//		return paramsNames.toArray(strings);
+//	}
+//
+//	public double[][] getParametersBoundaries() {
+//
+//		double[] min = new double[4 + areas.size()];
+//		double[] max = new double[4 + areas.size()];
+//
+//		min[0] = 1.0;
+//		min[1] = 1.0;
+//		min[2] = 1.0;
+//
+//		min[3] = 0.3;
+//
+//		max[0] = 100.0;
+//		max[1] = 100.0;
+//		max[2] = 100.0;
+//
+//		max[3] = 0.7;
+//
+//		for (int i = 0; i < areas.size(); i++) {
+//			min[4 + i] = 1.0;
+//			max[4 + i] = 10.0;
+//		}
+//
+//		double bounds[][] = new double[2][min.length];
+//		bounds[0] = min;
+//		bounds[1] = max;
+//
+//		return bounds;
+//	}
+
 	
 }
