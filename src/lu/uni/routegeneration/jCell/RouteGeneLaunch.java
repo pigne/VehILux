@@ -163,7 +163,7 @@ public class RouteGeneLaunch  implements GenerationListener
 		RealEvaluation evaluator = new RealEvaluation();
 		evaluator.setBaseFolder(baseFolder);
 		evaluator.setBaseName(baseName);
-		evaluator.setStopHour(11);
+		evaluator.setStopHour(stopHour);
 		
 		evaluator.readInput();
 

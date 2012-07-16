@@ -63,6 +63,7 @@ public class EditorPanel extends JPanel {
 	private double usefull_width;
 	private double usefull_height;
 	private double mapRatio;
+	private boolean transparent;
 	
 	// data to display
 	private HashMap<String, Zone> zones = new HashMap<String, Zone>();
@@ -111,6 +112,10 @@ public class EditorPanel extends JPanel {
 		for (int i = 0; i < pointsNames.length; ++i) {
 			this.displayPoints.add(pointsNames[i]);
 		}
+	}
+	
+	public void setTransparent(boolean transparent) {
+		this.transparent = transparent;
 	}
 	
 	private ArrayList<Point2D.Double> nodesToPoints(ArrayList<Node> nodes) {
@@ -179,7 +184,7 @@ public class EditorPanel extends JPanel {
 	public EditorPanel(HashMap<String, Zone> zones, ArrayList<Area> areas) {
 		this.zones = zones;
 		this.areas = areas;
-		
+		this.transparent = false;
 		min_x_boundary = Double.MAX_VALUE;
 		min_y_boundary = Double.MAX_VALUE;
 		max_x_boundary = Double.MIN_VALUE;
@@ -226,7 +231,9 @@ public class EditorPanel extends JPanel {
 		}
 
 		g2.setColor(Color.white);
-		g2.fillRect((int) (orig_width / 2 - usefull_width / 2), (int) (orig_height / 2 - usefull_height / 2), (int) usefull_width - 1, (int) usefull_height - 1);
+		if (!transparent) {
+			g2.fillRect((int) (orig_width / 2 - usefull_width / 2), (int) (orig_height / 2 - usefull_height / 2), (int) usefull_width - 1, (int) usefull_height - 1);
+		}
 		ratioX = usefull_width / (max_x_boundary - min_x_boundary);
 		ratioY = usefull_height / (max_y_boundary - min_y_boundary);
 		g2.setColor(Color.gray);

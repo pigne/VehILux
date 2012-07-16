@@ -74,11 +74,30 @@ public class RouteGeneration {
 		rg.computeDijkstra();
 		
 		rg.generateSortedTrips();
+		
 		XMLParser.writeFlows(rg.getBaseFolder(), rg.getBaseName(), outputFolder, rg.getTrips(), rg.getVTypes(), rg.getStopTime());
 		XMLParser.writeRoutes(rg.getBaseFolder(), rg.getBaseName(), outputFolder, rg.getTrips(), rg.getVTypes());
 			
-		rg.printTripInfo();
 		
+		writeFlowSummary(rg);
+	}
+	
+	private static void writeFlowSummary(RouteGeneration rg) {
+		logger.info("insideFlowRatio: " + rg.insideFlowRatio);
+		double readOuterFlow = 0;
+		for (Loop loop : rg.loops) {
+			readOuterFlow += loop.getTotalFlow();
+		}
+		logger.info("read outerFLow: " + readOuterFlow);
+		double generatedOuterFlow = 0;
+		double generatedInnerFlow = 0;
+		for (int i = 0; i < rg.inner.length; ++i) {
+			generatedInnerFlow += rg.inner[i];
+			generatedOuterFlow += rg.outer[i];
+		}
+		logger.info("read outerFLow: " + readOuterFlow + "genrated outerFLow: " + generatedOuterFlow + "generated innerFLow: " + generatedInnerFlow);
+		
+		rg.printTripInfo();
 	}
 	
 	public static void main(String[] args) {
@@ -322,6 +341,7 @@ public class RouteGeneration {
 		File[] listOfFiles = folder.listFiles();
 		for (File f : listOfFiles) {
 			if (f.isFile() && f.getName().startsWith(baseName) && f.getName().endsWith(fileExtension)) {
+				logger.info("reading " + f.getName());
 				XMLParser.readFile(f.getPath(), h);
 			}
 		}
@@ -642,7 +662,7 @@ public class RouteGeneration {
 		random = new Random(System.currentTimeMillis()); // reset seed!
 		int currentHour = 1;
 		int flowHour;
-		double currentTime = 1;
+		double currentTime = 0;
 		boolean isInner = false;
 		inner = new long[stopHour];
 		outer = new long[stopHour];
@@ -661,6 +681,15 @@ public class RouteGeneration {
 		 		// inside flow
 		 		isInner = true;
 				Zone zone = pickUpOneZone(ZoneType.RESIDENTIAL);
+				int limit = 5;
+				if (zone == null && limit > 0) {
+					limit--;
+					zone = pickUpOneZone(ZoneType.RESIDENTIAL);
+				}
+				if (zone == null) {
+					logger.warn("cannot pick up any residential zone!");
+					continue;
+				}
 				sourceNode = zone.sourceNode;
 			} 
 			else {
@@ -696,6 +725,7 @@ public class RouteGeneration {
 		 		}
 		 	}
 		}	
+		
 		return trips;
 	}
 	
@@ -772,9 +802,14 @@ public class RouteGeneration {
 			return trip;
 		}
 		Zone zone = pickUpOneZone(null);
-		if (zone == null) {
-			logger.warn("zone null!");
+		int limit = 5;
+		if (zone == null && limit > 0) {
+			limit--;
 			zone = pickUpOneZone(null);
+		}
+		if (zone == null) {
+			logger.warn("cannot pick up destination zone!");
+			return trip;
 		}
 		Node destinationNode = zone.getDestinationNode();
 		if (destinationNode == null) {
