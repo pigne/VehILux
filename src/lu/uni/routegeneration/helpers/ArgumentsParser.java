@@ -24,63 +24,116 @@ package lu.uni.routegeneration.helpers;
 
 public class ArgumentsParser {
 	
-	private static String baseFolder  = "./test/Luxembourg/";
-	private static String baseName = "Luxembourg";
-	private static double insideFlowRatio = 0.3435561009268159;
-	private static int stopHour = 11;
-	private static double shiftingRatio = 0.40568854350331804;
-	private static double defaultResidentialAreaProbability = 0.8512264551022459;
-	private static double defaultCommercialAreaProbability = 0.42124639069257036;
-	private static double defaultIndustrialAreaProbability = 0.11568295615593334;
-	private static String referenceNodeId = "77813703#1";
-	private static int steps;
-	private static int dumpInterval = 3600;
+	private String baseFolder  = "./test/Luxembourg/";
+	private String baseName = "Luxembourg";
+	private double insideFlowRatio = 0.3435561009268159;
+	private int stopHour = 11;
+	private double shiftingRatio = 0.40568854350331804;
+	private double defaultResidentialAreaProbability = 0.8512264551022459;
+	private double defaultCommercialAreaProbability = 0.42124639069257036;
+	private double defaultIndustrialAreaProbability = 0.11568295615593334;
+	private String referenceNodeId = "77813703#1";
+	private int steps;
+	private int dumpInterval = 3600;
 	
-	public static String getBaseFolder() {
+	public String getBaseFolder() {
 		return baseFolder;
 	}
 
-	public static String getBaseName() {
+	public String getBaseName() {
 		return baseName;
 	}
 
-	public static double getInsideFlowRatio() {
+	public double getInsideFlowRatio() {
 		return insideFlowRatio;
 	}
 
-	public static int getStopHour() {
+	public int getStopHour() {
 		return stopHour;
 	}
 
-	public static int getSteps() {
+	public int getSteps() {
 		return steps;
 	}
 	
-	public static double getShiftingRatio() {
+	public double getShiftingRatio() {
 		return shiftingRatio;
 	}
 
-	public static double getDefaultResidentialAreaProbability() {
+	public double getDefaultResidentialAreaProbability() {
 		return defaultResidentialAreaProbability;
 	}
 
-	public static double getDefaultCommercialAreaProbability() {
+	public double getDefaultCommercialAreaProbability() {
 		return defaultCommercialAreaProbability;
 	}
 
-	public static double getDefaultIndustrialAreaProbability() {
+	public double getDefaultIndustrialAreaProbability() {
 		return defaultIndustrialAreaProbability;
 	}
 
-	public static String getReferenceNodeId() {
+	public void setBaseFolder(String baseFolder) {
+		this.baseFolder = baseFolder;
+	}
+
+	public void setBaseName(String baseName) {
+		this.baseName = baseName;
+	}
+
+	public void setInsideFlowRatio(double insideFlowRatio) {
+		this.insideFlowRatio = insideFlowRatio;
+	}
+
+	public void setStopHour(int stopHour) {
+		this.stopHour = stopHour;
+	}
+
+	public void setShiftingRatio(double shiftingRatio) {
+		this.shiftingRatio = shiftingRatio;
+	}
+
+	public void setDefaultResidentialAreaProbability(
+			double defaultResidentialAreaProbability) {
+		this.defaultResidentialAreaProbability = defaultResidentialAreaProbability;
+	}
+
+	public void setDefaultCommercialAreaProbability(
+			double defaultCommercialAreaProbability) {
+		this.defaultCommercialAreaProbability = defaultCommercialAreaProbability;
+	}
+
+	public void setDefaultIndustrialAreaProbability(
+			double defaultIndustrialAreaProbability) {
+		this.defaultIndustrialAreaProbability = defaultIndustrialAreaProbability;
+	}
+
+	public void setReferenceNodeId(String referenceNodeId) {
+		this.referenceNodeId = referenceNodeId;
+	}
+
+	public void setSteps(int steps) {
+		this.steps = steps;
+	}
+
+	public void setDumpInterval(int dumpInterval) {
+		this.dumpInterval = dumpInterval;
+	}
+
+	public String getReferenceNodeId() {
 		return referenceNodeId;
 	}
 	
-	public static int getDumpInterval() {
+	public int getDumpInterval() {
 		return dumpInterval;
 	}
 	
-	public static void parse(String[] args) {
+	public void parse(String args) {
+		if (args != null) {
+			parse(args.split(" "));
+		}
+	}
+	
+	public void parse(String[] args) {
 		if (args == null) {
 			return;
 		}
@@ -117,7 +170,33 @@ public class ArgumentsParser {
 			if (arg.equals("-dumpInterval")) {
 				dumpInterval = Integer.parseInt(args[i]);
 			}
+			if (arg.equals("-defaultResidentialAreaProbability")) {
+				defaultResidentialAreaProbability = Double.parseDouble(args[i]);
+			}
+			if (arg.equals("-defaultCommercialAreaProbability")) {
+				defaultCommercialAreaProbability = Double.parseDouble(args[i]);
+			}
+			if (arg.equals("-defaultIndustrialAreaProbability")) {
+				defaultIndustrialAreaProbability = Double.parseDouble(args[i]);
+			}
 			i++;
 		}
+	}
+	
+	public String[] getArgs() {
+		String[] args = new String[] {
+				"-baseFolder", baseFolder,
+				"-baseName", baseName,
+				"-insideFlowRatio", ""+insideFlowRatio,
+				"-stopHour", ""+stopHour,
+				"-shiftingRatio", ""+shiftingRatio,
+				"-referenceNodeId", referenceNodeId,
+				"-steps", ""+steps,
+				"-dumpInterval", ""+dumpInterval,
+				"-defaultResidentialAreaProbability", ""+defaultResidentialAreaProbability,
+				"-defaultCommercialAreaProbability", ""+defaultCommercialAreaProbability,
+				"-defaultIndustrialAreaProbability", ""+defaultIndustrialAreaProbability,
+		};
+		return args;
 	}
 }

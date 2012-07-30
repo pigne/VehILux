@@ -1,6 +1,5 @@
 package lu.uni.routegeneration.evaluation;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -31,23 +30,8 @@ public class GawronEvaluation {
 	 */
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
-		//String[] args2 = new String[] {"-baseFolder", "./test/testEval/", "-steps", "5"};
-		//ArgumentsParser.parse(args2);
-		ArgumentsParser.parse(args);
-	    String baseFolder = ArgumentsParser.getBaseFolder();
-	    String baseName = ArgumentsParser.getBaseName();
-	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
-	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
-	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
-	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
-	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
-	    int steps = ArgumentsParser.getSteps();
-	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
-	    int stopHour = ArgumentsParser.getStopHour();
-	    int dumpInterval = ArgumentsParser.getDumpInterval();
-	    
-	    GawronEvaluation evaluation = new GawronEvaluation();
-	    evaluation.evaluate(baseFolder, baseName, stopHour, new double[] {defaultResidentialAreaProbability, defaultCommercialAreaProbability, defaultIndustrialAreaProbability}, insideFlowRatio, shiftingRatio, steps, dumpInterval);
+	    GawronEvaluation evaluation = new GawronEvaluation(args);
+	    evaluation.evaluate();
 	}
 
 	private String baseName; 
@@ -57,26 +41,24 @@ public class GawronEvaluation {
 	private int steps;
 	private int dumpInterval;
 	
-	public GawronEvaluation() {
-		
+	public GawronEvaluation(String[] args) {
+		ArgumentsParser arguments = new ArgumentsParser();
+		arguments.parse(args);
+		this.baseFolder = arguments.getBaseFolder();
+		this.baseName = arguments.getBaseName();
+		this.stopHour = arguments.getStopHour();
+		this.shiftingRatio = arguments.getShiftingRatio();
+		this.steps = arguments.getSteps();
+		this.dumpInterval = arguments.getDumpInterval();
 	}
 	
-	public void evaluate(String baseFolder, String baseName, int stopHour, double[] defaultProbabilities, double insideFlowRatio, double shiftingRatio, int steps, int dumpInterval) {
-		this.baseFolder = baseFolder;
-		this.baseName = baseName;
-		this.stopHour = stopHour;
-		this.shiftingRatio = shiftingRatio;
-		this.steps = steps;
-		this.dumpInterval = dumpInterval;
+	public void evaluate() {
 		long start = System.currentTimeMillis();
 		System.out.printf("%.1f s%n",(start)/1000.0);
-	
 		try {
-			
 			writeTripInfo();
 			writeSummary();
 			writeFitness();
-			
 		}
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -94,9 +76,7 @@ public class GawronEvaluation {
 		evaluator.setStopHour(stopHour);
 		evaluator.readInput();
 		HashMap<String, String> detectorIds = evaluator.getDetectorIds();
-		//System.out.println("real");
-		//printSolution(evaluator.controls);
-		
+
 		String outputFileName = "eval_fitness.txt";
 		System.out.println("writing " + baseFolder + outputFileName);
 		PrintStream stream = new PrintStream(new FileOutputStream(baseFolder + outputFileName));
@@ -114,12 +94,12 @@ public class GawronEvaluation {
 			printSolution(stream, rouSolution);
 			dijkstra1[i] = evaluator.compareTo(rouSolution);
 			stream.print("rou fitness:\t" + dijkstra1[i] + "\n");
-			
 			shiftDetectors(rouSolution, shiftingRatio);
+			
 			stream.print("\nrou after shift:\n");
-			printSolution(stream, rouSolution);
 			dijkstra2[i] = evaluator.compareTo(rouSolution);
 			stream.print("rou fitness:\t" + dijkstra2[i] + "\n");
+			printSolution(stream, rouSolution);
 			
 			// dump file
 			String dumpFileName = "dump_" + step + "_" + dumpInterval + ".xml";
@@ -127,8 +107,8 @@ public class GawronEvaluation {
 			HashMap<String, Detector> dumpSolution = computeDumpSolution(baseFolder + dumpFileName, detectorIds);
 			sumo[i] = evaluator.compareTo(dumpSolution);
 			stream.print("\ndump:\n");
-			printSolution(stream, dumpSolution);
 			stream.print("dump fitness:\t" + sumo[i] + "\n");
+			printSolution(stream, dumpSolution);
 		}
 		
 		stream.println("\niter\t dijkstra1 \t dijsktra2 \t SUMO");
@@ -303,13 +283,39 @@ public class GawronEvaluation {
 		
 	}
 	
+	private String[] detectors = new String[] {
+			"1431",
+			"1429",
+			"445",
+			"433",
+			"432",
+			"420",
+			"415",
+			"412",
+			"407",
+			"404",
+			"403",
+			"401",
+			"400"
+	};
+	
 	public void printSolution(PrintStream out, HashMap<String, Detector> solution) throws IOException {
-		for (Detector detector : solution.values()) {
+		long[] flows = new long[stopHour];
+		for (int i = 0; i < stopHour; ++i) {
+			flows[i] = 0;
+		}
+		for (int j = 0; j < detectors.length; ++j) {
+			Detector detector = solution.get(detectors[j]);
 			out.print(detector.id + "\t");
 			for (int i = 0; i < detector.vehicles.length; ++i) {
 				out.print(detector.vehicles[i] + "\t");
+				flows[i] += detector.vehicles[i];
 			}
 			out.print("\n");
+		}
+		out.print("sum\t");
+		for (int i = 0; i < stopHour; ++i) {
+			out.print(flows[i] + "\t");
 		}
 	}
 	

@@ -137,34 +137,24 @@ public class RouteGeneLaunch  implements GenerationListener
     
     private static Problem CreateProblem()
     {
-    	String baseFolder = ArgumentsParser.getBaseFolder();
-	    String baseName = ArgumentsParser.getBaseName();
-	    double defaultResidentialAreaProbability = ArgumentsParser.getDefaultResidentialAreaProbability();
-	    double defaultCommercialAreaProbability = ArgumentsParser.getDefaultCommercialAreaProbability();
-	    double defaultIndustrialAreaProbability = ArgumentsParser.getDefaultIndustrialAreaProbability();
-	    double insideFlowRatio = ArgumentsParser.getInsideFlowRatio();
-	    double shiftingRatio = ArgumentsParser.getShiftingRatio();
-	    String referenceNodeId = ArgumentsParser.getReferenceNodeId();
-	    int stopHour = ArgumentsParser.getStopHour();
-		
-	    RouteGeneration rg = new RouteGeneration();
-		rg.setBaseFolder(baseFolder);
-		rg.setBaseName(baseName);
-		rg.setStopHour(stopHour);
-		rg.setReferenceNodeId(referenceNodeId);
+    	ArgumentsParser arguments = new ArgumentsParser();
+		RouteGeneration rg = new RouteGeneration();
+		rg.setBaseFolder(arguments.getBaseFolder());
+		rg.setBaseName(arguments.getBaseName());
+		rg.setStopHour(arguments.getStopHour());
+		rg.setReferenceNodeId(arguments.getReferenceNodeId());
 		rg.readInput();
-		rg.setInsideFlowRatio(insideFlowRatio);
-		rg.setDefaultResidentialAreaProbability(defaultResidentialAreaProbability);
-		rg.setDefaultCommercialAreaProbability(defaultCommercialAreaProbability);
-		rg.setDefaultIndustrialAreaProbability(defaultIndustrialAreaProbability);
+		rg.setInsideFlowRatio(arguments.getInsideFlowRatio());
+		rg.setDefaultResidentialAreaProbability(arguments.getDefaultResidentialAreaProbability());
+		rg.setDefaultCommercialAreaProbability(arguments.getDefaultCommercialAreaProbability());
+		rg.setDefaultIndustrialAreaProbability(arguments.getDefaultIndustrialAreaProbability());
 		
 		rg.computeDijkstra();
 		
 		RealEvaluation evaluator = new RealEvaluation();
-		evaluator.setBaseFolder(baseFolder);
-		evaluator.setBaseName(baseName);
-		evaluator.setStopHour(stopHour);
-		
+		evaluator.setBaseFolder(arguments.getBaseFolder());
+		evaluator.setBaseName(arguments.getBaseName());
+		evaluator.setStopHour(arguments.getStopHour());
 		evaluator.readInput();
 
     	Problem problem = new RouteGenerationProblem(rg, evaluator);    
